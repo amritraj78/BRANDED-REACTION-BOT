@@ -178,8 +178,22 @@ class InMemoryDatabase:
     def __getitem__(self, name):
         return getattr(self, name)
 
-if config.MONGO_URL:
+import os
+import sys
+
+if config.MONGO_URL and "unittest" not in sys.modules and not os.getenv("TESTING"):
     try:
+        try:
+            import dns.resolver
+            if not os.path.exists("/etc/resolv.conf"):
+                r = dns.resolver.Resolver(configure=False)
+                r.nameservers = ["8.8.8.8", "1.1.1.1"]
+                dns.resolver.default_resolver = r
+                dns.resolver.reset_default_resolver = lambda: None
+                dns.resolver.get_default_resolver = lambda: r
+        except Exception:
+            pass
+
         from pymongo import MongoClient
         from motor.motor_asyncio import AsyncIOMotorClient as MongoCli
         _mongo_async = MongoCli(config.MONGO_URL)
