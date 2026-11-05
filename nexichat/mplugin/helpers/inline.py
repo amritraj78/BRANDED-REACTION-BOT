@@ -1,36 +1,50 @@
+# ---------------------------------------------------------------------------------
+#  VIP REACTION & AI CHATBOT
+#  Copyright (c) 2026 Amrit Raj (@Villanns). All Rights Reserved.
+#  Support Group : https://t.me/amrit_feel
+#  Updates Channel: https://t.me/privatethink
+#  Licensed under Proprietary Terms. Unauthorized copying is strictly prohibited.
+# ---------------------------------------------------------------------------------
+"""
+================================================================================
+  FILE EXPLANATION & HINTS (Student Friendly Guide)
+================================================================================
+Is file ka kya kaam hai?
+  Ye file Cloned Bots ke Inline Keyboards aur Buttons provide karti hai.
+================================================================================
+"""
+
 from pyrogram.types import InlineKeyboardButton
 
 from config import SUPPORT_GRP, UPDATE_CHNL
 from nexichat import OWNER, nexichat
 
-
 START_BOT = [
-    
     [
-        InlineKeyboardButton(text="🛠️ σρεи ¢σммαиdꜱ ⚙️", callback_data="HELP"),
+        InlineKeyboardButton(text="🛠️ ᴏᴘᴇɴ ᴄᴏᴍᴍᴀɴᴅs ⚙️", callback_data="HELP"),
     ],
 ]
-
 
 DEV_OP = [
     [
         InlineKeyboardButton(
-            text="✦ ᴀᴅᴅ ᴍᴇ ʙᴀʙʏ ✦",
-            url=f"https://t.me/{nexichat.username}?startgroup=true",
+            text="➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ➕",
+            url=f"https://t.me/{getattr(nexichat, 'username', 'Reactions_rebot')}?startgroup=true",
         ),
     ],
     [
-        InlineKeyboardButton(text="« ʜᴇʟᴘ »", callback_data="HELP"),
+        InlineKeyboardButton(text="📚 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅs", callback_data="HELP"),
+        InlineKeyboardButton(text="☁️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="ABOUT"),
     ],
     [
-        # InlineKeyboardButton(text="❄️ sᴏᴜʀᴄᴇ ❄️", callback_data="SOURCE"),
-        InlineKeyboardButton(text="☁️ ᴀʙᴏᴜᴛ ☁️", callback_data="ABOUT"),
+        InlineKeyboardButton(text="👥 sᴜᴘᴘᴏʀᴛ", url=f"https://t.me/{SUPPORT_GRP}"),
+        InlineKeyboardButton(text="📢 ᴜᴘᴅᴀᴛᴇs", url=f"https://t.me/{UPDATE_CHNL}"),
     ],
 ]
 
 PNG_BTN = [
     [
-        InlineKeyboardButton(text="🛠️ σρεи ¢σммαиdꜱ ⚙️", callback_data="HELP"),
+        InlineKeyboardButton(text="🛠️ ᴏᴘᴇɴ ᴄᴏᴍᴍᴀɴᴅs ⚙️", callback_data="HELP"),
     ],
     [
         InlineKeyboardButton(
@@ -40,24 +54,30 @@ PNG_BTN = [
     ],
 ]
 
-
 BACK = [
     [
         InlineKeyboardButton(text="⦿ ʙᴀᴄᴋ ⦿", callback_data="BACK"),
     ],
 ]
 
-
 HELP_BTN = [
     [
-        InlineKeyboardButton(text="🐳 ᴄʜᴀᴛʙᴏᴛ 🐳", callback_data="CHATBOT_CMD"),
-        InlineKeyboardButton(text="🎄 ᴛᴏᴏʟs 🎄", callback_data="TOOLS_DATA"),
+        InlineKeyboardButton(text="🤖 ᴀɪ ᴄʜᴀᴛ & ᴠᴏɪᴄᴇ", callback_data="AI_CHATBOT_CMD"),
+        InlineKeyboardButton(text="⚡ ʀᴇᴀᴄᴛɪᴏɴs", callback_data="CHATBOT_CMD"),
     ],
     [
+        InlineKeyboardButton(text="🎮 ɢᴀᴍᴇs & ғᴜɴ", callback_data="HELP_GAMES"),
+        InlineKeyboardButton(text="👥 ɢʀᴏᴜᴘ & ᴡᴇʟᴄᴏᴍᴇ", callback_data="HELP_GROUP"),
+    ],
+    [
+        InlineKeyboardButton(text="👑 ᴏᴡɴᴇʀ & ᴀᴅᴍɪɴ", callback_data="ADMINS"),
+        InlineKeyboardButton(text="☁️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="ABOUT"),
+    ],
+    [
+        InlineKeyboardButton(text="⦿ ʙᴀᴄᴋ ⦿", callback_data="BACK"),
         InlineKeyboardButton(text="⦿ ᴄʟᴏsᴇ ⦿", callback_data="CLOSE"),
     ],
 ]
-
 
 CLOSE_BTN = [
     [
@@ -65,18 +85,16 @@ CLOSE_BTN = [
     ],
 ]
 
-
 CHATBOT_ON = [
     [
-        InlineKeyboardButton(text="ᴇɴᴀʙʟᴇ", callback_data="enable_chatbot"),
-        InlineKeyboardButton(text="ᴅɪsᴀʙʟᴇ", callback_data="disable_chatbot"),
+        InlineKeyboardButton(text="🟢 ᴇɴᴀʙʟᴇ", callback_data="cb_enable_chatbot"),
+        InlineKeyboardButton(text="🔴 ᴅɪsᴀʙʟᴇ", callback_data="cb_disable_chatbot"),
     ],
 ]
 
-
 MUSIC_BACK_BTN = [
     [
-        InlineKeyboardButton(text="sᴏᴏɴ", callback_data=f"soom"),
+        InlineKeyboardButton(text="sᴏᴏɴ", callback_data="soon"),
     ],
 ]
 
@@ -87,7 +105,6 @@ S_BACK = [
     ],
 ]
 
-
 CHATBOT_BACK = [
     [
         InlineKeyboardButton(text="⦿ ʙᴀᴄᴋ ⦿", callback_data="CHATBOT_BACK"),
@@ -95,14 +112,12 @@ CHATBOT_BACK = [
     ],
 ]
 
-
 HELP_START = [
     [
         InlineKeyboardButton(text="« ʜᴇʟᴘ »", callback_data="HELP"),
         InlineKeyboardButton(text="🐳 ᴄʟᴏsᴇ 🐳", callback_data="CLOSE"),
     ],
 ]
-
 
 HELP_BUTN = [
     [
@@ -113,18 +128,21 @@ HELP_BUTN = [
     ],
 ]
 
-
 ABOUT_BTN = [
     [
-        InlineKeyboardButton(text="🎄 sᴜᴘᴘᴏʀᴛ 🎄", url=f"https://t.me/{SUPPORT_GRP}"),
+        InlineKeyboardButton(text="👥 sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ", url=f"https://t.me/{SUPPORT_GRP}"),
+        InlineKeyboardButton(text="📢 ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/{UPDATE_CHNL}"),
+    ],
+    [
+        InlineKeyboardButton(text="📷 ɪɴsᴛᴀɢʀᴀᴍ", url="https://instagram.com/ex_amrit"),
+        InlineKeyboardButton(text="👻 sɴᴀᴘᴄʜᴀᴛ", url="https://snapchat.com/add/ex_amrit"),
+    ],
+    [
+        InlineKeyboardButton(text="👑 ᴄʀᴇᴀᴛᴏʀ", url="https://t.me/Villanns"),
+        InlineKeyboardButton(text="🌟 sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ", url="https://github.com/amritraj78/VIP-REACTION-BOT"),
+    ],
+    [
         InlineKeyboardButton(text="« ʜᴇʟᴘ »", callback_data="HELP"),
-    ],
-    [
-        InlineKeyboardButton(text="🍾 ᴏᴡɴᴇʀ 🍾", user_id=OWNER),
-        #   InlineKeyboardButton(text="❄️ sᴏᴜʀᴄᴇ ❄️", callback_data="SOURCE"),
-    ],
-    [
-        InlineKeyboardButton(text="🐳 ᴜᴘᴅᴀᴛᴇs 🐳", url=f"https://t.me/{UPDATE_CHNL}"),
         InlineKeyboardButton(text="⦿ ʙᴀᴄᴋ ⦿", callback_data="BACK"),
     ],
 ]

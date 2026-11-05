@@ -1,32 +1,67 @@
 {
-  "name": "nexichat",
-  "description": "A telegram bot",
+  "name": "VIP-REACTION-CHATBOT",
+  "description": "A high-speed Telegram auto-reaction and AI chatbot with custom emojis, group/channel support, and bot cloning by Amrit Raj (@Villanns).",
   "logo": "https://envs.sh/IL_.jpg",
   "keywords": [
-    "Chatbot",
+    "ReactionBot",
+    "ChatBot",
+    "Telegram",
     "mongodb",
     "python",
-    "pyrogram"
+    "pyrogram",
+    "koyeb"
   ],
-    "buildpacks": [{
-    "url": "heroku/python"
-  }],
-  "repository": "https://github.com/THE-VIP-BOY-OP/VIP-REACTION-BOT",
+  "repository": "https://github.com/amritraj78/VIP-REACTION-BOT",
   "env": {
     "BOT_TOKEN": {
-      "description": "A Bot token from @BotFather",
+      "description": "Telegram Bot Token from @BotFather",
       "required": true,
       "value": ""
     },
     "OWNER_ID": {
-      "description": "Fill Here Your Owner User Id",
+      "description": "Your Telegram user ID",
       "required": true,
-      "value": "1808943146"
+      "value": "5423666218"
+    },
+    "OWNER_USERNAME": {
+      "description": "Your Telegram username without @",
+      "required": false,
+      "value": "Villanns"
+    },
+    "SUPPORT_GRP": {
+      "description": "Your support group username without @",
+      "required": false,
+      "value": "amrit_feel"
+    },
+    "UPDATE_CHNL": {
+      "description": "Your updates channel username without @",
+      "required": false,
+      "value": "privatethink"
     },
     "MONGO_URL": {
-      "description": "Get a mongodb url from https://cloud.mongodb.com.",
-      "required": true,
+      "description": "Optional MongoDB connection URL (leave empty for in-memory DB)",
+      "required": false,
       "value": ""
+    },
+    "GEMINI_API_KEY": {
+      "description": "Optional Google Gemini API key for smart AI answers",
+      "required": false,
+      "value": ""
+    },
+    "PORT": {
+      "description": "Port for web health check on Koyeb",
+      "required": false,
+      "value": "8000"
+    },
+    "KOYEB_PUBLIC_URL": {
+      "description": "Public URL of your Koyeb service for 24/7 automated keep-alive",
+      "required": false,
+      "value": ""
+    },
+    "STORAGE_THRESHOLD": {
+      "description": "Disk storage percentage threshold to trigger Telegram owner alert (default: 90)",
+      "required": false,
+      "value": "90"
     }
   }
 }
