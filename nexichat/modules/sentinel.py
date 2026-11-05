@@ -361,6 +361,7 @@ async def sentinel_callback_handler(client: Client, query: CallbackQuery):
     cache_files, cache_mb = get_cache_size()
     status_icon = "🔴 Critical" if (disk["percent"] >= 90 or ram["percent"] >= 90) else ("🟡 Warning" if (disk["percent"] >= 70 or ram["percent"] >= 70) else "🟢 Optimal")
 
+    action_line = f"✨ *{action_text}*\n" if action_text else ""
     text = f"""**
 ╭━━━━━〔 💾 sʏsᴛᴇᴍ & sᴛᴏʀᴀɢᴇ 〕━━━━━╮
 
@@ -377,8 +378,7 @@ async def sentinel_callback_handler(client: Client, query: CallbackQuery):
 │ ✦ **ᴀᴜᴛᴏ-ᴀʟᴇʀᴛ** : Every 10% Step Milestone
 │ ✦ **ᴅᴀᴛᴀʙᴀsᴇ**   : Telegram Cloud (>1000GB) ☁️
 ╰────────────────────────────────╯
-{f'✨ *{action_text}*\n' if action_text else ''}
-📡 **ʜᴏsᴛᴇᴅ ᴏɴ :** Koyeb Free Tier Cloud ☁️
+{action_line}📡 **ʜᴏsᴛᴇᴅ ᴏɴ :** Koyeb Free Tier Cloud ☁️
 👑 **ᴏᴡɴᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/Villanns) 💖**
 """
     try:
