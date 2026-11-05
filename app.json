@@ -11,7 +11,7 @@
     "pyrogram",
     "koyeb"
   ],
-  "repository": "https://github.com/amritraj78/VIP-REACTION-BOT",
+  "repository": "https://github.com/amritraj78/BRANDED-REACTION-BOT",
   "env": {
     "BOT_TOKEN": {
       "description": "Telegram Bot Token from @BotFather",
@@ -40,6 +40,11 @@
     },
     "MONGO_URL": {
       "description": "Optional MongoDB connection URL (leave empty for in-memory DB)",
+      "required": false,
+      "value": ""
+    },
+    "GROQ_API_KEY": {
+      "description": "Free Groq API key for ultra-fast (0.3s) Angle AI chatbot",
       "required": false,
       "value": ""
     },

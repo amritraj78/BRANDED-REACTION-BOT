@@ -103,7 +103,7 @@
 ### 🚀 KOYEB 24/7 FREE TIER DEPLOYMENT
 
 <p align="center">
-  <a href="https://app.koyeb.com/deploy?type=git&repository=github.com/amritraj78/VIP-REACTION-BOT&branch=master&name=vip-reaction-bot">
+  <a href="https://app.koyeb.com/deploy?type=git&repository=github.com/amritraj78/BRANDED-REACTION-BOT&branch=master&name=branded-reaction-bot">
     <img src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb" width="220">
   </a>
 </p>
@@ -137,7 +137,7 @@
 <details><summary>Run Locally or on VPS</summary>
 
 ```bash
-git clone https://github.com/amritraj78/VIP-REACTION-BOT && cd VIP-REACTION-BOT
+git clone https://github.com/amritraj78/BRANDED-REACTION-BOT && cd BRANDED-REACTION-BOT
 pip install -r requirements.txt
 cp sample.env .env
 # Edit .env with your BOT_TOKEN and OWNER_ID
