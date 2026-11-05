@@ -28,10 +28,12 @@ import sys
 import os
 import asyncio
 try:
-    asyncio.get_event_loop()
+    _loop = asyncio.get_event_loop()
+    if _loop.is_closed():
+        raise RuntimeError("loop closed")
 except RuntimeError:
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    _loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(_loop)
 
 import importlib
 from pyrogram import idle

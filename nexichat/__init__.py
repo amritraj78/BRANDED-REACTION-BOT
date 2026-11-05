@@ -42,6 +42,14 @@ try:
 except Exception:
     pass
 
+try:
+    _loop = asyncio.get_event_loop()
+    if _loop.is_closed():
+        raise RuntimeError("loop closed")
+except RuntimeError:
+    _loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(_loop)
+
 import gc
 from logging.handlers import RotatingFileHandler
 
@@ -285,6 +293,13 @@ async def get_idclone_owner(clone_id):
     
 class nexichat(Client):
     def __init__(self):
+        try:
+            _loop = asyncio.get_event_loop()
+            if _loop.is_closed():
+                raise RuntimeError("loop closed")
+        except RuntimeError:
+            _loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(_loop)
         super().__init__(
             name="nexichat",
             api_id=config.API_ID,
