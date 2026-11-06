@@ -24,7 +24,7 @@ from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from config import OWNER_ID, SUPPORT_GRP
-from nexichat import _boot_, get_readable_time, nexichat
+from nexichat import _boot_, get_readable_time, nexichat, SUDOERS
 from nexichat.database.chats import get_served_chats
 from nexichat.database.users import get_served_users
 from nexichat.database.chatbot import get_user_nickname
@@ -37,11 +37,27 @@ async def stats(cli: Client, message: Message):
     users = len(await get_served_users())
     chats = len(await get_served_chats())
     
+    api_info = ""
+    user_id = message.from_user.id if message.from_user else 0
+    if user_id in SUDOERS or user_id == int(OWNER_ID):
+        try:
+            from nexichat.database.chatbot import get_api_usage_stats
+            st = await get_api_usage_stats()
+            api_info = (
+                f"\n\n╭━━━━〔 📊 **VIP AI API USAGE** 〕━━━━╮\n"
+                f"✦ **Groq AI:** `{st['groq_calls']}`/`{st['groq_quota']}` ({st['groq_used_pct']}% used | {st['groq_left_pct']}% left)\n"
+                f"✦ **Gemini AI:** `{st['gemini_calls']}`/`{st['gemini_quota']}` ({st['gemini_used_pct']}% used | {st['gemini_left_pct']}% left)\n"
+                f"✦ **Total Queries:** `{st['total_calls']}` | **DB Fallback:** `{st['db_fallback_calls']}`\n"
+                f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
+            )
+        except Exception:
+            pass
+
     await message.reply_text(
         f"""{(await cli.get_me()).mention} Reaction Bot Stats:
 
 ➻ **Chats:** {chats}
-➻ **Users:** {users}"""
+➻ **Users:** {users}{api_info}"""
     )
 
 

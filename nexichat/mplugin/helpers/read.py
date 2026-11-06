@@ -10,7 +10,8 @@
   FILE EXPLANATION & HINTS (Student Friendly Guide)
 ================================================================================
 Is file ka kya kaam hai?
-  Ye file Cloned Bots ke liye templates, menus aur pre-styled text messages provide karti hai.
+  Ye file bot ke sare texts, help menus, messages aur templates ko format karti hai.
+  Isme Start, Help, About, Admin, aur Game commands ke pre-styled text messages hain.
 ================================================================================
 """
 
@@ -92,35 +93,36 @@ CHATBOT_READ = f"""**
 │ ➻ /resetreactions - ʀᴇsᴇᴛ ᴛᴏ ᴅᴇғᴀᴜʟᴛ
 │ ➻ /clone <token> - ᴄʟᴏɴᴇ ʏᴏᴜʀ ᴏᴡɴ ʙᴏᴛ
 │ ➻ /cloned - ʟɪsᴛ ᴀʟʟ ᴄʟᴏɴᴇᴅ ʙᴏᴛs
-│ ➻ /delclone <token> - ᴅᴇʟᴇᴛᴇ ᴄʟᴏɴᴇ
+│ ➻ /delclone <token> - ᴅᴇʟᴇᴛᴇ ʙᴏᴛ ᴄʟᴏɴᴇ
+│ ➻ /idclone <session> - ᴄʟᴏɴᴇ ʏᴏᴜʀ ɪᴅ
+│ ➻ /idclones - ʟɪsᴛ ᴀʟʟ ɪᴅ ᴄʟᴏɴᴇs
+│ ➻ /delidclone - ᴅᴇʟᴇᴛᴇ ʏᴏᴜʀ ɪᴅ ᴄʟᴏɴᴇ
 ╰────────────────────────────────╯
 
 📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
 """
 
 AI_CHATBOT_READ = f"""**
-╭━━━━━〔 🌸 ᴀɪ ɢɪʀʟ ᴄʜᴀᴛ & ᴠᴏɪᴄᴇ 🌸 〕━━━━━╮
+╭━━━━━〔 🌸 ᴀɪ ɢɪʀʟ ᴄʜᴀᴛ & ᴍᴇᴍᴏʀʏ 🌸 〕━━━━━╮
 
   💖 **ᴍᴇᴇᴛ ʏᴏᴜʀ ᴘʏᴀʀɪ ᴀɪ ᴄᴏᴍᴘᴀɴɪᴏɴ!** 🌸
-  ᴍᴀɪɴ ᴇᴋ ᴘʏᴀʀɪ ʟᴀᴅᴋɪ ᴋɪ ᴛᴀʀᴀʜ ʙᴀᴀᴛ ᴋᴀʀᴛɪ ʜᴏᴏɴ, 
-  sᴛɪᴄᴋᴇʀs, ᴠᴏɪᴄᴇ ɴᴏᴛᴇs, ᴘʜᴏᴛᴏs & ᴠɪᴅᴇᴏs ᴋᴀ ʀᴇᴘʟʏ 
-  ɴᴀᴛᴜʀᴀʟ ɢɪʀʟ ᴠᴏɪᴄᴇ & ᴛᴇxᴛ sᴇ ᴋᴀʀᴛɪ ʜᴏᴏɴ!
+  ᴍᴀɪɴ ᴇᴋ ᴘʏᴀʀɪ ʟᴀᴅᴋɪ (𝐀ɴsʜɪᴋᴀ) ᴋɪ ᴛᴀʀᴀʜ ʙᴀᴀᴛ ᴋᴀʀᴛɪ ʜᴏᴏɴ, 
+  sᴛɪᴄᴋᴇʀs, ᴛᴇxᴛ, ᴘʜᴏᴛᴏs & ᴠɪᴅᴇᴏs ᴋᴀ ʀᴇᴘʟʏ 
+  ɴᴀᴛᴜʀᴀʟ sᴡᴇᴇᴛ ɢɪʀʟ ᴛᴇxᴛ sᴇ ᴋᴀʀᴛɪ ʜᴏᴏɴ!
 
 ╭────────────────────────────────╮
 │ ➻ /chatbot - ᴏᴘᴇɴ ᴛᴏɢɢʟᴇ ᴍᴇɴᴜ
 │ ➻ /chatbot on - ᴇɴᴀʙʟᴇ ɪɴ ᴄʜᴀᴛ
 │ ➻ /chatbot off - ᴅɪsᴀʙʟᴇ ɪɴ ᴄʜᴀᴛ
-│ ➻ /voicemode on - 100% ɢɪʀʟ ᴠᴏɪᴄᴇ ᴍᴏᴅᴇ 🎙️
-│ ➻ /voicemode off - ᴛᴇxᴛ ʀᴇᴘʟʏ ᴍᴏᴅᴇ
-│ ➻ /voice <text> - sᴘᴇᴀᴋ ɪɴ sᴡᴇᴇᴛ ɢɪʀʟ ᴠᴏɪᴄᴇ
 │ ➻ /ask <query> - ᴀsᴋ ᴀɴʏᴛʜɪɴɢ
 │ ➻ /love <name1> <name2> - ʟᴏᴠᴇ ᴛᴇsᴛ %
 │ ➻ /shayri - sᴡᴇᴇᴛ ʜɪɴᴅɪ sʜᴀʏᴀʀɪ
 │ ➻ /joke - ғᴜɴɴʏ ᴊᴏᴋᴇs
+│ ➻ /draw <prompt> - ᴀɪ ɪᴍᴀɢᴇ ɢᴇɴᴇʀᴀᴛᴏʀ 🎨
+│ ➻ /setname <nick> - sᴇᴛ ʏᴏᴜʀ ɴɪᴄᴋɴᴀᴍᴇ
 ╰────────────────────────────────╯
 
-💡 **ᴛɪᴘ:** sᴇɴᴅ ᴀ ᴠᴏɪᴄᴇ ɴᴏᴛᴇ ᴏʀ ᴛʏᴘᴇ *"ᴠᴏɪᴄᴇ ʙʜᴇᴊᴏ"*
-ᴀɴᴅ ᴍᴀɪɴ sᴡᴇᴇᴛ ᴠᴏɪᴄᴇ ɴᴏᴛᴇ ʙʜᴇᴊᴜɴɢɪ! 🥰
+💡 **ᴛɪᴘ:** ᴍᴀɪɴ ᴀᴀᴘᴋɪ ᴘᴜʀᴀɴɪ ʙᴀᴀᴛᴇɪɴ ᴀᴜʀ ɪɴᴛᴇʀᴇsᴛs ʏᴀᴀᴅ ʀᴀᴋʜᴛɪ ʜᴏᴏɴ (ᴠɪᴠɪᴅ ᴍᴇᴍᴏʀʏ)! 🥰
 
 📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
 """
@@ -154,6 +156,9 @@ ADMIN_READ = f"""**
 │ ➻ /clone <token> - ᴍᴀᴋᴇ ᴄʟᴏɴᴇ ʙᴏᴛ
 │ ➻ /cloned - ʟɪsᴛ ᴀʟʟ ᴄʟᴏɴᴇ ʙᴏᴛs
 │ ➻ /delclone - ᴅᴇʟᴇᴛᴇ ᴄʟᴏɴᴇ ʙᴏᴛ
+│ ➻ /idclone <session> - ᴍᴀᴋᴇ ɪᴅ ᴄʟᴏɴᴇ
+│ ➻ /idclones - ʟɪsᴛ ᴀʟʟ ɪᴅ ᴄʟᴏɴᴇs
+│ ➻ /delidclone - ᴅᴇʟᴇᴛᴇ ɪᴅ ᴄʟᴏɴᴇ
 ╰────────────────────────────────╯
 
 📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**

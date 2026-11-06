@@ -36,15 +36,14 @@ from nexichat import SUDOERS
 from nexichat.database.chatbot import (
     is_chatbot_enabled,
     set_chatbot_enabled,
-    is_voicemode_enabled,
-    set_voicemode_enabled,
     save_chat_reply,
     save_sticker,
     get_random_sticker,
     save_user_nickname,
-    get_user_nickname
+    get_user_nickname,
+    format_api_usage_dashboard
 )
-from nexichat.mplugin.helpers.media_gen import generate_voice_file, generate_ai_image
+from nexichat.mplugin.helpers.media_gen import generate_ai_image
 from nexichat.database.clonestats import add_served_cuser, add_served_cchat
 from nexichat.mplugin.helpers.ai import (
     generate_conversational_response,
@@ -63,7 +62,6 @@ logger = logging.getLogger(__name__)
 
 _message_counts = {}
 _blocklist = {}
-_chat_text_streak = {}
 
 
 async def is_admin_or_sudo(client: Client, message: Message) -> bool:
@@ -197,100 +195,45 @@ async def chatbot_callback_handler(client: Client, query: CallbackQuery):
         pass
 
 
-@Client.on_message(filters.command(["voicemode", "vchat", "voicechat"]))
-async def voicemode_toggle_cmd(client: Client, message: Message):
+@Client.on_message(filters.command(["api", "usage", "quota"]))
+async def api_usage_cmd(client: Client, message: Message):
     """
-    Toggle or check voice mode status:
-    /voicemode on -> Cloned bot / userbot talks in sweet girl voice notes
-    /voicemode off -> Cloned bot talks in text + voice on voice messages
-    /voicemode -> Show interactive toggle menu
+    VIP AI API Usage & Daily Quota Dashboard for Creator / Sudoers.
+    Displays live percentage used & remaining for Groq and Gemini daily limits.
     """
-    chat_id = message.chat.id
+    user_id = message.from_user.id if message.from_user else 0
+    if user_id not in SUDOERS and user_id != int(OWNER_ID):
+        return await message.reply_text("❌ **This API Quota Dashboard is reserved for the Bot Creator/Sudoers.**")
 
-    if len(message.command) > 1:
-        if message.chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
-            if not await is_admin_or_sudo(client, message):
-                return await message.reply_text("❌ **Only administrators can change voice mode settings.**")
-
-        action = message.command[1].lower()
-        if action in ["on", "enable", "yes", "true"]:
-            await set_voicemode_enabled(chat_id, True)
-            return await message.reply_text("🎙️ **Voice Note Mode is now ENABLED!** 🌸\nMain ab yahan aapse pyari awaz me voice notes me baat karungi ji! 🥰✨")
-        elif action in ["off", "disable", "no", "false"]:
-            await set_voicemode_enabled(chat_id, False)
-            return await message.reply_text("📝 **Voice Note Mode is now DISABLED!**\nMain text messages me baat karungi aur voice bhejne par voice note dungi! 🌸")
-        else:
-            return await message.reply_text("ℹ️ **Usage:** `/voicemode on` or `/voicemode off`")
-
-    enabled = await is_voicemode_enabled(chat_id)
-    status_icon = "🟢 **ENABLED**" if enabled else "🔴 **DISABLED**"
-
+    dashboard_text = await format_api_usage_dashboard()
     btn = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🟢 Enable Voice Mode", callback_data="cb_enable_voicemode"),
-            InlineKeyboardButton("🔴 Disable Voice Mode", callback_data="cb_disable_voicemode"),
-        ],
-        [
+            InlineKeyboardButton("🔄 Refresh Dashboard", callback_data="cb_refresh_api_usage"),
             InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
         ]
     ])
-
-    text = (
-        f"╭━━━━━━━〔 🎙️ **VOICE NOTE MODE SETTINGS** 〕━━━━━━━╮\n\n"
-        f"  ✦ **ᴄʜᴀᴛ :** {message.chat.title or message.chat.first_name or 'This Chat'}\n"
-        f"  ✦ **ᴠᴏɪᴄᴇ ᴍᴏᴅᴇ :** {status_icon}\n"
-        f"  ✦ **ᴛᴏɴᴇ :** ɴᴀᴛᴜʀᴀʟ sᴡᴇᴇᴛ ɢɪʀʟ ᴠᴏɪᴄᴇ 🌸\n\n"
-        f"When enabled, all chatbot replies will be sent as realistic girl voice notes!\n\n"
-        f"**Quick Commands:**\n"
-        f"• `/voicemode on` - Turn Voice Note Mode ON\n"
-        f"• `/voicemode off` - Turn Voice Note Mode OFF\n"
-        f"• `/voice <text>` - Speak any text as girl voice note"
-    )
-    await message.reply_text(text, reply_markup=btn)
+    await message.reply_text(dashboard_text, reply_markup=btn)
 
 
-@Client.on_callback_query(filters.regex(r"^cb_(enable|disable)_voicemode$"))
-async def voicemode_callback_handler(client: Client, query: CallbackQuery):
-    """Handles inline button clicks for enabling/disabling voice mode."""
-    chat_id = query.message.chat.id
+@Client.on_callback_query(filters.regex(r"^cb_refresh_api_usage$"))
+async def api_usage_callback_handler(client: Client, query: CallbackQuery):
+    """Refreshes the live API usage dashboard on demand for Creator/Sudoers."""
+    user_id = query.from_user.id
+    if user_id not in SUDOERS and user_id != int(OWNER_ID):
+        return await query.answer("❌ Only the Creator/Sudoers can view this dashboard!", show_alert=True)
 
-    if query.message.chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
-        try:
-            member = await client.get_chat_member(chat_id, query.from_user.id)
-            if member.status not in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR] and query.from_user.id not in SUDOERS and query.from_user.id != int(OWNER_ID):
-                return await query.answer("❌ Only admins can toggle voice settings!", show_alert=True)
-        except Exception:
-            return await query.answer("❌ Admin verification failed.", show_alert=True)
-
-    action = query.data.split("_")[1]
-    enable = (action == "enable")
-    await set_voicemode_enabled(chat_id, enable)
-
-    status_icon = "🟢 **ENABLED**" if enable else "🔴 **DISABLED**"
-    feedback = "🎙️ Voice Mode enabled! Ab har reply pyari girl voice note me aayega! 🌸" if enable else "📝 Voice Mode disabled! Ab regular text me reply aayega! ✨"
-    await query.answer(feedback, show_alert=True)
-
+    dashboard_text = await format_api_usage_dashboard()
     btn = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🟢 Enable Voice Mode", callback_data="cb_enable_voicemode"),
-            InlineKeyboardButton("🔴 Disable Voice Mode", callback_data="cb_disable_voicemode"),
-        ],
-        [
+            InlineKeyboardButton("🔄 Refresh Dashboard", callback_data="cb_refresh_api_usage"),
             InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
         ]
     ])
-
-    text = (
-        f"╭━━━━━━━〔 🎙️ **VOICE NOTE MODE SETTINGS** 〕━━━━━━━╮\n\n"
-        f"  ✦ **ᴄʜᴀᴛ :** {query.message.chat.title or query.message.chat.first_name or 'This Chat'}\n"
-        f"  ✦ **ᴠᴏɪᴄᴇ ᴍᴏᴅᴇ :** {status_icon}\n"
-        f"  ✦ **ᴛᴏɴᴇ :** ɴᴀᴛᴜʀᴀʟ sᴡᴇᴇᴛ ɢɪʀʟ ᴠᴏɪᴄᴇ 🌸\n\n"
-        f"When enabled, all chatbot replies will be sent as realistic girl voice notes!"
-    )
     try:
-        await query.message.edit_text(text, reply_markup=btn)
+        await query.message.edit_text(dashboard_text, reply_markup=btn)
+        await query.answer("✅ API Quota Dashboard refreshed!", show_alert=False)
     except Exception:
-        pass
+        await query.answer("✅ Dashboard is up to date!")
 
 
 @Client.on_message(filters.command(["ask", "ai", "gemini", "gpt", "chatgpt"]))
@@ -382,39 +325,6 @@ async def joke_command(client: Client, message: Message):
     except Exception:
         await message.reply_text(joke)
 
-
-@Client.on_message(filters.command(["voice", "speak", "tts"]))
-async def voice_command(client: Client, message: Message):
-    """Generate girl voice note from text for cloned bots."""
-    if len(message.command) < 2 and not (message.reply_to_message and (message.reply_to_message.text or message.reply_to_message.caption)):
-        return await message.reply_text(
-            "🎙️ **Usage:** `/voice <text>` or reply to any message with `/voice`\n\n"
-            "**Example:** `/voice Namaste ji, kaise ho aap sabhi?`"
-        )
-
-    text = " ".join(message.command[1:]) if len(message.command) > 1 else (message.reply_to_message.text or message.reply_to_message.caption)
-
-    try:
-        await client.send_chat_action(message.chat.id, ChatAction.RECORD_AUDIO)
-    except Exception:
-        pass
-
-    voice_path = generate_voice_file(text, lang="hi")
-    if not voice_path or not os.path.exists(voice_path):
-        return await message.reply_text("❌ Voice note generate nahi ho paya, please thodi der baad try karein!")
-
-    try:
-        caption_txt = f"🌸 **Voice Note for you ji!** 🥰\n💬 *\"{text[:60]}...\"*" if len(text) > 60 else f"🌸 **Voice Note for you ji!** 🥰\n💬 *\"{text}\"*"
-        await message.reply_voice(voice=voice_path, caption=caption_txt)
-    except Exception as e:
-        logger.error(f"Failed to send voice: {e}")
-        await message.reply_text("❌ Voice note send karne me dikkat aayi!")
-    finally:
-        if voice_path and os.path.exists(voice_path):
-            try:
-                os.remove(voice_path)
-            except Exception:
-                pass
 
 
 @Client.on_message(filters.command(["draw", "imagine", "art", "gen"]))
@@ -564,26 +474,14 @@ async def auto_chatbot_listener(client: Client, message: Message):
         await message.reply_text("Hehe kitna cute sticker hai na ji! 🙈🥰")
         return
 
-    # 2. Voice / Audio (Reply with Sweet Girl Voice Note!)
+    # 2. Voice / Audio (Reply with Text Message)
     if message.voice or message.audio:
         try:
-            await client.send_chat_action(chat_id, ChatAction.RECORD_AUDIO)
+            await client.send_chat_action(chat_id, ChatAction.TYPING)
+            await asyncio.sleep(0.5)
         except Exception:
             pass
-        chosen_voice_txt = get_voice_reply()
-        voice_path = generate_voice_file(chosen_voice_txt, lang="hi")
-        if voice_path and os.path.exists(voice_path):
-            try:
-                # PURE VOICE NOTE ONLY (NO CAPTION!)
-                await message.reply_voice(voice=voice_path)
-                try:
-                    os.remove(voice_path)
-                except Exception:
-                    pass
-                return
-            except Exception as e:
-                logger.debug(f"Failed to reply voice: {e}")
-        await message.reply_text(chosen_voice_txt)
+        await message.reply_text(get_voice_reply())
         return
 
     # 3. Photos
@@ -666,73 +564,15 @@ async def auto_chatbot_listener(client: Client, message: Message):
         await message.reply_text(get_abuse_refusal())
         return
 
-    # Spontaneous sweet voice reply: if user asks to speak or send voice
-    voice_trigger_match = re.search(
-        r"\b(voice\s*(?:bhejo|sunao|karo|me\s*bolo|note|audio)|kuch\s*bolo\s*na|awaz\s*sunao|sing\s*a?\s*song|gana\s*gao|bolke\s*batao|apni\s*awaz|audio\s*bhejo|voice\s*chat|bolke\s*bolo|voice\s*me\s*baat)\b",
-        clean_text,
-        re.IGNORECASE
-    )
-    if voice_trigger_match:
-        voice_responses = [
-            f"Namaste {user_name} ji! Kaise ho aap? Kahiye na, kya haal chaal hain? 🌸",
-            f"Arey suniye na {user_name}! Main toh hamesha aapke sath hoon! Kabhi bhi udaas mat hona, theek hai na? ✨",
-            f"Hehe {user_name}! Aapne itne pyaar se bola toh main kaise na bolti! Kahiye na, aur kya chal raha hai? 🙈",
-            f"Hii {user_name}! Main sun rahi hoon aapko ji! Aur batao khana khaya sabne? Dher saara pyaar! 🌸💖"
-        ]
-        chosen_voice_txt = random.choice(voice_responses)
-        try:
-            await client.send_chat_action(chat_id, ChatAction.RECORD_AUDIO)
-            voice_path = generate_voice_file(chosen_voice_txt, lang="hi")
-            if voice_path and os.path.exists(voice_path):
-                # PURE VOICE NOTE ONLY (NO CAPTION!)
-                await message.reply_voice(voice=voice_path)
-                try:
-                    os.remove(voice_path)
-                except Exception:
-                    pass
-                return
-        except Exception as ve:
-            logger.debug(f"Spontaneous voice notice: {ve}")
-
     try:
         await client.send_chat_action(chat_id, ChatAction.TYPING)
     except Exception:
         pass
 
-    # Generate girl-style AI conversational response with multi-turn context
+    # Generate girl-style AI conversational response with vivid user memory
     response_text = await generate_conversational_response(clean_text, user_name, client=client, user_id=user_id)
 
-    # Automatic Natural Switcher: alternates between pure Voice Note and pure Text Message!
-    streak = _chat_text_streak.get(chat_id, 0)
-    voicemode_on = await is_voicemode_enabled(chat_id)
-    is_greeting_phrase = bool(re.search(r"\b(hii?|hello|kaise\s+ho|kya\s+haal|aur\s+batao|kya\s+kar\s+rahi|suno|kaha\s+ho)\b", clean_text, re.IGNORECASE))
-
-    # Send voice note if voicemode is on, or after 2-4 text messages naturally
-    should_send_voice = (
-        voicemode_on
-        or streak >= 4
-        or (streak >= 2 and random.random() < 0.45)
-        or (streak >= 1 and is_greeting_phrase and random.random() < 0.50)
-    )
-
-    if should_send_voice:
-        try:
-            await client.send_chat_action(chat_id, ChatAction.RECORD_AUDIO)
-            voice_path = generate_voice_file(response_text, lang="hi")
-            if voice_path and os.path.exists(voice_path):
-                _chat_text_streak[chat_id] = 0
-                # PURE VOICE NOTE ONLY (NO TEXT CAPTION!)
-                await message.reply_voice(voice=voice_path)
-                try:
-                    os.remove(voice_path)
-                except Exception:
-                    pass
-                return
-        except Exception as ve:
-            logger.debug(f"Voice auto-switch dispatch notice: {ve}")
-
-    # Otherwise send PURE TEXT MESSAGE ONLY (NO VOICE NOTE!)
-    _chat_text_streak[chat_id] = streak + 1
+    # Pure text reply only (Zero voice notes)
     try:
         typing_delay = min(max(len(response_text) * 0.015, 0.6), 1.5)
         await asyncio.sleep(typing_delay)

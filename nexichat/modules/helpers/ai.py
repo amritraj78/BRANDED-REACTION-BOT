@@ -42,7 +42,12 @@ from nexichat.database.chatbot import (
     get_qa_answer,
     append_user_context,
     get_user_context,
-    clear_user_context
+    clear_user_context,
+    update_vivid_user_memory,
+    format_vivid_user_context,
+    clear_vivid_user_memory,
+    track_api_call,
+    track_db_fallback_call
 )
 import config
 
@@ -470,12 +475,15 @@ async def query_pollinations_free_ai(
     prompt: str,
     user_name: str = "Friend",
     is_question: bool = False,
-    context_history: Optional[List[Dict[str, str]]] = None
+    context_history: Optional[List[Dict[str, str]]] = None,
+    vivid_context: Optional[str] = None
 ) -> Optional[str]:
     """
     100% Free Open-Access AI Text API with randomized IP header to avoid 45s rate limits.
     """
     system_prompt = ANSHIKA_CHARACTER_PROMPT
+    if vivid_context:
+        system_prompt += f"\n{vivid_context}"
 
     loop = asyncio.get_running_loop()
     random_ip = f"103.{random.randint(1, 250)}.{random.randint(1, 250)}.{random.randint(1, 250)}"
@@ -527,7 +535,8 @@ async def query_multi_provider_ai(
     prompt: str,
     user_name: str = "Friend",
     is_question: bool = False,
-    context_history: Optional[List[Dict[str, str]]] = None
+    context_history: Optional[List[Dict[str, str]]] = None,
+    vivid_context: Optional[str] = None
 ) -> Optional[str]:
     """
     High-Speed Concurrent AI Waterfall:
@@ -558,14 +567,18 @@ async def query_multi_provider_ai(
         return f"Haanji! Maine is baare me search kiya hai: 🌸✨\n\n{ddg_search_res}\n\n*Umeed hai ye aapke kaam aayega ji!* 🥰"
 
     # Fallback to Pollinations AI
-    pollinations_res = await query_pollinations_free_ai(prompt, user_name, is_question=is_question, context_history=context_history)
+    pollinations_res = await query_pollinations_free_ai(prompt, user_name, is_question=is_question, context_history=context_history, vivid_context=vivid_context)
     if pollinations_res:
         return pollinations_res
+
+    return None
+
 
 async def query_groq_api(
     prompt: str,
     user_name: str = "Friend",
-    context_history: Optional[List[Dict[str, str]]] = None
+    context_history: Optional[List[Dict[str, str]]] = None,
+    vivid_context: Optional[str] = None
 ) -> Optional[str]:
     """
     Ultra-Fast Groq AI Engine (0.3s speed, ultra-low token consumption, realistic modern Indian girl shortcuts).
@@ -577,6 +590,8 @@ async def query_groq_api(
 
     models = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
     system_prompt = ANSHIKA_CHARACTER_PROMPT
+    if vivid_context:
+        system_prompt += f"\n{vivid_context}"
 
     messages = [{"role": "system", "content": system_prompt}]
     if context_history:
@@ -634,14 +649,15 @@ async def query_groq_api(
 async def query_gemini_api(
     prompt: str,
     user_name: str = "Friend",
-    context_history: Optional[List[Dict[str, str]]] = None
+    context_history: Optional[List[Dict[str, str]]] = None,
+    vivid_context: Optional[str] = None
 ) -> Optional[str]:
     """
     Call Google Gemini API with maximum token efficiency:
     1. Zero thinking tokens budget (thinkingBudget: 0) to save 150+ tokens & 3x speed.
     2. maxOutputTokens: 35 for natural, sweet girl replies.
     3. Context pruning (last 1 turn, max 50 chars) to save 85% prompt tokens.
-    4. Anshika character system prompt.
+    4. Anshika character system prompt with vivid user memory.
     """
     api_key = getattr(config, "GEMINI_API_KEY", None)
     if not api_key:
@@ -649,6 +665,8 @@ async def query_gemini_api(
 
     gemini_models = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
     system_instruction_text = ANSHIKA_CHARACTER_PROMPT
+    if vivid_context:
+        system_instruction_text += f"\n{vivid_context}"
 
     contents = []
     if context_history:
@@ -849,9 +867,11 @@ async def generate_conversational_response(
     cleaned = user_text.strip().lower()
     lang = detect_language(user_text)
 
-    def _finalize(reply_str: str) -> str:
+    async def _finalize(reply_str: str) -> str:
         if user_id:
             try:
+                await update_vivid_user_memory(user_id, "user", user_text, user_name=user_name)
+                await update_vivid_user_memory(user_id, "anshika", reply_str)
                 append_user_context(user_id, "user", user_text)
                 append_user_context(user_id, "anshika", reply_str)
             except Exception:
@@ -861,6 +881,7 @@ async def generate_conversational_response(
     # Multi-turn Context Reset Check
     if user_id and re.search(r"\b(bhool jao|forget everything|reset chat|clear context)\b", cleaned):
         clear_user_context(user_id)
+        await clear_vivid_user_memory(user_id)
         if lang == "hindi":
             return "ठीक है जी! मैंने पुरानी सभी बातें भुला दीं! अब एक नई शुरुआत करते हैं! 🌸✨"
         elif lang == "telugu":
@@ -873,12 +894,7 @@ async def generate_conversational_response(
     if is_abusive(cleaned):
         return get_abuse_refusal()
 
-    # 2. Check Q&A Memory Cache (Instant response from Telegram-synced database)
-    cached_answer = await get_qa_answer(cleaned)
-    if cached_answer:
-        return _finalize(cached_answer)
-
-    # 3. Math calculation
+    # 2. Math calculation
     math_match = re.fullmatch(r"(\d+)\s*([\+\-\*\/])\s*(\d+)", cleaned)
     if math_match:
         try:
@@ -891,29 +907,11 @@ async def generate_conversational_response(
             elif op == '/': ans = "Zero se divide nahi kar sakte ji! 🙈" if n2 == 0 else round(n1 / n2, 2)
             res = f"Haanji! Maine hisab laga liya: `{n1} {op} {n2} = {ans}` hota hai ji! 🔢✨"
             await save_qa_pair(cleaned, res, client=client)
-            return _finalize(res)
+            return await _finalize(res)
         except Exception:
             pass
 
-    # 4. Sentiment & Mood Detection (Sweet caring/comforting reactions)
-    sad_match = re.search(r"\b(sad|udaas|mood\s+kharab|rona\s+aa\s+raha|dil\s+toot|breakup|akelapan|depressed|koi\s+nahi\s+hai)\b", cleaned)
-    if sad_match:
-        sad_replies = [
-            f"Arey {user_name}! 🥺 Aise udaas mat ho na please! Sab theek ho jayega, smile karo na! 🌸💖",
-            f"Aww {user_name}, dil chhota mat karo yrr! Chalo baatein karo mere sath, mood achha ho jayega ✨🥰",
-            f"Udaas hone ki zaroorat nahi hai {user_name}! Mai hu na baat karne ke liye, kya hua batao? 🙈🌸",
-        ]
-        return _finalize(random.choice(sad_replies))
-
-    happy_match = re.search(r"\b(pass\s+ho\s+gaya|party|khush\s+hoon|celebration|jeet\s+gaya|mazedar|good\s+news)\b", cleaned)
-    if happy_match:
-        happy_replies = [
-            f"Yaaayyy! 🥳🎉 Bohot bohot badhai ho {user_name}! Main bohot khush hoon aapke liye! Party kab de rahe ho fir? Hehe! 💃✨",
-            f"Waah waah! Kya baat hai {user_name}! Aise hi hamesha khush aur kamyab raho ji! Dher saara pyaar meri taraf se! 🌸💖",
-        ]
-        return _finalize(random.choice(happy_replies))
-
-    # 5. Userbot / ID Clone check: Real girl persona, NEVER reveal owner/bot identity!
+    # 3. Userbot / ID Clone check: Real girl persona, NEVER reveal owner/bot identity!
     is_userbot = bool(client and hasattr(client, "me") and client.me and not client.me.is_bot)
     if is_userbot:
         if re.search(r"\b(owner|creator|boss|admin|kisne banaya|who made you|developer)\b", cleaned):
@@ -922,7 +920,7 @@ async def generate_conversational_response(
                 "Haha main kisi ki ghulam thodi hoon jo mera owner hoga! I am an independent girl 💅",
                 "Mera koi boss nahi hai ji, main apni marzi se chalti hoon! 🌸😌",
             ]
-            return _finalize(random.choice(userbot_owner_replies))
+            return await _finalize(random.choice(userbot_owner_replies))
 
         if re.search(r"\b(who are you|kaun ho|tum kaun ho|tera naam|apna naam|identity|what is your name)\b", cleaned):
             userbot_id_replies = [
@@ -930,53 +928,95 @@ async def generate_conversational_response(
                 "Hii! Main Anshika hoon, Uttarakhand se! Bas thodi der padhai se break liya tha... aap batao kaise ho? ✨",
                 "Anshika bolte hain mujhe! Class 12 ki student hoon Chamoli se... aap kahan se ho? 🏔️😊",
             ]
-            return _finalize(random.choice(userbot_id_replies))
+            return await _finalize(random.choice(userbot_id_replies))
 
         if re.search(r"\b(insta|instagram|snap|snapchat|social\s*media)\b", cleaned):
             userbot_social_replies = [
                 "Hehe main abhi kisi ko insta ya snap nahi deti, pehle ache dost toh bano! 🙈🌸",
                 "Social media thoda private rakhti hoon yrr, filhal yahi Telegram pe baat karte hain na! ✨",
             ]
-            return _finalize(random.choice(userbot_social_replies))
+            return await _finalize(random.choice(userbot_social_replies))
 
-    # 6. Check core greetings / identity first for instant girl persona reply
+    # 4. Core Anshika Character Identity & Greetings check (prevents search engine false positives)
     for pattern, responses in GIRL_KNOWLEDGE_BASE:
         if re.search(pattern, cleaned, re.IGNORECASE):
             reply = random.choice(responses)
-            return _finalize(reply.format(user=user_name))
+            return await _finalize(reply.format(user=user_name))
 
+    # 5. Fetch vivid memory context & recent dialogue
+    vivid_context = await format_vivid_user_context(user_id, user_name) if user_id else ""
     user_context = get_user_context(user_id) if user_id else []
 
-    # 6. TOP PRIORITY: Ultra-Fast Groq AI (0.3s speed, ultra-low token shortcuts, modern girl vibe)
+    # =========================================================================
+    # 6. LIVE API WATERFALL (Groq -> Gemini -> Free Multi-Provider)
+    # =========================================================================
+    # 5.1 PRIORITY 1: Ultra-Fast Groq AI (0.3s speed, ultra-low token shortcuts)
     if getattr(config, "GROQ_API_KEY", None):
-        groq_resp = await query_groq_api(user_text, user_name=user_name, context_history=user_context)
+        groq_resp = await query_groq_api(user_text, user_name=user_name, context_history=user_context, vivid_context=vivid_context)
         if groq_resp:
+            await track_api_call("groq", success=True)
             await save_qa_pair(cleaned, groq_resp, client=client)
-            return _finalize(groq_resp)
+            return await _finalize(groq_resp)
 
-    # 7. SECOND PRIORITY: Official Google Gemini 3.5 AI (Fast, intelligent & conversational)
+    # 5.2 PRIORITY 2: Google Gemini AI
     if getattr(config, "GEMINI_API_KEY", None):
-        gemini_resp = await query_gemini_api(user_text, user_name=user_name, context_history=user_context)
+        gemini_resp = await query_gemini_api(user_text, user_name=user_name, context_history=user_context, vivid_context=vivid_context)
         if gemini_resp:
+            await track_api_call("gemini", success=True)
             await save_qa_pair(cleaned, gemini_resp, client=client)
-            return _finalize(gemini_resp)
+            return await _finalize(gemini_resp)
 
-    # 7. HIGH-SPEED CONCURRENT FREE WATERFALL: Safone + Wiki + DuckDuckGo + Pollinations
-    fast_ai_resp = await query_multi_provider_ai(user_text, user_name, is_question=is_question_mode, context_history=user_context)
+    # 5.3 PRIORITY 3: High-Speed Concurrent Free AI Waterfall (Safone, DDG, Wiki, Pollinations)
+    fast_ai_resp = await query_multi_provider_ai(user_text, user_name, is_question=is_question_mode, context_history=user_context, vivid_context=vivid_context)
     if fast_ai_resp:
+        await track_api_call("waterfall_free", success=True)
         await save_qa_pair(cleaned, fast_ai_resp, client=client)
-        return _finalize(fast_ai_resp)
+        return await _finalize(fast_ai_resp)
 
-    # 8. THIRD PRIORITY: Telegram Database Saved Word-Reply Fallback (Self-learned replies)
+    # =========================================================================
+    # 6. DATABASE FALLBACK (ONLY EXECUTED IF ALL LIVE APIS HIT RATE LIMIT OR FAIL)
+    # =========================================================================
+    await track_db_fallback_call()
+
+    # 6.1 Learned Q&A Memory Cache (Sync from Telegram Database)
+    cached_answer = await get_qa_answer(cleaned)
+    if cached_answer:
+        return await _finalize(cached_answer)
+
+    # 6.2 Telegram Database Saved Word-Reply Fallback (Self-learned group replies)
     try:
         from nexichat.database.chatbot import get_chat_reply
         learned = await get_chat_reply(cleaned)
         if learned and learned.get("content") and not is_abusive(learned.get("content")):
-            return _finalize(learned.get("content"))
+            return await _finalize(learned.get("content"))
     except Exception:
         pass
 
-    # 9. Language-adaptive fallback sweet girl conversation
+    # 6.3 Core greetings / Identity knowledge base
+    for pattern, responses in GIRL_KNOWLEDGE_BASE:
+        if re.search(pattern, cleaned, re.IGNORECASE):
+            reply = random.choice(responses)
+            return await _finalize(reply.format(user=user_name))
+
+    # 6.4 Sentiment & Mood Detection
+    sad_match = re.search(r"\b(sad|udaas|mood\s+kharab|rona\s+aa\s+raha|dil\s+toot|breakup|akelapan|depressed|koi\s+nahi\s+hai)\b", cleaned)
+    if sad_match:
+        sad_replies = [
+            f"Arey {user_name}! 🥺 Aise udaas mat ho na please! Sab theek ho jayega, smile karo na! 🌸💖",
+            f"Aww {user_name}, dil chhota mat karo yrr! Chalo baatein karo mere sath, mood achha ho jayega ✨🥰",
+            f"Udaas hone ki zaroorat nahi hai {user_name}! Mai hu na baat karne ke liye, kya hua batao? 🙈🌸",
+        ]
+        return await _finalize(random.choice(sad_replies))
+
+    happy_match = re.search(r"\b(pass\s+ho\s+gaya|party|khush\s+hoon|celebration|jeet\s+gaya|mazedar|good\s+news)\b", cleaned)
+    if happy_match:
+        happy_replies = [
+            f"Yaaayyy! 🥳🎉 Bohot bohot badhai ho {user_name}! Main bohot khush hoon aapke liye! Party kab de rahe ho fir? Hehe! 💃✨",
+            f"Waah waah! Kya baat hai {user_name}! Aise hi hamesha khush aur kamyab raho ji! Dher saara pyaar meri taraf se! 🌸💖",
+        ]
+        return await _finalize(random.choice(happy_replies))
+
+    # 6.5 Language-adaptive fallback sweet girl conversation
     if lang == "hindi":
         fallback_res = random.choice(DEVNAGARI_FALLBACKS)
     elif lang == "telugu":
@@ -986,4 +1026,4 @@ async def generate_conversational_response(
     else:
         fallback_res = random.choice(GIRL_FALLBACK_REPLIES)
 
-    return _finalize(fallback_res)
+    return await _finalize(fallback_res)

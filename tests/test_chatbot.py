@@ -138,17 +138,72 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
         res = get_random_sticker(fallback=fb)
         self.assertIsNotNone(res)
 
-    async def test_voicemode_database_toggle(self):
-        from nexichat.database.chatbot import is_voicemode_enabled, set_voicemode_enabled
-        chat_id = -10099112233
-        # Default should be False (text mode)
-        self.assertFalse(await is_voicemode_enabled(chat_id))
-        # Turn ON
-        await set_voicemode_enabled(chat_id, True)
-        self.assertTrue(await is_voicemode_enabled(chat_id))
-        # Turn OFF
-        await set_voicemode_enabled(chat_id, False)
-        self.assertFalse(await is_voicemode_enabled(chat_id))
+    async def test_vivid_user_memory_database(self):
+        from nexichat.database.chatbot import (
+            update_vivid_user_memory,
+            get_vivid_user_memory,
+            format_vivid_user_context,
+            clear_vivid_user_memory
+        )
+        test_uid = 9988776655
+        await clear_vivid_user_memory(test_uid)
+
+        # First interaction: user introduces themselves
+        mem = await update_vivid_user_memory(
+            user_id=test_uid,
+            role="user",
+            text="Hii Anshika! Mera naam Rohit hai aur main coding karta hoon",
+            user_name="Rohit",
+            username="rohit_coder"
+        )
+        self.assertEqual(mem["name"], "Rohit")
+        self.assertEqual(mem["interactions"], 1)
+        self.assertIn("coding", mem["topics"])
+
+        # Second interaction: Anshika replies
+        mem2 = await update_vivid_user_memory(
+            user_id=test_uid,
+            role="anshika",
+            text="Hii Rohit! Waah coding toh bohot exciting hai!",
+            user_name="Rohit"
+        )
+        self.assertEqual(mem2["interactions"], 2)
+
+        # Context formatting for AI
+        ctx = await format_vivid_user_context(test_uid)
+        self.assertIn("Rohit", ctx)
+        self.assertIn("coding", ctx)
+
+        # Cleanup
+        await clear_vivid_user_memory(test_uid)
+
+    async def test_api_usage_tracking_and_daily_quota(self):
+        from nexichat.database.chatbot import (
+            track_api_call,
+            track_db_fallback_call,
+            get_api_usage_stats,
+            format_api_usage_dashboard
+        )
+        await track_api_call("groq", success=True)
+        await track_api_call("gemini", success=True)
+        await track_api_call("waterfall_free", success=True)
+        await track_db_fallback_call()
+
+        stats = await get_api_usage_stats()
+        self.assertGreaterEqual(stats["groq_calls"], 1)
+        self.assertGreaterEqual(stats["gemini_calls"], 1)
+        self.assertGreaterEqual(stats["waterfall_calls"], 1)
+        self.assertGreaterEqual(stats["db_fallback_calls"], 1)
+        self.assertIn("groq_used_pct", stats)
+        self.assertIn("groq_left_pct", stats)
+        self.assertEqual(stats["groq_quota"], 1000)
+        self.assertEqual(stats["gemini_quota"], 1500)
+
+        dashboard = await format_api_usage_dashboard()
+        self.assertIn("VIP AI API USAGE & DAILY QUOTA", dashboard)
+        self.assertIn("ɢʀᴏǫ ᴀɪ ᴇɴɢɪɴᴇ", dashboard)
+        self.assertIn("ɢᴏᴏɢʟᴇ ɢᴇᴍɪɴɪ ᴀɪ", dashboard)
+
 
     def test_hinglish_to_hindi_transliteration(self):
         from nexichat.modules.helpers.media_gen import hinglish_to_hindi

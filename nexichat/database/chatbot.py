@@ -37,6 +37,8 @@ qa_cache_db = db.qa_cache
 stickers_db = db.stickers
 user_nicknames_db = db.user_nicknames
 afk_db = db.afk
+user_vivid_memory_db = db.user_vivid_memory
+api_usage_db = db.api_usage
 
 # In-memory caches for ultra-fast performance
 _replies_cache: List[Dict[str, Any]] = []
@@ -44,6 +46,8 @@ _qa_cache: Dict[str, str] = {}
 _stickers_cache: List[str] = []
 _nicknames_cache: Dict[int, str] = {}
 _afk_cache: Dict[int, Dict[str, Any]] = {}
+_user_vivid_memory: Dict[int, Dict[str, Any]] = {}
+_daily_api_usage: Dict[str, Any] = {}
 _cache_loaded = False
 
 
@@ -400,5 +404,316 @@ def clear_user_context(user_id: int):
     """Reset dialogue history when user requests to forget or on reset."""
     global _conversation_context
     _conversation_context.pop(user_id, None)
+
+
+# ==============================================================================
+# VIVID PERSONALIZED USER MEMORY DATABASE
+# ==============================================================================
+TOPIC_KEYWORDS = {
+    "studies": ["padhai", "study", "studies", "class", "12th", "school", "college", "exam", "marks", "books"],
+    "coding": ["python", "code", "bot", "developer", "server", "github", "coding", "programming"],
+    "music": ["music", "song", "gana", "singer", "listen", "playlist"],
+    "mountains": ["uttarakhand", "chamoli", "pahad", "nature", "mountains", "weather", "snow"],
+    "emotions": ["udaas", "sad", "khush", "happy", "breakup", "love", "friend", "dost", "alone"],
+    "food": ["khana", "dinner", "lunch", "food", "maggi", "chai", "coffee", "roti"]
+}
+
+
+async def update_vivid_user_memory(
+    user_id: int,
+    role: str,
+    text: str,
+    user_name: str = "",
+    username: str = ""
+) -> Dict[str, Any]:
+    """
+    Store vivid, personalized interaction context in RAM and MongoDB.
+    Records past conversations, user nicknames, detected topics, and dialogue history.
+    """
+    import time
+    global _user_vivid_memory
+    if not user_id or not text:
+        return {}
+
+    now = time.time()
+    mem = _user_vivid_memory.get(user_id)
+    if not mem:
+        try:
+            doc = await user_vivid_memory_db.find_one({"user_id": user_id})
+            if doc:
+                mem = doc
+        except Exception:
+            pass
+
+    if not mem:
+        mem = {
+            "user_id": user_id,
+            "name": user_name or "Friend",
+            "username": username or "",
+            "interactions": 0,
+            "created_at": now,
+            "last_seen": now,
+            "topics": [],
+            "dialogue": []
+        }
+
+    # Update metadata
+    if user_name and mem.get("name") in ["", "Friend", "None"]:
+        mem["name"] = user_name
+    if username and not mem.get("username"):
+        mem["username"] = username
+
+    mem["interactions"] = mem.get("interactions", 0) + 1
+    mem["last_seen"] = now
+
+    # Detect topics dynamically
+    text_lower = text.lower()
+    current_topics = set(mem.get("topics", []))
+    for topic, keywords in TOPIC_KEYWORDS.items():
+        if any(kw in text_lower for kw in keywords):
+            current_topics.add(topic)
+    mem["topics"] = list(current_topics)[:6]
+
+    # Append dialogue turn (sliding window of 10 recent messages)
+    dialogue = mem.get("dialogue", [])
+    dialogue.append({"role": role, "text": text.strip()[:150], "time": now})
+    if len(dialogue) > 10:
+        dialogue = dialogue[-10:]
+    mem["dialogue"] = dialogue
+
+    _user_vivid_memory[user_id] = mem
+
+    # Asynchronously persist to MongoDB
+    try:
+        await user_vivid_memory_db.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "name": mem.get("name"),
+                "username": mem.get("username"),
+                "interactions": mem.get("interactions"),
+                "last_seen": mem.get("last_seen"),
+                "topics": mem.get("topics"),
+                "dialogue": mem.get("dialogue")
+            }},
+            upsert=True
+        )
+    except Exception:
+        pass
+
+    return mem
+
+
+async def get_vivid_user_memory(user_id: int) -> Dict[str, Any]:
+    """Retrieve vivid personalized memory for a user from RAM or DB."""
+    global _user_vivid_memory
+    if not user_id:
+        return {}
+    if user_id in _user_vivid_memory:
+        return _user_vivid_memory[user_id]
+    try:
+        doc = await user_vivid_memory_db.find_one({"user_id": user_id})
+        if doc:
+            _user_vivid_memory[user_id] = doc
+            return doc
+    except Exception:
+        pass
+    return {}
+
+
+async def format_vivid_user_context(user_id: int, user_name: str = "") -> str:
+    """
+    Generate rich conversational context summary for AI prompt.
+    Enables Anshika to naturally recall user's name, previous topics, and past friendship details.
+    """
+    mem = await get_vivid_user_memory(user_id)
+    if not mem:
+        return ""
+
+    name = mem.get("name") or user_name or "Friend"
+    interactions = mem.get("interactions", 1)
+    topics = mem.get("topics", [])
+    topics_str = ", ".join(topics) if topics else "general chat"
+
+    context_str = f"[Friend Context: Name: {name}, Past chats: {interactions} times, Known interests/topics: {topics_str}]"
+    return context_str
+
+
+async def clear_vivid_user_memory(user_id: int):
+    """Clear personalized memory for a user upon reset."""
+    global _user_vivid_memory
+    _user_vivid_memory.pop(user_id, None)
+    try:
+        await user_vivid_memory_db.delete_one({"user_id": user_id})
+    except Exception:
+        pass
+
+
+# ==============================================================================
+# API USAGE & DAILY QUOTA DASHBOARD (CREATOR METRICS)
+# ==============================================================================
+GROQ_DAILY_QUOTA = 1000      # 1,000 requests/day
+GEMINI_DAILY_QUOTA = 1500    # 1,500 requests/day
+
+
+def _get_today_utc() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+async def track_api_call(provider: str, success: bool = True):
+    """Record an API request in RAM and MongoDB daily quota tracker."""
+    global _daily_api_usage
+    today = _get_today_utc()
+
+    if _daily_api_usage.get("date") != today:
+        _daily_api_usage = {
+            "date": today,
+            "groq_calls": 0,
+            "gemini_calls": 0,
+            "waterfall_calls": 0,
+            "db_fallback_calls": 0,
+            "total_calls": 0
+        }
+
+    provider_lower = provider.lower()
+    if "groq" in provider_lower:
+        _daily_api_usage["groq_calls"] = _daily_api_usage.get("groq_calls", 0) + 1
+    elif "gemini" in provider_lower:
+        _daily_api_usage["gemini_calls"] = _daily_api_usage.get("gemini_calls", 0) + 1
+    else:
+        _daily_api_usage["waterfall_calls"] = _daily_api_usage.get("waterfall_calls", 0) + 1
+
+    _daily_api_usage["total_calls"] = _daily_api_usage.get("total_calls", 0) + 1
+
+    try:
+        await api_usage_db.update_one(
+            {"date": today},
+            {"$inc": {
+                f"{provider_lower}_calls": 1,
+                "total_calls": 1
+            }},
+            upsert=True
+        )
+    except Exception:
+        pass
+
+
+async def track_db_fallback_call():
+    """Record a fallback to the offline learned database when APIs reach quota limit."""
+    global _daily_api_usage
+    today = _get_today_utc()
+
+    if _daily_api_usage.get("date") != today:
+        _daily_api_usage = {
+            "date": today,
+            "groq_calls": 0,
+            "gemini_calls": 0,
+            "waterfall_calls": 0,
+            "db_fallback_calls": 0,
+            "total_calls": 0
+        }
+
+    _daily_api_usage["db_fallback_calls"] = _daily_api_usage.get("db_fallback_calls", 0) + 1
+
+    try:
+        await api_usage_db.update_one(
+            {"date": today},
+            {"$inc": {"db_fallback_calls": 1}},
+            upsert=True
+        )
+    except Exception:
+        pass
+
+
+async def get_api_usage_stats() -> Dict[str, Any]:
+    """Calculate live usage counts and remaining percentage for today."""
+    global _daily_api_usage
+    today = _get_today_utc()
+
+    if _daily_api_usage.get("date") != today:
+        try:
+            doc = await api_usage_db.find_one({"date": today})
+            if doc:
+                _daily_api_usage = {
+                    "date": today,
+                    "groq_calls": doc.get("groq_calls", 0),
+                    "gemini_calls": doc.get("gemini_calls", 0),
+                    "waterfall_calls": doc.get("waterfall_calls", 0),
+                    "db_fallback_calls": doc.get("db_fallback_calls", 0),
+                    "total_calls": doc.get("total_calls", 0)
+                }
+            else:
+                _daily_api_usage = {
+                    "date": today,
+                    "groq_calls": 0,
+                    "gemini_calls": 0,
+                    "waterfall_calls": 0,
+                    "db_fallback_calls": 0,
+                    "total_calls": 0
+                }
+        except Exception:
+            _daily_api_usage = {
+                "date": today,
+                "groq_calls": 0,
+                "gemini_calls": 0,
+                "waterfall_calls": 0,
+                "db_fallback_calls": 0,
+                "total_calls": 0
+            }
+
+    groq_calls = _daily_api_usage.get("groq_calls", 0)
+    gemini_calls = _daily_api_usage.get("gemini_calls", 0)
+    waterfall_calls = _daily_api_usage.get("waterfall_calls", 0)
+    db_fallback_calls = _daily_api_usage.get("db_fallback_calls", 0)
+    total_calls = _daily_api_usage.get("total_calls", 0)
+
+    groq_used_pct = round(min((groq_calls / GROQ_DAILY_QUOTA) * 100, 100.0), 1)
+    groq_left_pct = round(max(100.0 - groq_used_pct, 0.0), 1)
+
+    gemini_used_pct = round(min((gemini_calls / GEMINI_DAILY_QUOTA) * 100, 100.0), 1)
+    gemini_left_pct = round(max(100.0 - gemini_used_pct, 0.0), 1)
+
+    is_limit_reached = (groq_used_pct >= 100.0 and gemini_used_pct >= 100.0)
+    status_label = "🔴 LIMIT REACHED (DB Fallback Active)" if is_limit_reached else "🟢 STANDBY (Live APIs Online)"
+
+    return {
+        "date": today,
+        "groq_calls": groq_calls,
+        "groq_quota": GROQ_DAILY_QUOTA,
+        "groq_used_pct": groq_used_pct,
+        "groq_left_pct": groq_left_pct,
+        "gemini_calls": gemini_calls,
+        "gemini_quota": GEMINI_DAILY_QUOTA,
+        "gemini_used_pct": gemini_used_pct,
+        "gemini_left_pct": gemini_left_pct,
+        "waterfall_calls": waterfall_calls,
+        "db_fallback_calls": db_fallback_calls,
+        "total_calls": total_calls,
+        "status": status_label
+    }
+
+
+async def format_api_usage_dashboard() -> str:
+    """Format an interactive, clean markdown dashboard for bot creator."""
+    stats = await get_api_usage_stats()
+    return (
+        f"╭━━━━━━〔 📊 **VIP AI API USAGE & DAILY QUOTA** 〕━━━━━━╮\n\n"
+        f"👑 **ᴄʀᴇᴀᴛᴏʀ :** Amrit Raj (@Villanns)\n"
+        f"📅 **ᴅᴀᴛᴇ (ᴜᴛᴄ) :** `{stats['date']}`\n\n"
+        f"✦ **ɢʀᴏǫ ᴀɪ ᴇɴɢɪɴᴇ :**\n"
+        f"  • Used Today: `{stats['groq_calls']}` / `{stats['groq_quota']}` requests\n"
+        f"  • Used: `{stats['groq_used_pct']}%`  |  Remaining: `{stats['groq_left_pct']}%`\n\n"
+        f"✦ **ɢᴏᴏɢʟᴇ ɢᴇᴍɪɴɪ ᴀɪ :**\n"
+        f"  • Used Today: `{stats['gemini_calls']}` / `{stats['gemini_quota']}` requests\n"
+        f"  • Used: `{stats['gemini_used_pct']}%`  |  Remaining: `{stats['gemini_left_pct']}%`\n\n"
+        f"✦ **ғʀᴇᴇ ᴡᴀᴛᴇʀғᴀʟʟ ᴀɪ :** `{stats['waterfall_calls']}` requests (Unlimited)\n"
+        f"✦ **ᴛᴏᴛᴀʟ ᴀɪ ǫᴜᴇʀɪᴇs :** `{stats['total_calls']}` requests\n\n"
+        f"✦ **ᴅᴀᴛᴀʙᴀsᴇ ғᴀʟʟʙᴀᴄᴋ sᴛᴀᴛᴜs :**\n"
+        f"  • Status: {stats['status']}\n"
+        f"  • DB Fallback Triggers: `{stats['db_fallback_calls']}`\n"
+        f"  *(Database is ONLY utilized when all APIs reach 100% quota limit!)*\n\n"
+        f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
+    )
+
 
 
