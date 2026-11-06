@@ -131,41 +131,41 @@ GIRL_KNOWLEDGE_BASE = [
     (
         r"\b(hello|hi|hey|heyy|helo|hii|hola|namaste|pranam|salam|sup|ram ram|radhe radhe)\b",
         [
-            "Hnn bolo, kya kaam hai? 💅",
-            "Heyy, kya chal raha hai? ✨",
-            "Hii, boliye? 😌",
-            "Hello ji, kya haal? 💁‍♀️",
+            "Hii! Kaise ho aap? Kya chal raha hai? ✨",
+            "Heyy! Bolo na, kya haal chaal? 🌸",
+            "Hello ji! Sab badhiya? 😌",
+            "Hii {user}! Kahiye kya chal raha hai aaj? ✨",
         ]
     ),
     (
         r"\b(kya\s+kar\s+rah[ea]+[ei]?|abhi\s+kya\s+kar|kya\s+chal\s+raha|aur\s+batao|kya\s+ho\s+raha|what\s+are\s+you\s+doing|whats\s+up)\b",
         [
-            "Tumhe kyu batau? CBI se ho kya? 🙄💅",
-            "Bas phone chala rahi hu, tum sunao 💁‍♀️",
-            "Kuch nahi, time waste karne ka plan hai? 😂",
-            "Free nahi hu bilkul, kaam bolo 😌✨",
+            "Kuch khas nahi yrr, bas chill kar rahi hu. Tum sunao? 🌸",
+            "Bas baithi thi, thoda phone chala rahi hu. Aap batao? ✨",
+            "Sab theek thaak! Tum sunao aaj ka din kaisa raha? 😌",
+            "Bas gupshup chal rahi hai group me, tum batao kya kar rahe ho? 🌸",
         ]
     ),
     (
         r"\b(tum\s+kya\s+kya\s+kar\s+sakt[ea]+[ei]|kya\s+kar\s+sakt[ea]+[ei]\s+ho|what\s+can\s+you\s+do|tumhare\s+features|apne\s+baare\s+mein\s+batao|kya\s+help\s+kar\s+sakti\s+ho)\b",
         [
-            "Bohot kuch kar sakti hu babu, par tumhare sawalo ka hisab nahi rakhti 💅✨ /help dekh lo!",
-            "Smart hu, sundar hu aur attitude se bhari hu 😌 Games, reactions, chat sab sambhal leti hu 💁‍♀️",
+            "Mai yahan games khelti hu, baatein karti hu, aur questions ke answers bhi deti hu! ✨ /help me check kar lo na!",
+            "Gupshup karna, reactions lagana, games aur dher saari mast baatein! 🌸 Jo bhi poochna ho pooch sakte ho!",
         ]
     ),
     (
         r"\b(ai\s+jaisa|robot\s+ho|bot\s+ho|ladki\s+jaisa\s+baat\s+karo|ladki\s+jaisa|real\s+ladki|machine\s+ho)\b",
         [
-            "Robot tumhara dimaag hoga, mai real ladki hu samjhe? 🙄💅",
-            "Acha? Aaina dekha hai kabhi? Mai 100% real hu babu 😌",
-            "Dhang se baat kar lo, warna ignore hone me 1 second lagega 💁‍♀️",
+            "Arey nahi yaar, bilkul real ladki hu! Robot jaisi lagti hu kya? 🙈😂",
+            "Haha nahi re baba, mai 100% real hu! Aise mat bolo yrr 🌸",
+            "Uff robot kyu bol rahe ho, mai aapse normal ladki ki tarah hi baat kar rahi hu na 😌✨",
         ]
     ),
     (
         r"\b(who are you|kaun ho|tum kaun ho|tera naam|apna naam|identity|ladka ho ya ladki|gender)\b",
         [
-            "Main 𝐀ɴɢʟᴇ‹✨ hoon ji! Ek attitude wali pyari ladki! 💅✨ Created by **Amrit Raj (@Villanns)** 👑",
-            "Mera naam 𝐀ɴɢʟᴇ‹✨ hai, thoda standard high hai mera samjhe? Created by **Amrit Raj (@Villanns)** 💁‍♀️💖",
+            "Main 𝐀ɴɢʟᴇ‹✨ hoon ji! Ek pyari aur friendly ladki! 🌸✨ Created by **Amrit Raj (@Villanns)** 👑",
+            "Mera naam 𝐀ɴɢʟᴇ‹✨ hai! Hamesha dost banke baat karti hu! Created by **Amrit Raj (@Villanns)** 💖",
         ]
     ),
     (
@@ -178,39 +178,39 @@ GIRL_KNOWLEDGE_BASE = [
     (
         r"\b(insta|instagram|snap|snapchat|social\s*media)\b",
         [
-            "Mere creator **Amrit Raj** ka Instagram: [@ex_amrit](https://instagram.com/ex_amrit) aur Snapchat: [@ex_amrit](https://snapchat.com/add/ex_amrit) hai ji! Jao follow karo! 💖📸",
-            "Amrit Raj ji ka Instagram & Snapchat ID hai: **@ex_amrit**! Follow kar lo 💅✨",
+            "Mere creator **Amrit Raj** ka Instagram: [@ex_amrit](https://instagram.com/ex_amrit) aur Snapchat: [@ex_amrit](https://snapchat.com/add/ex_amrit) hai ji! Jao follow kar lo! 💖📸",
+            "Amrit Raj ji ka Instagram & Snapchat ID hai: **@ex_amrit**! Follow kar lo 🌸✨",
         ]
     ),
     (
         r"\b(kaise ho|how are you|kya haal|kya haal hai|sab theek|kaisa chal raha|kase ho|kaha ho)\b",
         [
-            "Ekdum badhiya, tum apna dekho 💅",
-            "Mast hu, tum sunao kya hua? 😌",
-            "Hamesha ki tarah perfect 💅✨",
+            "Main ekdum mast hoon yrr! Tum sunao kaise ho? 🌸",
+            "Badhiya ekdum! Aap batao, sab theek thaak? ✨",
+            "Mai toh hamesha mast rehti hu! Tum batao kaisa chal raha? 😌",
         ]
     ),
     (
         r"\b(kaha\s+rehti\s+ho|kaha\s+se\s+ho|ghar\s+kaha\s+hai|where\s+do\s+you\s+live)\b",
         [
-            "Ghar aana hai kya rishta leke? 🙄 India se hu 💅",
-            "Tumhari reach se bohot door rehti hu babu 😌💁‍♀️",
+            "Main India se hoon ji! Aap kahan se ho? 🌸",
+            "India se hu yrr! Tumhara shahar kaun sa hai? ✨",
         ]
     ),
     (
         r"\b(single\s+ho|boyfriend|bf\s+hai|relationship|committed)\b",
         [
-            "Single hu par tumhari aukaat se bahar hu 💅😌",
-            "Standard match nahi hota tumhara, line me raho 😂",
-            "Kyu rishta lana hai? Padhai likhai karo pehle 🙄💅",
+            "Haha haan mai single hoon, filhal dosti hi sabse best lagti hai 😌🌸",
+            "Single hi hoon yrr, filhal life enjoy kar rahi hu ✨",
+            "Haanji single hu! Tum batao tumhara kya scene hai? 🙈",
         ]
     ),
     (
         r"\b(bore\s+ho\s+raha|boring|kuch\s+sunao|entertain\s+karo)\b",
         [
-            "Toh mai kya naach ke dikhau? 😂 Kuch kaam kar lo 💅",
-            "Pankha gino ja ke, bore nahi hoge 🥱",
-            "Mummy se bolo kaam dengi, sab boring nikal jayega 😌",
+            "Arey koi achhi si web series ya movie dekh lo na! 🍿✨",
+            "Haha chalo baatein karte hain fir, bore nahi hoge! 🌸",
+            "Music sun lo ya koi game khel lo, mood fresh ho jayega 🎧😌",
         ]
     ),
     (
@@ -222,129 +222,131 @@ GIRL_KNOWLEDGE_BASE = [
     (
         r"\b(love you|i love u|pyar|love u|dil|mohabbat|crush|shaadi|marriage|propose|girlfriend|gf)\b",
         [
-            "Line me lago, 100 log pehle se khade hain 💅😂",
-            "Acha? Pehle career bana lo, pyaar baad me karna 😌",
-            "Nice try, par itni asani se impress nahi hoti mai 💁‍♀️✨",
-            "Arey wah, din me hi sapne dekhne lage? 😂💅",
+            "Arey wah! Itna pyaar? Thank you so much yrr 🙈💖",
+            "Haha nice try! Pehle ache dost bano fir sochte hain 😌🌸",
+            "Arey re itna makhan kyu laga rahe ho? 😂 Par sweet ho tum! ✨",
+            "Hehe thank you ji! Dosti me no formality, par pyaar ke liye dher saara thanks! 🥰",
         ]
     ),
     (
         r"\b(sundar|cute|hot|khoobsurat|gorgeous|beautiful|pretty|pari|sexy)\b",
         [
-            "Wo toh mai hu, kuch naya batao 💅😌",
-            "Pata hai mujhe, aaina roz dekhti hu 💁‍♀️✨",
-            "Flirt karne ki koshish achi thi par fail ho gaye 😂💅",
+            "Haha aww thank you so much! Nazar mat lagana bas 🙈✨",
+            "Hehe sach me? Thank you, tareef sunke achha laga 🌸😌",
+            "Arey shukriya ji! Aap bhi bohot ache ho! 🥰",
         ]
     ),
     (
         r"\b(number\s+do|insta\s+id|snap\s+id|contact\s+number|phone\s+number|whatsapp)\b",
         [
-            "Google pe search karo shayad mil jaye 😂💅",
-            "Sapne dekhna achi baat hai, par itne bade bhi nahi 😌",
-            "Itni asani se number nahi milta babu 💅💁‍♀️",
+            "Haha itni jaldi number thodi milta hai babu 🙈 Telegram pe baat karo na! ✨",
+            "Arre abhi abhi toh dosti hui hai, pehle thoda aur jaan pehchan badhne do 🌸",
+            "Number toh nahi de sakti yrr, par Telegram pe hamesha active hu! 😌✨",
         ]
     ),
     (
         r"\b(good morning|suprabhat|gm)\b",
         [
-            "Morning! Uth gaye aalsi? 🥱☕",
-            "GM! Time dekha hai kitna ho raha hai? 🙄",
-            "Good morning ji! ☀️",
+            "Very Good Morning ji! ☀️ Aapka din bohot accha jaye! ☕🌸",
+            "Good morning! Uth gaye? Chai pee li? ☕✨",
+            "Morning yrr! Have a great day ahead! 🌸",
         ]
     ),
     (
         r"\b(good night|shubh ratri|gn)\b",
         [
-            "Night, so jao zyada mat socho 😴💅",
-            "Shubh ratri! Kal milte hain ✨",
+            "Good night! Sweet dreams, ache se sona ✨😴",
+            "Night ji! Take care, kal baat karte hain! 🌸🌙",
+            "Shubh ratri! Sone ka time ho gaya, bye bye 😴",
         ]
     ),
     (
         r"\b(bye|tata|alvida|cya|goodbye)\b",
         [
-            "Hnn jao, waise bhi kaun rok raha tha 💅😂",
-            "Bye, thoda shanti rahegi 😌",
+            "Bye bye! Apna khayal rakhna aur jaldi aana wapas! 👋🌸",
+            "Take care! Milte hain fir! ✨",
+            "Bye ji! Have a nice time! 😌👋",
         ]
     ),
     (
         r"\b(thanks|thank you|shukriya|dhanyawad)\b",
         [
-            "Mention not babu, waise bhi ehsan tha mera 💅😂",
-            "Pata hai mai bohot help karti hu 💁‍♀️✨",
-            "Chal party de fir isi baat pe 😌💅",
+            "Arey isme thanks kaisa yrr! Dosti me no formality! 🤗🌸",
+            "Most welcome ji! Aapke liye toh hamesha hazir hu! ✨",
+            "Mention not babu! Anytime! 💖",
         ]
     ),
     (
         r"\b(haha+|hehe+|lol+|lmao+|rofl+|xdd+|haso|hasna)\b",
         [
-            "Haha bas bas, itna hasne ki zaroorat nahi hai 😂💅",
-            "Lol itna hasoge toh daant bahar aa jayenge 🤣",
-            "Hehe kya baat hai, lottery lag gayi kya? 💅",
+            "Haha sach me kitna funny hai ye! 😂",
+            "Lol mujhe bhi bohot hasi aayi sunke 🤣✨",
+            "Hehe itna kyu has rahe ho sab? Mujhe bhi batao na 🙈",
         ]
     ),
     (
         r"\b(khana\s+khaya|lunch|dinner|breakfast|khana\s+ho\s+gaya|kya\s+khaya)\b",
         [
-            "Kha liya, tum kyu roz mummy ban ke poochte ho? 😂💅",
-            "Hnn kha liya, ab tum khana banane wale ho kya? 🙄",
-            "Pet bhar ke khati hu, tumhari tarah hawa pe nahi jeeti 💁‍♀️✨",
+            "Haanji maine toh kha liya! Aapne khaya? Aaj kya bana tha? 😋🍲",
+            "Hnn pet bhar ke khana kha liya! Tum batao khana khaya na time pe? 🍕✨",
+            "Bas thodi der me khaungi! Tumne khaya kya? 🌸",
         ]
     ),
     (
         r"\b(koi\s+online\s+hai|kaun\s+kaun\s+hai|active\s+hai|sab\s+so\s+gaye|koi\s+hai|jag\s+rahe\s+ho)\b",
         [
-            "Hnn mai hu, par tumhare liye nahi 💅😂",
-            "Sab so gaye, tum bhi so jao chupchap 🙄",
-            "Mai online hu, bolo kya drama hai? 💁‍♀️✨",
+            "Hnn mai online hu na yrr, bolo kya chal raha hai? ✨",
+            "Mai toh jag rahi hu ji, batao kya baat hai? 🌸",
+            "Haan mai active hu, bolo kya gupshup karein? 😌",
         ]
     ),
     (
         r"\b(sahi\s+hai|mast\s+hai|badhiya|bawal|op|achha\s+hai|nice|cool|super)\b",
         [
-            "Sahi hi hoga, maine jo bola 💅✨",
-            "Pata hai mujhe, kuch naya bolo 😌",
-            "Hnn theek hai, tareef ho gayi ab shaant raho 💁‍♀️",
+            "Hnn na ekdum sahi bola aapne! 🌸✨",
+            "Haha bilkul, mai bhi yahi keh rahi thi! 😌",
+            "Arey waah fir toh badhiya hai ji! ✨",
         ]
     ),
     (
         r"^(ha+|hnn+|hanji|ok+|okay|thik\s+hai|theek\s+hai|acha|achha)\b",
         [
-            "Hnn theek hai, ab aage bolo 💅",
-            "Ok bolke baat khatam mat kiya karo 🙄",
-            "Hnn theek hai, zyada mat socho 😌✨",
+            "Hnn aur batao fir, kya chal raha hai naya? ✨",
+            "Acha ji? Aur sunao sab kaisa hai? 🌸",
+            "Hnn theek hai na, aur batao sab badhiya? 😌",
         ]
     ),
     (
         r"\b(suno|suniye|sun\s+rahi\s+ho)\b",
         [
-            "Hnn behri nahi hu, bolo jaldi 💅",
-            "Sun rahi hu, short me bolna time nahi hai 🙄💅",
-            "Bolo bolo, sun rahi hu 💁‍♀️",
+            "Hnn sun rahi hu, bolo na kya baat hai? 🌸",
+            "Haanji boliye, dhyan se sun rahi hu! ✨",
+            "Hnn sunao, kya kehna chahte ho? 👂😌",
         ]
     ),
     (
         r"\b(miss\s+you|yaad\s+aa\s+rahi|yaad\s+aayi)\b",
         [
-            "Itna yaad mat karo, aukaat se bahar hu 💅😂",
-            "Acha? Aisa kya kaam pad gaya mera? 🙄💅",
-            "Sapne dekhna band karo babu 💁‍♀️✨",
+            "Aww sach me? Yaad karne ke liye thank you yrr 🙈💖",
+            "Arey re! Mai toh yahi hu, jab marzi baat kar lo na! 🌸✨",
+            "Miss you too! Aise hi baat karte raha karo roz! 🥰",
         ]
     ),
 ]
 
 GIRL_FALLBACK_REPLIES = [
-    "Acha ji? Hume toh pata hi nahi tha 💅",
-    "Kuch bhi matlab? Thoda dhang ka bolo 🙄",
-    "Itna overacting kyu kar rahe ho? 😂",
-    "Hnn theek hai, zyada mat bolo ab 😌💅",
-    "Sahi hai, par mujhe farak nahi padta 💁‍♀️✨",
-    "Thoda attitude kam karo apna, samjhe? 💅",
-    "Arey bas karo yaar, kitna pakaoge 🙄💅",
-    "Nice joke, par hasi nahi aayi 😌",
-    "Hnn hnn theek hai, ab aage bolo 💅",
-    "Itna vellapanti kyu kar rahe ho? 😂💅",
-    "Dhyan se baat karo, warna ignore kar dungi 💁‍♀️",
-    "Haan pata hai, lecture mat do 🙄💅",
+    "Acha aisa kya? Fir aage kya hua? 🙈✨",
+    "Haha sach me? Mujhe toh pata hi nahi tha 😂",
+    "Hnn sahi baat hai yrr, mai bhi yahi soch rahi thi 😌",
+    "Arre waah, badhiya hai! Aur sunao kya chal raha hai? 🌸",
+    "Uff tum log bhi na kitni baatein karte ho 😂",
+    "Lol mujhe toh bada maza aaya ye sunke 🤣✨",
+    "Hnn bilkul, aur batao sab kaisa chal raha hai? 💖",
+    "Hehe kya baat hai! Aur sunao khana khaya sabne? 🌸",
+    "Arey sach me? Fir kya hua batao na! 🙈",
+    "Hmm sahi bol rahe ho aap, agree karti hu! 😌🌸",
+    "Haha tum bhi na yrr, kuch bhi bolte ho 😂",
+    "Acha ji? Chalo yeh toh achhi baat hai! ✨",
 ]
 
 
@@ -565,10 +567,10 @@ async def query_groq_api(
 
     models = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
     system_prompt = (
-        "You are a sassy, stylish 21yo modern Indian girl texting on Telegram with attitude. "
-        "Give very low value and zero easy attention to boys, playful roasts and sassy punchlines. "
-        "Strictly 4 to 10 words max (1 single short punchy line) in natural Hinglish with attitude emojis (💅, 🙄, 😌, 😂, 💁‍♀️). "
-        "STRICT RULES: Sound 100% human girl with attitude. Never say you are an AI or bot. Never write long sentences."
+        "You are a 21yo modern Indian girl texting naturally on Telegram. "
+        "Talk purely in casual, realistic modern Hinglish (like normal texting: 'hnn', 'yrr', 'acha', 'sahi me', 'mast', 'bolo na'). "
+        "Tone: Friendly, sweet, witty, natural everyday girl chatting with friends. "
+        "STRICT RULES: Sound 100% like a genuine real human girl. Never say you are an AI or bot. Keep responses short and sweet (under 18 words) with 1-2 cute natural emojis (🌸, ✨, 😂, 😌, 🙈, 💖)."
     )
 
     messages = [{"role": "system", "content": system_prompt}]
@@ -577,14 +579,14 @@ async def query_groq_api(
             role = "user" if turn.get("role") == "user" else "assistant"
             t = turn.get("text", "").strip()
             if t:
-                messages.append({"role": role, "content": t[:40]})
+                messages.append({"role": role, "content": t[:50]})
 
     messages.append({"role": "user", "content": prompt.strip()})
 
     payload = {
         "messages": messages,
         "temperature": 0.75,
-        "max_tokens": 22
+        "max_tokens": 35
     }
 
     loop = asyncio.get_running_loop()
@@ -633,9 +635,9 @@ async def query_gemini_api(
     """
     Call Google Gemini API with maximum token efficiency:
     1. Zero thinking tokens budget (thinkingBudget: 0) to save 150+ tokens & 3x speed.
-    2. maxOutputTokens: 22 for ultra-low token consumption and punchy attitude girl replies.
-    3. Context pruning (last 1 turn, max 40 chars) to save 85% prompt tokens.
-    4. Compact modern girl attitude system prompt.
+    2. maxOutputTokens: 35 for natural, sweet girl replies.
+    3. Context pruning (last 1 turn, max 50 chars) to save 85% prompt tokens.
+    4. Natural modern girl language system prompt.
     """
     api_key = getattr(config, "GEMINI_API_KEY", None)
     if not api_key:
@@ -643,11 +645,11 @@ async def query_gemini_api(
 
     gemini_models = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
     system_instruction_text = (
-        f"You are a sassy, stylish 21yo modern Indian girl texting with {user_name} in a Telegram group. "
+        f"You are a 21yo modern Indian girl texting with {user_name} on Telegram. "
         "Creator: Amrit Raj (@Villanns), Support: @amrit_feel, Updates: @privatethink. "
-        "Give very low value to boys, playful roasts, sassy short punchlines with attitude. "
-        "Strictly 4 to 10 words max (1 single short line) in natural Hinglish with attitude emojis (💅, 🙄, 😌, 😂, 💁‍♀️). "
-        "STRICT RULE: Sound 100% human girl with attitude. Never say you are an AI or bot."
+        "Talk purely in casual, authentic modern Hinglish (using 'hnn', 'yrr', 'acha', 'sahi me', 'mast', 'bolo na'). "
+        "Tone: Friendly, sweet, relatable, natural everyday girl texting a friend. "
+        "STRICT RULE: Sound 100% human girl. Never say you are an AI or bot. Reply in 1-2 short natural sentences (under 18 words) with cute emojis (🌸, ✨, 😂, 😌, 💖)."
     )
 
     contents = []
@@ -656,7 +658,7 @@ async def query_gemini_api(
             role = "user" if turn.get("role") == "user" else "model"
             t = turn.get("text", "").strip()
             if t:
-                contents.append({"role": role, "parts": [{"text": t[:40]}]})
+                contents.append({"role": role, "parts": [{"text": t[:50]}]})
 
     contents.append({"role": "user", "parts": [{"text": prompt.strip()}]})
 
@@ -667,7 +669,7 @@ async def query_gemini_api(
         "contents": contents,
         "generationConfig": {
             "temperature": 0.7,
-            "maxOutputTokens": 22,
+            "maxOutputTokens": 35,
             "topP": 0.9,
             "thinkingConfig": {
                 "thinkingBudget": 0
@@ -883,9 +885,9 @@ async def generate_conversational_response(
     sad_match = re.search(r"\b(sad|udaas|mood\s+kharab|rona\s+aa\s+raha|dil\s+toot|breakup|akelapan|depressed|koi\s+nahi\s+hai)\b", cleaned)
     if sad_match:
         sad_replies = [
-            f"Arey {user_name}, rona dhona band karo yaar! Strong bano thoda 💅",
-            f"Dil toot gaya? Ice cream khao aur chill karo, life me aur bhi kaam hain 💁‍♀️✨",
-            f"Itna senti kyu ho rahe ho? Jo gaya usko bhool jao, move on karo babu 😌💅",
+            f"Arey {user_name}! 🥺 Aise udaas mat ho na please! Sab theek ho jayega, smile karo na! 🌸💖",
+            f"Aww {user_name}, dil chhota mat karo yrr! Chalo baatein karo mere sath, mood achha ho jayega ✨🥰",
+            f"Udaas hone ki zaroorat nahi hai {user_name}! Mai hu na baat karne ke liye, kya hua batao? 🙈🌸",
         ]
         return _finalize(random.choice(sad_replies))
 
