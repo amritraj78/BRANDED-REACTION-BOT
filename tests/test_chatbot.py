@@ -126,5 +126,29 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
         res = get_random_sticker(fallback=fb)
         self.assertIsNotNone(res)
 
+    async def test_voicemode_database_toggle(self):
+        from nexichat.database.chatbot import is_voicemode_enabled, set_voicemode_enabled
+        chat_id = -10099112233
+        # Default should be False (text mode)
+        self.assertFalse(await is_voicemode_enabled(chat_id))
+        # Turn ON
+        await set_voicemode_enabled(chat_id, True)
+        self.assertTrue(await is_voicemode_enabled(chat_id))
+        # Turn OFF
+        await set_voicemode_enabled(chat_id, False)
+        self.assertFalse(await is_voicemode_enabled(chat_id))
+
+    def test_hinglish_to_hindi_transliteration(self):
+        from nexichat.modules.helpers.media_gen import hinglish_to_hindi
+        # Already Hindi
+        self.assertEqual(hinglish_to_hindi("नमस्ते"), "नमस्ते")
+        # Hinglish converts to Hindi
+        res = hinglish_to_hindi("Hii kaise ho")
+        self.assertTrue(len(res) > 0)
+        # Should contain Devanagari characters
+        has_devanagari = any("\u0900" <= c <= "\u097F" for c in res)
+        self.assertTrue(has_devanagari)
+
 if __name__ == "__main__":
     unittest.main()
+

@@ -36,21 +36,49 @@ def clean_tts_text(text: str) -> str:
     """Clean text for TTS by removing markdown symbols, emojis, and urls."""
     text = re.sub(r"http\S+", "", text)
     text = re.sub(r"[*_`~#|]", "", text)
-    # Remove emojis so TTS pronounces words cleanly
-    text = re.sub(r"[^\w\s,\.\?\!\'\-]", "", text)
-    return text.strip()[:200]
+    # Retain Latin letters, Devanagari Hindi characters, and basic punctuation
+    text = re.sub(r"[^\w\s,\.\?\!\'\-\u0900-\u097F]", "", text)
+    return text.strip()[:250]
+
+
+def hinglish_to_hindi(text: str) -> str:
+    """
+    Transliterate Roman Hinglish to pure Devanagari Hindi using Google's official input tools.
+    This enables Google TTS female voice to pronounce words with a 100% natural, sweet Indian girl accent!
+    """
+    if not text:
+        return text
+    # If already mostly Devanagari Hindi, keep as is
+    if re.search(r"[\u0900-\u097F]", text):
+        return text
+    try:
+        url = f"https://inputtools.google.com/request?text={urllib.parse.quote(text)}&itc=hi-t-i0-und&num=1"
+        r = requests.get(url, timeout=3.5)
+        if r.status_code == 200:
+            data = r.json()
+            if isinstance(data, list) and len(data) > 1 and data[0] == "SUCCESS":
+                translit = "".join(item[1][0] for item in data[1] if item and len(item) > 1 and item[1])
+                if translit and len(translit) > 1:
+                    return translit
+    except Exception:
+        pass
+    return text
 
 
 def generate_voice_file(text: str, lang: str = "hi") -> Optional[str]:
     """
-    Generate an audio voice file using Google TTS (free, no extra pip dependencies).
+    Generate an audio voice file in a natural, sweet Indian girl tone.
+    Automatically transliterates Hinglish to Devanagari Hindi for flawless natural speech.
     Returns the file path of the generated .mp3 audio file.
     """
     cleaned = clean_tts_text(text)
     if not cleaned:
         cleaned = "Haanji, boliye kya kehna chahte hain aap!"
 
-    encoded_text = urllib.parse.quote(cleaned)
+    # Transliterate to Hindi script for pure natural female accent
+    spoken_text = hinglish_to_hindi(cleaned)
+
+    encoded_text = urllib.parse.quote(spoken_text)
     url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_text}&tl={lang}&client=tw-ob"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -66,6 +94,20 @@ def generate_voice_file(text: str, lang: str = "hi") -> Optional[str]:
             return file_path
     except Exception as e:
         logger.error(f"TTS generation error: {e}")
+
+    # Fallback to direct raw text
+    try:
+        encoded_raw = urllib.parse.quote(cleaned)
+        url_raw = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_raw}&tl={lang}&client=tw-ob"
+        resp = requests.get(url_raw, headers=headers, timeout=8)
+        if resp.status_code == 200 and len(resp.content) > 500:
+            file_name = f"voice_{uuid.uuid4().hex[:8]}.mp3"
+            file_path = os.path.join(CACHE_DIR, file_name)
+            with open(file_path, "wb") as f:
+                f.write(resp.content)
+            return file_path
+    except Exception:
+        pass
 
     return None
 

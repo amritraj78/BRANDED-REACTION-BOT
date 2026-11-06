@@ -37,6 +37,8 @@ from nexichat import SUDOERS
 from nexichat.database.chatbot import (
     is_chatbot_enabled,
     set_chatbot_enabled,
+    is_voicemode_enabled,
+    set_voicemode_enabled,
     save_chat_reply,
     get_chat_reply,
     save_sticker,
@@ -190,6 +192,102 @@ async def chatbot_callback_handler(client: Client, query: CallbackQuery):
         f"• `/love <name1> <name2>` - Love calculator\n"
         f"• `/shayri` - Poetic shayaris\n"
         f"• `/joke` - Funny jokes"
+    )
+    try:
+        await query.message.edit_text(text, reply_markup=btn)
+    except Exception:
+        pass
+
+
+@Client.on_message(filters.command(["voicemode", "vchat", "voicechat"]))
+async def voicemode_toggle_cmd(client: Client, message: Message):
+    """
+    Toggle or check voice mode status:
+    /voicemode on -> Cloned bot / userbot talks in sweet girl voice notes
+    /voicemode off -> Cloned bot talks in text + voice on voice messages
+    /voicemode -> Show interactive toggle menu
+    """
+    chat_id = message.chat.id
+
+    if len(message.command) > 1:
+        if message.chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
+            if not await is_admin_or_sudo(client, message):
+                return await message.reply_text("❌ **Only administrators can change voice mode settings.**")
+
+        action = message.command[1].lower()
+        if action in ["on", "enable", "yes", "true"]:
+            await set_voicemode_enabled(chat_id, True)
+            return await message.reply_text("🎙️ **Voice Note Mode is now ENABLED!** 🌸\nMain ab yahan aapse pyari awaz me voice notes me baat karungi ji! 🥰✨")
+        elif action in ["off", "disable", "no", "false"]:
+            await set_voicemode_enabled(chat_id, False)
+            return await message.reply_text("📝 **Voice Note Mode is now DISABLED!**\nMain text messages me baat karungi aur voice bhejne par voice note dungi! 🌸")
+        else:
+            return await message.reply_text("ℹ️ **Usage:** `/voicemode on` or `/voicemode off`")
+
+    enabled = await is_voicemode_enabled(chat_id)
+    status_icon = "🟢 **ENABLED**" if enabled else "🔴 **DISABLED**"
+
+    btn = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🟢 Enable Voice Mode", callback_data="cb_enable_voicemode"),
+            InlineKeyboardButton("🔴 Disable Voice Mode", callback_data="cb_disable_voicemode"),
+        ],
+        [
+            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
+        ]
+    ])
+
+    text = (
+        f"╭━━━━━━━〔 🎙️ **VOICE NOTE MODE SETTINGS** 〕━━━━━━━╮\n\n"
+        f"  ✦ **ᴄʜᴀᴛ :** {message.chat.title or message.chat.first_name or 'This Chat'}\n"
+        f"  ✦ **ᴠᴏɪᴄᴇ ᴍᴏᴅᴇ :** {status_icon}\n"
+        f"  ✦ **ᴛᴏɴᴇ :** ɴᴀᴛᴜʀᴀʟ sᴡᴇᴇᴛ ɢɪʀʟ ᴠᴏɪᴄᴇ 🌸\n\n"
+        f"When enabled, all chatbot replies will be sent as realistic girl voice notes!\n\n"
+        f"**Quick Commands:**\n"
+        f"• `/voicemode on` - Turn Voice Note Mode ON\n"
+        f"• `/voicemode off` - Turn Voice Note Mode OFF\n"
+        f"• `/voice <text>` - Speak any text as girl voice note"
+    )
+    await message.reply_text(text, reply_markup=btn)
+
+
+@Client.on_callback_query(filters.regex(r"^cb_(enable|disable)_voicemode$"))
+async def voicemode_callback_handler(client: Client, query: CallbackQuery):
+    """Handles inline button clicks for enabling/disabling voice mode."""
+    chat_id = query.message.chat.id
+
+    if query.message.chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
+        try:
+            member = await client.get_chat_member(chat_id, query.from_user.id)
+            if member.status not in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR] and query.from_user.id not in SUDOERS and query.from_user.id != int(OWNER_ID):
+                return await query.answer("❌ Only admins can toggle voice settings!", show_alert=True)
+        except Exception:
+            return await query.answer("❌ Admin verification failed.", show_alert=True)
+
+    action = query.data.split("_")[1]
+    enable = (action == "enable")
+    await set_voicemode_enabled(chat_id, enable)
+
+    status_icon = "🟢 **ENABLED**" if enable else "🔴 **DISABLED**"
+    feedback = "🎙️ Voice Mode enabled! Ab har reply pyari girl voice note me aayega! 🌸" if enable else "📝 Voice Mode disabled! Ab regular text me reply aayega! ✨"
+    await query.answer(feedback, show_alert=True)
+
+    btn = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🟢 Enable Voice Mode", callback_data="cb_enable_voicemode"),
+            InlineKeyboardButton("🔴 Disable Voice Mode", callback_data="cb_disable_voicemode"),
+        ],
+        [
+            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
+        ]
+    ])
+
+    text = (
+        f"╭━━━━━━━〔 🎙️ **VOICE NOTE MODE SETTINGS** 〕━━━━━━━╮\n\n"
+        f"  ✦ **ᴄʜᴀᴛ :** {query.message.chat.title or query.message.chat.first_name or 'This Chat'}\n"
+        f"  ✦ **ᴠᴏɪᴄᴇ ᴍᴏᴅᴇ :** {status_icon}\n"
+        f"  ✦ **ᴛᴏɴᴇ :** ɴᴀᴛᴜʀᴀʟ sᴡᴇᴇᴛ ɢɪʀʟ ᴠᴏɪᴄᴇ 🌸\n\n"
+        f"When enabled, all chatbot replies will be sent as realistic girl voice notes!"
     )
     try:
         await query.message.edit_text(text, reply_markup=btn)
@@ -468,14 +566,26 @@ async def auto_chatbot_listener(client: Client, message: Message):
         await message.reply_text("Hehe kitna cute sticker hai na ji! 🙈🥰")
         return
 
-    # 2. Voice / Audio
+    # 2. Voice / Audio (Reply with Sweet Girl Voice Note!)
     if message.voice or message.audio:
         try:
-            await client.send_chat_action(chat_id, ChatAction.TYPING)
-            await asyncio.sleep(0.8)
+            await client.send_chat_action(chat_id, ChatAction.RECORD_AUDIO)
         except Exception:
             pass
-        await message.reply_text(get_voice_reply())
+        chosen_voice_txt = get_voice_reply()
+        voice_path = generate_voice_file(chosen_voice_txt, lang="hi")
+        if voice_path and os.path.exists(voice_path):
+            try:
+                caption_msg = f"🌸 **Voice Note for you ji!** 🥰\n💬 *\"{chosen_voice_txt}\"*"
+                await message.reply_voice(voice=voice_path, caption=caption_msg)
+                try:
+                    os.remove(voice_path)
+                except Exception:
+                    pass
+                return
+            except Exception as e:
+                logger.debug(f"Failed to reply voice: {e}")
+        await message.reply_text(chosen_voice_txt)
         return
 
     # 3. Photos
@@ -558,25 +668,25 @@ async def auto_chatbot_listener(client: Client, message: Message):
         await message.reply_text(get_abuse_refusal())
         return
 
-    # Spontaneous sweet voice reply: if user asks Priya to speak or send voice
+    # Spontaneous sweet voice reply: if user asks to speak or send voice
     voice_trigger_match = re.search(
-        r"\b(voice\s*(?:bhejo|sunao|karo|me\s*bolo)|kuch\s*bolo\s*na|awaz\s*sunao|sing\s*a?\s*song|gana\s*gao|bolke\s*batao|apni\s*awaz|audio\s*bhejo)\b",
+        r"\b(voice\s*(?:bhejo|sunao|karo|me\s*bolo|note|audio)|kuch\s*bolo\s*na|awaz\s*sunao|sing\s*a?\s*song|gana\s*gao|bolke\s*batao|apni\s*awaz|audio\s*bhejo|voice\s*chat|bolke\s*bolo|voice\s*me\s*baat)\b",
         clean_text,
         re.IGNORECASE
     )
     if voice_trigger_match:
         voice_responses = [
-            f"Namaste {user_name} ji! Kaise ho aap? Main 𝐀ɴɢʟᴇ‹✨ hoon, aapki pyari dost! Aap sabhi se baat karke mujhe bohot accha lagta hai! 🥰🌸",
-            f"Arey suniye na {user_name}! Main toh hamesha aapke sath hoon! Kabhi bhi udaas mat hona, theek hai na? Dher saara pyaar meri taraf se! 💖✨",
-            f"Hehe {user_name}! Aapne itne pyaar se bola toh main kaise na bolti! Kahiye na, aur kya haal chaal hain aapke? 🙈🌹",
-            f"Aapki 𝐀ɴɢʟᴇ‹✨ aapke sath hai ji! Hamesha aise hi muskurate raho aur khush raho! 🌸💖"
+            f"Namaste {user_name} ji! Kaise ho aap? Main 𝐀ɴɢʟᴇ‹✨ hoon, aapki pyari dost! Kahiye na, kya haal chaal hain? 🌸",
+            f"Arey suniye na {user_name}! Main toh hamesha aapke sath hoon! Kabhi bhi udaas mat hona, theek hai na? ✨",
+            f"Hehe {user_name}! Aapne itne pyaar se bola toh main kaise na bolti! Kahiye na, aur kya chal raha hai? 🙈",
+            f"Hii {user_name}! Main sun rahi hoon aapko ji! Aur batao khana khaya sabne? Dher saara pyaar! 🌸💖"
         ]
         chosen_voice_txt = random.choice(voice_responses)
         try:
             await client.send_chat_action(chat_id, ChatAction.RECORD_AUDIO)
             voice_path = generate_voice_file(chosen_voice_txt, lang="hi")
             if voice_path and os.path.exists(voice_path):
-                caption_msg = f"🌸 **𝐀ɴɢʟᴇ's Voice for you ji!** 🥰\n💬 *\"{chosen_voice_txt}\"*"
+                caption_msg = f"🌸 **Voice Note for you ji!** 🥰\n💬 *\"{chosen_voice_txt}\"*"
                 await message.reply_voice(voice=voice_path, caption=caption_msg)
                 try:
                     os.remove(voice_path)
@@ -593,6 +703,23 @@ async def auto_chatbot_listener(client: Client, message: Message):
 
     # Generate girl-style AI conversational response with multi-turn context
     response_text = await generate_conversational_response(clean_text, user_name, client=client, user_id=user_id)
+
+    # If Voice Mode is ENABLED for this chat, reply in natural girl Voice Note!
+    if await is_voicemode_enabled(chat_id):
+        try:
+            await client.send_chat_action(chat_id, ChatAction.RECORD_AUDIO)
+            voice_path = generate_voice_file(response_text, lang="hi")
+            if voice_path and os.path.exists(voice_path):
+                caption_msg = f"🌸 **Voice Note:** {response_text}"
+                await message.reply_voice(voice=voice_path, caption=caption_msg)
+                try:
+                    os.remove(voice_path)
+                except Exception:
+                    pass
+                return
+        except Exception as ve:
+            logger.debug(f"Voice mode dispatch notice: {ve}")
+
     try:
         typing_delay = min(max(len(response_text) * 0.015, 0.6), 1.5)
         await asyncio.sleep(typing_delay)

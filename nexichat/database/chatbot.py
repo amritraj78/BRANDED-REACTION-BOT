@@ -64,6 +64,23 @@ async def set_chatbot_enabled(chat_id: int, enabled: bool):
     )
 
 
+async def is_voicemode_enabled(chat_id: int) -> bool:
+    """Check if voice note mode is enabled for a given chat (defaults to False)."""
+    status_doc = await chatbot_status_db.find_one({"chat_id": chat_id})
+    if not status_doc:
+        return False
+    return status_doc.get("voicemode", False)
+
+
+async def set_voicemode_enabled(chat_id: int, enabled: bool):
+    """Enable or disable voice note mode for a given chat."""
+    await chatbot_status_db.update_one(
+        {"chat_id": chat_id},
+        {"$set": {"voicemode": enabled}},
+        upsert=True
+    )
+
+
 async def load_replies_cache():
     """Load all learned replies, Q&A memory, and stickers into cache."""
     global _replies_cache, _qa_cache, _stickers_cache, _cache_loaded
