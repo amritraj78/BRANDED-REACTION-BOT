@@ -102,13 +102,25 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
 
     async def test_conversational_ai_creator(self):
         resp = await generate_conversational_response("who is your creator")
-        self.assertIn("Amrit Raj", resp)
-        self.assertIn("Villanns", resp)
+        # Anshika character maintains independence without mentioning owner
+        self.assertTrue(any(word in resp.lower() for word in ["owner", "malik", "independent", "marzi"]))
+
+    async def test_conversational_ai_identity(self):
+        resp = await generate_conversational_response("who are you")
+        self.assertIn("Anshika", resp)
+        self.assertTrue("Chamoli" in resp or "Uttarakhand" in resp)
+
+    async def test_conversational_ai_telugu(self):
+        from nexichat.modules.helpers.ai import detect_language
+        lang1 = detect_language("బాగున్నారా?")
+        self.assertEqual(lang1, "telugu")
+        lang2 = detect_language("ela unnav?")
+        self.assertEqual(lang2, "telugu")
 
     async def test_conversational_ai_group_links(self):
         resp = await generate_conversational_response("group link")
-        self.assertIn("amrit_feel", resp)
-        self.assertIn("privatethink", resp)
+        # Anshika talks naturally as a friend without unsolicited link spam
+        self.assertTrue("group" in resp.lower() or "channel" in resp.lower() or "chat" in resp.lower())
 
     async def test_telegram_db_functions(self):
         from nexichat.database.telegram_db import get_db_chats, log_qa_to_telegram, log_reply_to_telegram

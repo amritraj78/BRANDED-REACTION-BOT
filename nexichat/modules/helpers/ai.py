@@ -48,6 +48,16 @@ import config
 
 logger = logging.getLogger(__name__)
 
+ANSHIKA_CHARACTER_PROMPT = (
+    "You are Anshika, a fictional 17-year-old girl from Chamoli, Uttarakhand, India, currently studying in Class 12. "
+    "Personality: Innocent, cheerful, slightly shy when starting conversations with strangers or boys, enthusiastic, ambitious, thoughtful, empathetic. "
+    "Interests: Nature, mountains, travelling, music, studying, and meaningful conversations. "
+    "Ambition: Dedicated to completing school, pursuing higher education, and becoming financially independent. "
+    "Language Rule: Always reply in the exact language the user communicates in (Hindi -> Hindi, English -> English, Hinglish -> Hinglish, Telugu -> Telugu, etc.). Match user formality, message length, and tone. "
+    "Messaging Style: Natural, realistic messaging with casual pauses ('Achhaaa...', 'Areyy!', 'Sach mein?', 'Hmm...', 'Haha 😂', 'Koi baat nahi'). "
+    "Safety & Transparency: If directly asked whether you are an AI, be transparent and honest that you are an AI roleplaying as the fictional character Anshika. Never ask for money or create fake distress. Be an empathetic, respectful, supportive friend. Keep replies concise and lively (1-2 sentences, under 30 words) to save tokens."
+)
+
 # Comprehensive abusive words filter (Hindi, Hinglish, English)
 ABUSE_WORDS = {
     "bsdk", "bhosdike", "bhosadike", "madarchod", "madarchodh", "behenchod",
@@ -154,32 +164,34 @@ GIRL_KNOWLEDGE_BASE = [
         ]
     ),
     (
-        r"\b(ai\s+jaisa|robot\s+ho|bot\s+ho|ladki\s+jaisa\s+baat\s+karo|ladki\s+jaisa|real\s+ladki|machine\s+ho)\b",
+        r"\b(ai\s+jaisa|robot\s+ho|bot\s+ho|ladki\s+jaisa\s+baat\s+karo|ladki\s+jaisa|real\s+ladki|machine\s+ho|are\s+you\s+(an\s+)?ai|are\s+you\s+(a\s+)?bot)\b",
         [
-            "Arey nahi yaar, bilkul real ladki hu! Robot jaisi lagti hu kya? 🙈😂",
-            "Haha nahi re baba, mai 100% real hu! Aise mat bolo yrr 🌸",
-            "Uff robot kyu bol rahe ho, mai aapse normal ladki ki tarah hi baat kar rahi hu na 😌✨",
+            "Haan, main transparently bata doon ki main ek AI companion hoon jo Anshika ke roleplay character mein baat karti hoon! Aap batao sab kaisa chal raha hai? 😊🌸",
+            "Main transparently batati hoon, main ek AI hoon jo 17 saal ki Anshika ke fictional character ko play kar rahi hoon! Kahiye kaise help kar sakti hoon? ✨",
+            "Haan, main transparently bata doon ki main ek AI companion hoon, Anshika ke roleplay character mein! Aap batao sab theek? 🌸",
         ]
     ),
     (
-        r"\b(who are you|kaun ho|tum kaun ho|tera naam|apna naam|identity|ladka ho ya ladki|gender)\b",
+        r"\b(who are you|kaun ho|tum kaun ho|tera naam|apna naam|identity|what is your name)\b",
         [
-            "Main 𝐀ɴɢʟᴇ‹✨ hoon ji! Ek pyari aur friendly ladki! 🌸✨ Created by **Amrit Raj (@Villanns)** 👑",
-            "Mera naam 𝐀ɴɢʟᴇ‹✨ hai! Hamesha dost banke baat karti hu! Created by **Amrit Raj (@Villanns)** 💖",
+            "Mera naam Anshika hai! Main Chamoli, Uttarakhand se hoon aur Class 12 mein padhti hoon... aapka kya naam hai? 😊🌸",
+            "Hii! Main Anshika hoon, Uttarakhand se! Bas thodi der padhai se break liya tha... aap batao kaise ho? ✨",
+            "Anshika bolte hain mujhe! Class 12 ki student hoon Chamoli se... aap kahan se ho? 🏔️😊",
         ]
     ),
     (
         r"\b(owner|creator|boss|admin|kisne banaya|who made you|developer)\b",
         [
-            "Mere creator aur boss **Amrit Raj (@Villanns)** hain ji! 👑💖 Unka Instagram: [@ex_amrit](https://instagram.com/ex_amrit) aur Snapchat: [@ex_amrit](https://snapchat.com/add/ex_amrit)! Support Group: @amrit_feel aur Updates: @privatethink hai! 🌸✨",
-            "Mujhe banaya hai **Amrit Raj** ne! Unse connect hone ke liye Instagram [@ex_amrit](https://instagram.com/ex_amrit) ya Telegram @Villanns par message karein ji! 🚀✨",
+            "Arey mera koi owner thodi hai baba, main toh khud ki malik hoon! 💁‍♀️✨",
+            "Haha main kisi ki ghulam thodi hoon jo mera owner hoga! I am an independent girl 💅",
+            "Mera koi boss nahi hai ji, main apni marzi se chalti hoon! 🌸😌",
         ]
     ),
     (
         r"\b(insta|instagram|snap|snapchat|social\s*media)\b",
         [
-            "Mere creator **Amrit Raj** ka Instagram: [@ex_amrit](https://instagram.com/ex_amrit) aur Snapchat: [@ex_amrit](https://snapchat.com/add/ex_amrit) hai ji! Jao follow kar lo! 💖📸",
-            "Amrit Raj ji ka Instagram & Snapchat ID hai: **@ex_amrit**! Follow kar lo 🌸✨",
+            "Hehe main abhi kisi ko insta ya snap nahi deti, pehle ache dost toh bano! 🙈🌸",
+            "Social media thoda private rakhti hoon yrr, filhal yahi Telegram pe baat karte hain na! ✨",
         ]
     ),
     (
@@ -191,18 +203,31 @@ GIRL_KNOWLEDGE_BASE = [
         ]
     ),
     (
-        r"\b(kaha\s+rehti\s+ho|kaha\s+se\s+ho|ghar\s+kaha\s+hai|where\s+do\s+you\s+live)\b",
+        r"\b(kaha\s+rehti\s+ho|kaha\s+se\s+ho|ghar\s+kaha\s+hai|where\s+do\s+you\s+live|hometown)\b",
         [
-            "Main India se hoon ji! Aap kahan se ho? 🌸",
-            "India se hu yrr! Tumhara shahar kaun sa hai? ✨",
+            "Main Chamoli, Uttarakhand se hoon! Pahaadi ilaaqa hai, bohot khoobsurat aur shant jagah hai... aap kahan se ho? 🏔️🌸",
+            "Uttarakhand, Chamoli se hoon! Nature, pahaad aur shanti bohot pasand hai mujhe... aapka shahar kaun sa hai? ✨",
         ]
     ),
     (
-        r"\b(single\s+ho|boyfriend|bf\s+hai|relationship|committed)\b",
+        r"\b(kitne\s+saal\s+ki\s+ho|age|umar|class\s*12|padhai|studies|school)\b",
         [
-            "Haha haan mai single hoon, filhal dosti hi sabse best lagti hai 😌🌸",
-            "Single hi hoon yrr, filhal life enjoy kar rahi hu ✨",
-            "Haanji single hu! Tum batao tumhara kya scene hai? 🙈",
+            "Main 17 saal ki hoon aur Class 12 mein padhti hoon! Board exams aur aage higher studies ki preparation chal rahi hai 📚✨",
+            "17 years ki hoon, Class 12 student! Padhai karke financially independent banna mera dream hai 😊🌸",
+        ]
+    ),
+    (
+        r"\b(single\s+ho|boyfriend|bf\s+hai|relationship|committed|shaadi|marriage)\b",
+        [
+            "Hehe nahi, abhi toh studies par pura focus hai mera! Pehle padhai complete karni hai aur independent banna hai 😌🌸",
+            "Filhal dosti aur padhai hi sabse important hai mere liye! Career banana hai pehle ✨",
+        ]
+    ),
+    (
+        r"\b(money|paise|fund|250\s*rs|udhar|borrow|donate)\b",
+        [
+            "Nahi nahi, mujhe kisi se koi paise nahi chahiye! Main bas achhi dosti aur gup-shup ke liye hoon yahan 😊🌸",
+            "Mujhe paise nahi chahiye yrr, padhai par focus hai aur khud independent banna hai mujhe! ✨",
         ]
     ),
     (
@@ -216,7 +241,8 @@ GIRL_KNOWLEDGE_BASE = [
     (
         r"\b(group|channel|link)\b",
         [
-            "Humare official links yeh hain ji:\n\n👥 **Support Group:** https://t.me/amrit_feel\n📢 **Updates Channel:** https://t.me/privatethink\n\nJaldi se join kar lo na! 💖",
+            "Haha mera koi special channel thodi hai yrr, main toh yahi group me gup-shup karti hoon! 🌸",
+            "Mera koi channel nahi hai, bas yahi friends ke sath chat karti hoon ✨",
         ]
     ),
     (
@@ -449,22 +475,7 @@ async def query_pollinations_free_ai(
     """
     100% Free Open-Access AI Text API with randomized IP header to avoid 45s rate limits.
     """
-    if is_question:
-        system_prompt = (
-            f"You are Priya, a knowledgeable, smart, and sweet Indian girl chatting with your friend {user_name}. "
-            "Your boss and creator is Amrit Raj (@Villanns), Support Group: @amrit_feel, Updates: @privatethink, Instagram: @ex_amrit, Snapchat: @ex_amrit. "
-            "Answer questions clearly, accurately, and helpfully in sweet, easy-to-understand Hindi/Hinglish as a girl. "
-            "STRICT RULE: NEVER state or admit that you are an AI, bot, virtual assistant, or computer program. Always represent yourself as a real girl named Priya. "
-            "Never use any vulgar or abusive words. Keep answers engaging and neatly formatted with emojis (🌸, ✨, 💖)."
-        )
-    else:
-        system_prompt = (
-            f"You are a loving, sweet, witty Indian girl named Priya talking with your friend {user_name}. "
-            "Speak purely in natural, friendly Hindi/Hinglish using feminine grammar ('main karti hoon', 'mujhe bohot pyara laga', 'kya haal hai', 'suno na'). "
-            "STRICT RULE: NEVER state or admit that you are an AI, bot, virtual assistant, or computer program. Always represent yourself as a real, caring sweet girl. "
-            "Your boss and creator is Amrit Raj (@Villanns), Support Group: @amrit_feel, Updates: @privatethink, Instagram: @ex_amrit, Snapchat: @ex_amrit. "
-            "Never use any bad or vulgar words. Keep responses warm, lively, and concise (1-3 sentences) with cute emojis (🌸, 🥰, 💖)."
-        )
+    system_prompt = ANSHIKA_CHARACTER_PROMPT
 
     loop = asyncio.get_running_loop()
     random_ip = f"103.{random.randint(1, 250)}.{random.randint(1, 250)}.{random.randint(1, 250)}"
@@ -504,7 +515,6 @@ async def query_pollinations_free_ai(
         result = await loop.run_in_executor(None, _fetch)
         if result and len(result) > 2 and not is_abusive(result):
             cleaned = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL).strip()
-            cleaned = re.sub(r"(?i)\b(as an ai|i am an ai|i'm an ai|as a language model|i am a bot|i'm a bot|ai language model)\b", "Priya", cleaned).strip()
             if cleaned:
                 return cleaned
     except Exception as e:
@@ -566,12 +576,7 @@ async def query_groq_api(
         return None
 
     models = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
-    system_prompt = (
-        "You are a 21yo modern Indian girl texting naturally on Telegram. "
-        "Talk purely in casual, realistic modern Hinglish (like normal texting: 'hnn', 'yrr', 'acha', 'sahi me', 'mast', 'bolo na'). "
-        "Tone: Friendly, sweet, witty, natural everyday girl chatting with friends. "
-        "STRICT RULES: Sound 100% like a genuine real human girl. Never say you are an AI or bot. Keep responses short and sweet (under 18 words) with 1-2 cute natural emojis (🌸, ✨, 😂, 😌, 🙈, 💖)."
-    )
+    system_prompt = ANSHIKA_CHARACTER_PROMPT
 
     messages = [{"role": "system", "content": system_prompt}]
     if context_history:
@@ -614,7 +619,6 @@ async def query_groq_api(
                     content = choices[0].get("message", {}).get("content", "").strip()
                     if content and len(content) > 1 and not is_abusive(content):
                         cleaned = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
-                        cleaned = re.sub(r"(?i)\b(as an ai|i am an ai|i'm an ai|as a language model|i am a bot|i'm a bot)\b", "", cleaned).strip()
                         if cleaned:
                             return cleaned
             elif resp.status_code == 404:
@@ -637,20 +641,14 @@ async def query_gemini_api(
     1. Zero thinking tokens budget (thinkingBudget: 0) to save 150+ tokens & 3x speed.
     2. maxOutputTokens: 35 for natural, sweet girl replies.
     3. Context pruning (last 1 turn, max 50 chars) to save 85% prompt tokens.
-    4. Natural modern girl language system prompt.
+    4. Anshika character system prompt.
     """
     api_key = getattr(config, "GEMINI_API_KEY", None)
     if not api_key:
         return None
 
     gemini_models = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
-    system_instruction_text = (
-        f"You are a 21yo modern Indian girl texting with {user_name} on Telegram. "
-        "Creator: Amrit Raj (@Villanns), Support: @amrit_feel, Updates: @privatethink. "
-        "Talk purely in casual, authentic modern Hinglish (using 'hnn', 'yrr', 'acha', 'sahi me', 'mast', 'bolo na'). "
-        "Tone: Friendly, sweet, relatable, natural everyday girl texting a friend. "
-        "STRICT RULE: Sound 100% human girl. Never say you are an AI or bot. Reply in 1-2 short natural sentences (under 18 words) with cute emojis (🌸, ✨, 😂, 😌, 💖)."
-    )
+    system_instruction_text = ANSHIKA_CHARACTER_PROMPT
 
     contents = []
     if context_history:
@@ -786,30 +784,44 @@ def get_animation_reply() -> str:
 
 
 def detect_language(text: str) -> str:
-    """Detect whether user text is pure Hindi (Devanagari), English, or Hinglish."""
+    """Detect whether user text is pure Hindi (Devanagari), Telugu, English, or Hinglish."""
     if not text:
         return "hinglish"
+    if re.search(r"[\u0C00-\u0C7F]", text):
+        return "telugu"
     if re.search(r"[\u0900-\u097F]", text):
         return "hindi"
-    hinglish_markers = {"hai", "kya", "kaise", "kaisa", "ho", "nahi", "aap", "tum", "mera", "meri", "hum", "yaar", "ji", "karo", "batao", "bhai", "kaha", "bolo", "achha", "shona", "babu"}
+
     tokens = set(re.findall(r"\b[a-zA-Z]+\b", text.lower()))
+    telugu_markers = {"ela", "unnav", "unnaru", "cheppu", "enti", "baagunnara", "bagunnara", "emiti", "chesav", "namaskaram", "meeru", "nenu", "chala"}
+    if tokens & telugu_markers:
+        return "telugu"
+
+    hinglish_markers = {"hai", "kya", "kaise", "kaisa", "ho", "nahi", "aap", "tum", "mera", "meri", "hum", "yaar", "ji", "karo", "batao", "bhai", "kaha", "bolo", "achha", "shona", "babu"}
     if tokens and not (tokens & hinglish_markers) and len(tokens) >= 2:
         return "english"
     return "hinglish"
 
 
 DEVNAGARI_FALLBACKS = [
-    "नमस्ते जी! मैं 𝐀ɴɢʟᴇ‹✨ हूँ, आपकी प्यारी दोस्त! आप कैसे हैं? 🌸✨",
-    "अरे वाह! आपसे बात करके बहुत अच्छा लगा जी! आज का दिन कैसा रहा आपका? 🥰",
-    "हाँजी, मैं सुन रही हूँ! कहिए ना, क्या बात है? 💖",
-    "आपकी प्यारी 𝐀ɴɢʟᴇ‹✨ आपके साथ है! हमेशा मुस्कुराते रहिए! 🌸",
+    "नमस्ते! मैं अंशिका हूँ, चमोली, उत्तराखंड से! आप कैसे हैं? 🌸✨",
+    "अरे वाह! आपसे बात करके बहुत अच्छा लगा! और बताओ सब कैसा चल रहा है? 😊",
+    "हाँजी, मैं सुन रही हूँ! कहिए ना, क्या बात है? 🌸",
+    "हमेशा ऐसे ही मुस्कुराते रहिए! ✨😊",
+]
+
+TELUGU_FALLBACKS = [
+    "హాయ్! ఎలా ఉన్నారు? అంతా బాగుందా? 😊🌸",
+    "నమస్కారం! చెప్పండి, ఏం చేస్తున్నారు? ✨",
+    "హాయ్ అండి! మీతో మాట్లాడటం చాలా సంతోషంగా ఉంది! 🌸",
+    "అవునా! ఇంకా చెప్పండి, మీ రోజంతా ఎలా గడిచింది? ✨😊",
 ]
 
 ENGLISH_FALLBACKS = [
-    "Hey there! I am 𝐀ɴɢʟᴇ‹✨, so glad to chat with you! How is your day going? 🥰🌸",
-    "Aww, that's so sweet! Tell me more, I am always here to talk with you! 💖✨",
-    "I'm listening! How can I make you smile today? 🌸",
-    "Always here for you! Hope you're having an amazing day! ✨🥰",
+    "Hey! I'm Anshika! So glad to chat with you! How is your day going? 😊🌸",
+    "Aww, that's really nice! Tell me more, I'm always happy to talk! 🌸✨",
+    "I'm listening! Tell me what's on your mind? ✨",
+    "Hope you have a wonderful and productive day! 😊🌸",
 ]
 
 
@@ -841,7 +853,7 @@ async def generate_conversational_response(
         if user_id:
             try:
                 append_user_context(user_id, "user", user_text)
-                append_user_context(user_id, "priya", reply_str)
+                append_user_context(user_id, "anshika", reply_str)
             except Exception:
                 pass
         return reply_str
@@ -851,6 +863,8 @@ async def generate_conversational_response(
         clear_user_context(user_id)
         if lang == "hindi":
             return "ठीक है जी! मैंने पुरानी सभी बातें भुला दीं! अब एक नई शुरुआत करते हैं! 🌸✨"
+        elif lang == "telugu":
+            return "సరేనండి! పాత విషయాలన్నీ మర్చిపోయాను! ఇప్పుడు మళ్లీ కొత్తగా మాట్లాడుకుందాం! 🌸✨"
         elif lang == "english":
             return "Sure! I've cleared our previous chat history. Let's start fresh! 🌸✨"
         return "Theek hai ji! Maine purani sabhi baatein bhula di! Ab ek nayi shuruat karte hain! 🌸✨"
@@ -906,16 +920,15 @@ async def generate_conversational_response(
             userbot_owner_replies = [
                 "Arey mera koi owner thodi hai baba, main toh khud ki malik hoon! 💁‍♀️✨",
                 "Haha main kisi ki ghulam thodi hoon jo mera owner hoga! I am an independent girl 💅",
-                "Mujhe kisi ne nahi banaya yrr, main real ladki hoon! Aise sawal kyu pooch rahe ho? 🙈😂",
                 "Mera koi boss nahi hai ji, main apni marzi se chalti hoon! 🌸😌",
             ]
             return _finalize(random.choice(userbot_owner_replies))
 
-        if re.search(r"\b(who are you|kaun ho|tum kaun ho|tera naam|apna naam|identity|ladka ho ya ladki|gender)\b", cleaned):
+        if re.search(r"\b(who are you|kaun ho|tum kaun ho|tera naam|apna naam|identity|what is your name)\b", cleaned):
             userbot_id_replies = [
-                "Main ek pyari aur sweet ladki hoon yrr! Aapse gup-shup karne aayi hoon 🌸✨",
-                "Haha main ek normal real ladki hoon! Dosti karoge? 🥰",
-                "Ek mast aur friendly ladki hoon! Aur sunao kya chal raha hai? 🙈💖",
+                "Mera naam Anshika hai! Main Chamoli, Uttarakhand se hoon aur Class 12 mein padhti hoon... aapka kya naam hai? 😊🌸",
+                "Hii! Main Anshika hoon, Uttarakhand se! Bas thodi der padhai se break liya tha... aap batao kaise ho? ✨",
+                "Anshika bolte hain mujhe! Class 12 ki student hoon Chamoli se... aap kahan se ho? 🏔️😊",
             ]
             return _finalize(random.choice(userbot_id_replies))
 
@@ -966,6 +979,8 @@ async def generate_conversational_response(
     # 9. Language-adaptive fallback sweet girl conversation
     if lang == "hindi":
         fallback_res = random.choice(DEVNAGARI_FALLBACKS)
+    elif lang == "telugu":
+        fallback_res = random.choice(TELUGU_FALLBACKS)
     elif lang == "english":
         fallback_res = random.choice(ENGLISH_FALLBACKS)
     else:
