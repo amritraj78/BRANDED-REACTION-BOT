@@ -1,3 +1,4 @@
+import os
 import asyncio
 import unittest
 from nexichat.database.chatbot import (
@@ -148,6 +149,32 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
         # Should contain Devanagari characters
         has_devanagari = any("\u0900" <= c <= "\u097F" for c in res)
         self.assertTrue(has_devanagari)
+
+    async def test_userbot_never_reveals_owner(self):
+        class MockUser:
+            is_bot = False
+            first_name = "Lav"
+        class MockClient:
+            me = MockUser()
+
+        mock_client = MockClient()
+        resp_owner = await generate_conversational_response("owner kaun hai", client=mock_client)
+        # Userbot must NOT reveal Amrit Raj or Villanns as owner
+        self.assertNotIn("Amrit Raj", resp_owner)
+        self.assertNotIn("@Villanns", resp_owner)
+        # Should talk like an independent real girl
+        self.assertTrue(any(k in resp_owner.lower() for k in ["owner", "malik", "ghulam", "boss", "real ladki"]))
+
+    def test_polly_aditi_voice_generation(self):
+        from nexichat.modules.helpers.media_gen import generate_voice_file
+        path = generate_voice_file("Hii kaise ho!", voice="Aditi")
+        self.assertIsNotNone(path)
+        self.assertTrue(os.path.exists(path))
+        self.assertTrue(os.path.getsize(path) > 500)
+        try:
+            os.remove(path)
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     unittest.main()

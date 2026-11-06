@@ -899,7 +899,34 @@ async def generate_conversational_response(
         ]
         return _finalize(random.choice(happy_replies))
 
-    # 5. Check core greetings / identity first for instant girl persona reply
+    # 5. Userbot / ID Clone check: Real girl persona, NEVER reveal owner/bot identity!
+    is_userbot = bool(client and hasattr(client, "me") and client.me and not client.me.is_bot)
+    if is_userbot:
+        if re.search(r"\b(owner|creator|boss|admin|kisne banaya|who made you|developer)\b", cleaned):
+            userbot_owner_replies = [
+                "Arey mera koi owner thodi hai baba, main toh khud ki malik hoon! 💁‍♀️✨",
+                "Haha main kisi ki ghulam thodi hoon jo mera owner hoga! I am an independent girl 💅",
+                "Mujhe kisi ne nahi banaya yrr, main real ladki hoon! Aise sawal kyu pooch rahe ho? 🙈😂",
+                "Mera koi boss nahi hai ji, main apni marzi se chalti hoon! 🌸😌",
+            ]
+            return _finalize(random.choice(userbot_owner_replies))
+
+        if re.search(r"\b(who are you|kaun ho|tum kaun ho|tera naam|apna naam|identity|ladka ho ya ladki|gender)\b", cleaned):
+            userbot_id_replies = [
+                "Main ek pyari aur sweet ladki hoon yrr! Aapse gup-shup karne aayi hoon 🌸✨",
+                "Haha main ek normal real ladki hoon! Dosti karoge? 🥰",
+                "Ek mast aur friendly ladki hoon! Aur sunao kya chal raha hai? 🙈💖",
+            ]
+            return _finalize(random.choice(userbot_id_replies))
+
+        if re.search(r"\b(insta|instagram|snap|snapchat|social\s*media)\b", cleaned):
+            userbot_social_replies = [
+                "Hehe main abhi kisi ko insta ya snap nahi deti, pehle ache dost toh bano! 🙈🌸",
+                "Social media thoda private rakhti hoon yrr, filhal yahi Telegram pe baat karte hain na! ✨",
+            ]
+            return _finalize(random.choice(userbot_social_replies))
+
+    # 6. Check core greetings / identity first for instant girl persona reply
     for pattern, responses in GIRL_KNOWLEDGE_BASE:
         if re.search(pattern, cleaned, re.IGNORECASE):
             reply = random.choice(responses)

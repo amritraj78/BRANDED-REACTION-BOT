@@ -676,7 +676,7 @@ async def auto_chatbot_listener(client: Client, message: Message):
     )
     if voice_trigger_match:
         voice_responses = [
-            f"Namaste {user_name} ji! Kaise ho aap? Main 𝐀ɴɢʟᴇ‹✨ hoon, aapki pyari dost! Kahiye na, kya haal chaal hain? 🌸",
+            f"Namaste {user_name} ji! Kaise ho aap? Kahiye na, kya haal chaal hain? 🌸",
             f"Arey suniye na {user_name}! Main toh hamesha aapke sath hoon! Kabhi bhi udaas mat hona, theek hai na? ✨",
             f"Hehe {user_name}! Aapne itne pyaar se bola toh main kaise na bolti! Kahiye na, aur kya chal raha hai? 🙈",
             f"Hii {user_name}! Main sun rahi hoon aapko ji! Aur batao khana khaya sabne? Dher saara pyaar! 🌸💖"

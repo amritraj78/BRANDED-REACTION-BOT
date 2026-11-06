@@ -62,27 +62,48 @@ def hinglish_to_hindi(text: str) -> str:
     return text
 
 
-def generate_voice_file(text: str, lang: str = "hi") -> Optional[str]:
+def generate_voice_file(text: str, lang: str = "hi", voice: str = "Aditi") -> Optional[str]:
     """
-    Generate an audio voice file in a natural, sweet Indian girl tone.
-    Automatically transliterates Hinglish to Devanagari Hindi for flawless natural speech.
-    Returns the file path of the generated .mp3 audio file.
+    Generate an audio voice file in a natural, sweet Indian girl voice (Amazon Polly Aditi/Raveena).
+    Unlike robotic Google TTS, Amazon Polly Aditi is recorded by a real human Indian female voice artist.
+    Falls back gracefully to Raveena and then Google transliterated TTS if needed.
     """
     cleaned = clean_tts_text(text)
     if not cleaned:
         cleaned = "Haanji, boliye kya kehna chahte hain aap!"
 
-    # Transliterate to Hindi script for pure natural female accent
-    spoken_text = hinglish_to_hindi(cleaned)
+    # 1. Primary: Natural Indian Female Voice via Amazon Polly (Aditi & Raveena)
+    for polly_voice in [voice, "Aditi", "Raveena"]:
+        try:
+            polly_url = "https://streamlabs.com/polly/speak"
+            polly_headers = {
+                "Referer": "https://streamlabs.com",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+            }
+            r = requests.post(polly_url, headers=polly_headers, data={"text": cleaned, "voice": polly_voice}, timeout=6)
+            if r.status_code == 200:
+                data = r.json()
+                if data.get("success") and data.get("speak_url"):
+                    audio_r = requests.get(data["speak_url"], timeout=10)
+                    if audio_r.status_code == 200 and len(audio_r.content) > 500:
+                        file_name = f"voice_{uuid.uuid4().hex[:8]}.mp3"
+                        file_path = os.path.join(CACHE_DIR, file_name)
+                        with open(file_path, "wb") as f:
+                            f.write(audio_r.content)
+                        return file_path
+        except Exception as pe:
+            logger.debug(f"Polly voice ({polly_voice}) attempt: {pe}")
 
-    encoded_text = urllib.parse.quote(spoken_text)
-    url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_text}&tl={lang}&client=tw-ob"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-
+    # 2. Secondary Fallback: Google Transliterated Hindi TTS
     try:
-        response = requests.get(url, headers=headers, timeout=12)
+        spoken_text = hinglish_to_hindi(cleaned)
+        encoded_text = urllib.parse.quote(spoken_text)
+        url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_text}&tl={lang}&client=tw-ob"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers, timeout=8)
         if response.status_code == 200 and len(response.content) > 500:
             file_name = f"voice_{uuid.uuid4().hex[:8]}.mp3"
             file_path = os.path.join(CACHE_DIR, file_name)
@@ -90,21 +111,7 @@ def generate_voice_file(text: str, lang: str = "hi") -> Optional[str]:
                 f.write(response.content)
             return file_path
     except Exception as e:
-        logger.error(f"TTS generation error: {e}")
-
-    # Fallback to direct raw text
-    try:
-        encoded_raw = urllib.parse.quote(cleaned)
-        url_raw = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_raw}&tl={lang}&client=tw-ob"
-        resp = requests.get(url_raw, headers=headers, timeout=8)
-        if resp.status_code == 200 and len(resp.content) > 500:
-            file_name = f"voice_{uuid.uuid4().hex[:8]}.mp3"
-            file_path = os.path.join(CACHE_DIR, file_name)
-            with open(file_path, "wb") as f:
-                f.write(resp.content)
-            return file_path
-    except Exception:
-        pass
+        logger.error(f"Fallback TTS generation error: {e}")
 
     return None
 
