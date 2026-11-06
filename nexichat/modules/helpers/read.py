@@ -93,7 +93,10 @@ CHATBOT_READ = f"""**
 │ ➻ /resetreactions - ʀᴇsᴇᴛ ᴛᴏ ᴅᴇғᴀᴜʟᴛ
 │ ➻ /clone <token> - ᴄʟᴏɴᴇ ʏᴏᴜʀ ᴏᴡɴ ʙᴏᴛ
 │ ➻ /cloned - ʟɪsᴛ ᴀʟʟ ᴄʟᴏɴᴇᴅ ʙᴏᴛs
-│ ➻ /delclone <token> - ᴅᴇʟᴇᴛᴇ ᴄʟᴏɴᴇ
+│ ➻ /delclone <token> - ᴅᴇʟᴇᴛᴇ ʙᴏᴛ ᴄʟᴏɴᴇ
+│ ➻ /idclone <session> - ᴄʟᴏɴᴇ ʏᴏᴜʀ ɪᴅ
+│ ➻ /idclones - ʟɪsᴛ ᴀʟʟ ɪᴅ ᴄʟᴏɴᴇs
+│ ➻ /delidclone - ᴅᴇʟᴇᴛᴇ ʏᴏᴜʀ ɪᴅ ᴄʟᴏɴᴇ
 ╰────────────────────────────────╯
 
 📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
@@ -152,6 +155,9 @@ ADMIN_READ = f"""**
 │ ➻ /clone <token> - ᴍᴀᴋᴇ ᴄʟᴏɴᴇ ʙᴏᴛ
 │ ➻ /cloned - ʟɪsᴛ ᴀʟʟ ᴄʟᴏɴᴇ ʙᴏᴛs
 │ ➻ /delclone - ᴅᴇʟᴇᴛᴇ ᴄʟᴏɴᴇ ʙᴏᴛ
+│ ➻ /idclone <session> - ᴍᴀᴋᴇ ɪᴅ ᴄʟᴏɴᴇ
+│ ➻ /idclones - ʟɪsᴛ ᴀʟʟ ɪᴅ ᴄʟᴏɴᴇs
+│ ➻ /delidclone - ᴅᴇʟᴇᴛᴇ ɪᴅ ᴄʟᴏɴᴇ
 ╰────────────────────────────────╯
 
 📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**

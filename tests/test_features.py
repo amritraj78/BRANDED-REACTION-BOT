@@ -451,6 +451,54 @@ class TestReactionFeatures(unittest.TestCase):
         self.assertLess(sim3, 0.50)
 
 
+    def test_id_clone_database_and_operations(self):
+        from nexichat.modules.clone import cloneuserdb, USER_CLONES
+        uid = 123456789
+        dummy_session = "1BVtsOMQBu7...dummy_session..."
+        details = {
+            "user_id": uid,
+            "cloned_by": 987654321,
+            "name": "Test User",
+            "username": "testuser",
+            "session": dummy_session,
+            "is_bot": False,
+            "cloned_at": "2026-11-06 12:00:00"
+        }
+        # Insert
+        self.loop.run_until_complete(cloneuserdb.update_one({"user_id": uid}, {"$set": details}, upsert=True))
+        found = self.loop.run_until_complete(cloneuserdb.find_one({"user_id": uid}))
+        self.assertIsNotNone(found)
+        self.assertEqual(found["user_id"], uid)
+        self.assertEqual(found["name"], "Test User")
+
+        # Delete
+        self.loop.run_until_complete(cloneuserdb.delete_one({"user_id": uid}))
+        after_del = self.loop.run_until_complete(cloneuserdb.find_one({"user_id": uid}))
+        self.assertIsNone(after_del)
+
+    def test_id_clone_empty_guidance(self):
+        from nexichat.modules.clone import id_clone_txt
+        mock_msg = MagicMock()
+        mock_msg.command = ["idclone"]
+        mock_msg.reply_to_message = None
+        mock_msg.reply_text = AsyncMock()
+
+        self.loop.run_until_complete(id_clone_txt(MagicMock(), mock_msg))
+        mock_msg.reply_text.assert_called_once()
+        guide_text = mock_msg.reply_text.call_args[0][0]
+        self.assertIn("ID CLONE SETUP GUIDE", guide_text)
+        self.assertIn("Pyrogram v2", guide_text)
+
+    def test_generate_session_script_valid(self):
+        import os
+        import py_compile
+        script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "generate_session.py")
+        self.assertTrue(os.path.exists(script_path), "generate_session.py must exist")
+        # Ensure it compiles cleanly with zero syntax errors
+        py_compile.compile(script_path, doraise=True)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 

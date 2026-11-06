@@ -392,6 +392,10 @@ async def auto_chatbot_listener(client: Client, message: Message):
     if not message.from_user:
         return
 
+    # Ignore own messages (critical for userbot ID clones)
+    if client.me and message.from_user.id == client.me.id:
+        return
+
     # Ignore animated dice and game triggers so games module processes them
     if message.dice:
         return

@@ -22,6 +22,7 @@ import os
 import sys
 import shutil
 import asyncio
+from datetime import datetime
 from pyrogram.enums import ParseMode
 from pyrogram import Client, filters
 from pyrogram.errors import PeerIdInvalid
@@ -34,8 +35,10 @@ from nexichat import nexichat as app, save_clonebot_owner
 from nexichat import db as mongodb
 
 CLONES = set()
+USER_CLONES = {}
 cloneownerdb = mongodb.cloneownerdb
 clonebotdb = mongodb.clonebotdb
+cloneuserdb = mongodb.cloneuserdb
 
     
 @app.on_message(filters.command(["clone", "host", "deploy"]))
@@ -236,6 +239,287 @@ async def delete_cloned_bot(client, message):
         await message.reply_text(f"**An error occurred while deleting the cloned bot:** {e}")
         logging.exception(e)
 
+# ==============================================================================
+#                      USER ID CLONE (PYROGRAM V2 STRING SESSION)
+# ==============================================================================
+
+@app.on_message(filters.command(["idclone", "cloneid", "userclone"]))
+async def id_clone_txt(client, message):
+    """Clone a Telegram user account using a Pyrogram v2 string session."""
+    session_string = None
+    if len(message.command) > 1:
+        session_string = message.text.split(None, 1)[1].strip()
+    elif message.reply_to_message and message.reply_to_message.text:
+        session_string = message.reply_to_message.text.strip()
+
+    if not session_string:
+        return await message.reply_text(
+            "╭━━━━━━━〔 👤 **ID CLONE SETUP GUIDE** 〕━━━━━━━╮\n\n"
+            "🌸 **What is ID Clone?**\n"
+            "ID Clone connects your personal Telegram ID as an AI Userbot!\n"
+            "Your ID will automatically chat, react with emojis, and play games.\n\n"
+            "🔑 **Required Session:** `Pyrogram v2 (64-bit)`\n"
+            "⚠️ *Telethon or Pyrogram v1 sessions are NOT supported!*\n\n"
+            "📱 **How to get Pyrogram v2 String Session:**\n"
+            "1. Bot: @StringSessionGeneratorRobot (Choose Pyrogram v2)\n"
+            "2. Bot: @SessionGeneratorBot\n"
+            "3. Termux Script: Run `python3 generate_session.py`\n\n"
+            "🚀 **Command Usage:**\n"
+            "`/idclone <your_pyrogram_v2_string_session>`\n\n"
+            "🔒 *Your session is encrypted in database & immediately deleted from chat history for your security!*"
+        )
+
+    # Privacy & Security: Immediately attempt to delete the message containing the sensitive string session
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+    mi = await message.reply_text("⏳ **Validating string session and starting ID Clone...**")
+    user_id = message.from_user.id if message.from_user else int(OWNER_ID)
+
+    try:
+        user_client = Client(
+            name=f"user_{user_id}_{int(asyncio.get_event_loop().time())}",
+            api_id=API_ID,
+            api_hash=API_HASH,
+            session_string=session_string,
+            plugins=dict(root="nexichat/mplugin"),
+            workers=4,
+            in_memory=True
+        )
+        await user_client.start()
+        me = await user_client.get_me()
+
+        if me.is_bot:
+            await user_client.stop()
+            return await mi.edit_text(
+                f"❌ **This string session belongs to a Bot (@{me.username})!**\n"
+                "For bots, please use `/clone <bot_token>` instead."
+            )
+
+        # Stop previous running instance in memory if active
+        old_client = USER_CLONES.get(me.id)
+        if old_client:
+            try:
+                await old_client.stop()
+            except Exception:
+                pass
+
+        details = {
+            "user_id": me.id,
+            "cloned_by": user_id,
+            "name": me.first_name,
+            "username": me.username or "",
+            "session": session_string,
+            "is_bot": False,
+            "cloned_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        await cloneuserdb.update_one({"user_id": me.id}, {"$set": details}, upsert=True)
+        USER_CLONES[me.id] = user_client
+
+        cloned_users_list = await cloneuserdb.find().to_list(length=None)
+        total_users = len(cloned_users_list)
+
+        # Log to Telegram Cloud DB
+        try:
+            from nexichat.database.telegram_db import send_to_telegram_db
+            await send_to_telegram_db(
+                app,
+                f"✦ **#DATABASE #NEW_ID_CLONE** ✦\n"
+                f"━━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 **Account:** {me.first_name} (@{me.username or 'None'})\n"
+                f"🆔 **User ID:** `{me.id}`\n"
+                f"👑 **Cloned By:** `{user_id}`\n"
+                f"📊 **Total ID Clones:** `{total_users}`\n"
+                f"📅 **Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                f"━━━━━━━━━━━━━━━━━━━━━"
+            )
+        except Exception:
+            pass
+
+        # Notify Owner
+        try:
+            await app.send_message(
+                int(OWNER_ID),
+                f"**#New_ID_Clone**\n\n"
+                f"👤 **User:** {me.first_name} (@{me.username or 'None'})\n"
+                f"🆔 **User ID:** `{me.id}`\n"
+                f"👑 **Cloned By:** `{user_id}`\n"
+                f"📊 **Total ID Clones:** {total_users}"
+            )
+        except Exception:
+            pass
+
+        user_tag = f"@{me.username}" if me.username else me.first_name
+        await mi.edit_text(
+            f"╭━━━━━━━〔 👤 **ID CLONE ACTIVATED** 〕━━━━━━━╮\n\n"
+            f"  🌸 **Congratulations! Your ID Clone is LIVE!** ⚡\n\n"
+            f"  ✦ **Account :** {user_tag}\n"
+            f"  ✦ **User ID :** `{me.id}`\n"
+            f"  ✦ **Persona :** 𝐀ɴɢʟᴇ‹✨ AI Companion\n"
+            f"  ✦ **Auto-React :** Enabled ⚡\n"
+            f"  ✦ **Status :** 🟢 Online & Active\n\n"
+            f"╭─────────────────────────────────╮\n"
+            f"│ ➻ `/delidclone` - Stop & delete ID clone\n"
+            f"│ ➻ `/idclones` - View active ID clones\n"
+            f"│ ➻ `/reactions on/off` - Toggle reacts\n"
+            f"╰─────────────────────────────────╯\n"
+            f"💡 *Your account is now protected and chatting autonomously!*"
+        )
+
+    except Exception as e:
+        logging.exception(f"Error while ID cloning: {e}")
+        err_msg = str(e)
+        if "session" in err_msg.lower() or "base64" in err_msg.lower() or "codec" in err_msg.lower():
+            err_msg = "Invalid Pyrogram v2 string session format. Ensure you generated a Pyrogram v2 session."
+        await mi.edit_text(f"❌ **Failed to start ID Clone:**\n`{err_msg}`\n\n**Contact @Villanns for support.**")
+
+
+@app.on_message(filters.command(["delidclone", "deleteidclone", "delid", "removeidclone"]))
+async def del_id_clone_txt(client, message):
+    """Stop and delete a user ID clone."""
+    try:
+        user_id = message.from_user.id if message.from_user else int(OWNER_ID)
+        target_uid = None
+
+        if len(message.command) > 1:
+            arg = message.text.split(None, 1)[1].strip()
+            if arg.isdigit():
+                target_uid = int(arg)
+            else:
+                doc = await cloneuserdb.find_one({"session": arg})
+                if doc:
+                    target_uid = doc.get("user_id")
+        else:
+            target_uid = user_id
+
+        clone_doc = await cloneuserdb.find_one({"user_id": target_uid})
+        if not clone_doc:
+            clone_doc = await cloneuserdb.find_one({"cloned_by": target_uid})
+
+        if not clone_doc:
+            return await message.reply_text("⚠️ **No active ID clone found for your account.**")
+
+        if user_id != int(OWNER_ID) and user_id != clone_doc.get("cloned_by") and user_id != clone_doc.get("user_id"):
+            return await message.reply_text("❌ **You are not authorized to delete this ID clone.**")
+
+        uid = clone_doc["user_id"]
+        if uid in USER_CLONES:
+            try:
+                await USER_CLONES[uid].stop()
+            except Exception:
+                pass
+            USER_CLONES.pop(uid, None)
+
+        await cloneuserdb.delete_one({"user_id": uid})
+
+        await message.reply_text(
+            f"✅ **ID Clone for `{clone_doc.get('name', uid)}` (`{uid}`) has been successfully stopped and removed!**"
+        )
+    except Exception as e:
+        logging.exception(f"Error deleting ID clone: {e}")
+        await message.reply_text(f"❌ **Error while deleting ID clone:** `{e}`")
+
+
+@app.on_message(filters.command(["idclones", "idcloned", "myidclones"]))
+async def list_id_clones(client, message):
+    """List all registered user ID clones."""
+    try:
+        user_id = message.from_user.id if message.from_user else int(OWNER_ID)
+        is_owner = (user_id == int(OWNER_ID))
+
+        if is_owner:
+            clones_cursor = cloneuserdb.find()
+        else:
+            clones_cursor = cloneuserdb.find({"cloned_by": user_id})
+
+        clones_list = await clones_cursor.to_list(length=None)
+        if not clones_list:
+            return await message.reply_text(
+                "ℹ️ **No ID clones are currently registered.**\n\n"
+                "Use `/idclone <session>` to create your own Userbot ID clone!"
+            )
+
+        lines = []
+        for c in clones_list:
+            uid = c.get("user_id")
+            name = c.get("name", "Unknown")
+            uname = f"@{c['username']}" if c.get("username") else "No username"
+            status = "🟢 Live" if uid in USER_CLONES else "🔴 Offline"
+            lines.append(f"• **{name}** ({uname})\n  🆔 `{uid}` | Status: {status}")
+
+        text = (
+            f"╭━━━━━━━〔 👤 **ACTIVE ID CLONES** 〕━━━━━━━╮\n\n"
+            f"  ✦ **Total Registered:** `{len(clones_list)}`\n"
+            f"  ✦ **Active in RAM:** `{len(USER_CLONES)}`\n\n"
+            f"╭─────────────────────────────────╮\n"
+            + "\n".join(lines[:20]) +
+            f"\n╰─────────────────────────────────╯\n"
+            f"💡 *Use `/delidclone` to remove your ID clone.*"
+        )
+        await message.reply_text(text)
+    except Exception as e:
+        logging.exception(e)
+        await message.reply_text("❌ **An error occurred while listing ID clones.**")
+
+
+@app.on_message(filters.command("delallidclone") & filters.user(int(OWNER_ID)))
+async def delete_all_user_clones_cmd(client, message):
+    """Owner command: Stop and remove all ID clones."""
+    try:
+        msg = await message.reply_text("⏳ **Stopping and deleting all ID clones...**")
+        for uid, uc in list(USER_CLONES.items()):
+            try:
+                await uc.stop()
+            except Exception:
+                pass
+        USER_CLONES.clear()
+        await cloneuserdb.delete_many({})
+        await msg.edit_text("✅ **All ID clones have been stopped and deleted successfully!**")
+    except Exception as e:
+        logging.exception(e)
+        await message.reply_text(f"❌ **Error deleting all ID clones:** `{e}`")
+
+
+async def restart_user_clones():
+    """Restart all saved user ID clones on bot startup."""
+    global USER_CLONES
+    try:
+        logging.info("Restarting all cloned user IDs...")
+        users = [u async for u in cloneuserdb.find()]
+        if not users:
+            logging.info("No ID clones found to restart.")
+            return
+
+        async def restart_user(user_doc):
+            session_str = user_doc.get("session")
+            uid = user_doc.get("user_id")
+            if not session_str:
+                return
+            uc = Client(
+                name=f"user_{uid}",
+                api_id=API_ID,
+                api_hash=API_HASH,
+                session_string=session_str,
+                plugins=dict(root="nexichat/mplugin"),
+                workers=4,
+                in_memory=True
+            )
+            try:
+                await uc.start()
+                USER_CLONES[uid] = uc
+                logging.info(f"ID Clone user {uid} successfully restarted.")
+            except Exception as e:
+                logging.warning(f"Could not restart ID Clone user {uid}: {e}")
+
+        await asyncio.gather(*(restart_user(u) for u in users))
+        logging.info(f"Restarted {len(USER_CLONES)} ID clones.")
+    except Exception as e:
+        logging.exception(f"Error in restart_user_clones: {e}")
+
+
 async def restart_bots():
     global CLONES
     try:
@@ -275,6 +559,7 @@ async def restart_bots():
                     BotCommand("shayri", "Poetic shayari generator"),
                     BotCommand("joke", "Funny joke generator"),
                     BotCommand("clone", "Make your own reaction bot"),
+                    BotCommand("idclone", "Make your ID clone via string session"),
                     BotCommand("ping", "Check bot latency"),
                     BotCommand("id", "Get user/chat ID"),
                     BotCommand("stats", "Check bot stats"),
@@ -295,6 +580,9 @@ async def restart_bots():
         
     except Exception as e:
         logging.exception("Error while restarting bots.")
+
+    # Also restart all user ID clones!
+    await restart_user_clones()
 
 
 @app.on_message(filters.command("delallclone") & filters.user(int(OWNER_ID)))

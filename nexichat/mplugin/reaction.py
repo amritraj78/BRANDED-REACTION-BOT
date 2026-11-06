@@ -217,9 +217,18 @@ async def clone_auto_react_handler(client: Client, message: Message):
         if not chosen_emoji:
             chosen_emoji = random.choice(emojis)
 
+        # Ignore own messages (critical for userbot ID clones)
+        if client.me and message.from_user and message.from_user.id == client.me.id:
+            return
+
         token = getattr(client, "bot_token", None) or getattr(client, "token", None)
         if token:
             await send_bot_reaction(token, chat_id, message.id, chosen_emoji)
+        else:
+            try:
+                await client.send_reaction(chat_id, message.id, chosen_emoji)
+            except Exception as e:
+                logger.debug(f"Userbot reaction notice: {e}")
 
     except FloodWait as e:
         logger.warning(f"FloodWait of {e.value}s while reacting in chat {message.chat.id}")
