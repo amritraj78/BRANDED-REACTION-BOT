@@ -29,7 +29,6 @@ Kaise kaam karta hai?
 
 import os
 import re
-import time
 import random
 import asyncio
 import logging
@@ -43,19 +42,16 @@ from pyrogram.types import (
     CallbackQuery
 )
 
-import config
 from config import OWNER_ID
-from nexichat import LOGGER, nexichat, SUDOERS
+from nexichat import nexichat, SUDOERS
 from nexichat.database.chatbot import (
     is_chatbot_enabled,
     set_chatbot_enabled,
     is_voicemode_enabled,
     set_voicemode_enabled,
     save_chat_reply,
-    get_chat_reply,
     save_sticker,
     get_random_sticker,
-    save_qa_pair,
     save_user_nickname,
     get_user_nickname
 )

@@ -25,7 +25,7 @@ import asyncio
 import logging
 from typing import Dict
 from pyrogram import Client, filters
-from pyrogram.enums import ChatAction, ChatMemberStatus, ChatType
+from pyrogram.enums import ChatMemberStatus, ChatType
 from pyrogram.errors import FloodWait
 from pyrogram.types import Message
 

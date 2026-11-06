@@ -20,12 +20,11 @@ import os
 import gc
 import shutil
 import time
-import asyncio
 import logging
-from typing import Dict, Any, Tuple
+from typing import Dict, Tuple
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from config import OWNER_ID, SUPPORT_GRP
+from config import OWNER_ID
 from nexichat.mplugin.helpers import is_owner
 
 logger = logging.getLogger(__name__)

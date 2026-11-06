@@ -20,42 +20,19 @@ Kaise kaam karta hai?
 ================================================================================
 """
 
-import asyncio
-import logging
 import random
 import time
-try:
-    import psutil
-except ImportError:
-    psutil = None
-import config
-import os
-from nexichat import _boot_
-from nexichat import get_readable_time
-from nexichat.mplugin.helpers import is_owner
-from nexichat import nexichat
 from datetime import datetime
-from pymongo import MongoClient
-from pyrogram.enums import ChatType
 from pyrogram import Client, filters
-from nexichat import db
-from config import OWNER_ID, MONGO_URL, OWNER_USERNAME
-from pyrogram.errors import FloodWait, ChatAdminRequired
-from nexichat.database.chats import get_served_chats, add_served_chat
-from nexichat.database.users import get_served_users, add_served_user
-from nexichat.database.clonestats import get_served_cchats, get_served_cusers, add_served_cuser, add_served_cchat
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
-from nexichat.mplugin.helpers import (
-    START,
-    START_BOT,
-    PNG_BTN,
-    CLOSE_BTN,
-    HELP_BTN,
-    HELP_BUTN,
-    HELP_READ,
-    HELP_START,
-    SOURCE_READ,
-)
+from pyrogram.enums import ChatType
+from pyrogram.types import InlineKeyboardMarkup, Message
+
+from config import OWNER_USERNAME
+from nexichat import _boot_, get_readable_time
+from nexichat.database.chats import add_served_chat
+from nexichat.database.users import add_served_user
+from nexichat.database.clonestats import add_served_cuser, add_served_cchat
+from nexichat.mplugin.helpers import PNG_BTN
 
 IMG = [
     "https://graph.org/file/210751796ff48991b86a3.jpg",

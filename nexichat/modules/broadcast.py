@@ -17,28 +17,20 @@ Is file ka kya kaam hai?
 ================================================================================
 """
 
+import os
+import json
 import asyncio
 import logging
-import random
-import time
-import config
-import os
-from nexichat import _boot_
-from nexichat import get_readable_time
-from nexichat import mongo, nexichat as app, SUDOERS
-from datetime import datetime
-from pymongo import MongoClient
-from pyrogram.enums import ChatType
 from pyrogram import Client, filters
+from pyrogram.errors import FloodWait
+from pyrogram.types import Message
+
 from config import OWNER_ID
-from pyrogram.errors import FloodWait, ChatAdminRequired
-from nexichat.database.chats import get_served_chats, add_served_chat
-from nexichat.database.users import get_served_users, add_served_user
-from nexichat.database.clonestats import get_served_cchats, get_served_cusers, add_served_cuser, add_served_cchat
+from nexichat import nexichat as app, SUDOERS
+from nexichat.database.clonestats import get_served_cchats, get_served_cusers
+from nexichat.database.chats import get_served_chats
+from nexichat.database.users import get_served_users
 
-
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 AUTO_SLEEP = 5
@@ -47,7 +39,7 @@ broadcast_lock = asyncio.Lock()
 
 
 @app.on_message(filters.command(["broadcast", "gcast"]) & SUDOERS)
-async def broadcast_message(client, message):
+async def broadcast_message(client: Client, message: Message):
     global IS_BROADCASTING
     bot_id = (await client.get_me()).id
     user_id = message.from_user.id

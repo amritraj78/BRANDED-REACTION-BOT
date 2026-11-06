@@ -11,7 +11,6 @@ for VIP Reaction Bot ID Clone feature.
 """
 
 import asyncio
-import os
 import sys
 
 # Official credentials or custom from environment

@@ -17,7 +17,7 @@ Is file ka kya kaam hai?
 from pyrogram.types import InlineKeyboardButton
 
 from config import SUPPORT_GRP, UPDATE_CHNL
-from nexichat import OWNER, nexichat
+from nexichat import nexichat
 
 START_BOT = [
     [

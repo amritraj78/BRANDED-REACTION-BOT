@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 import asyncio
 import os
-import time
 
 
 class TestSentinel(unittest.TestCase):

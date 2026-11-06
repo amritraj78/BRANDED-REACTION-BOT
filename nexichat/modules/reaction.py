@@ -40,7 +40,7 @@ from pyrogram.errors import FloodWait, ReactionInvalid, ChatAdminRequired
 from pyrogram.types import Message
 
 from config import OWNER_ID
-from nexichat import LOGGER, nexichat, SUDOERS
+from nexichat import nexichat, SUDOERS
 from nexichat.database.reactions import (
     DEFAULT_EMOJIS,
     get_chat_emojis,

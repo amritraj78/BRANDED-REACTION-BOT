@@ -25,9 +25,6 @@ from pyrogram import Client, filters
 from pyrogram.enums import ChatMemberStatus, ChatType
 from pyrogram.errors import FloodWait, ReactionInvalid, ChatAdminRequired
 from pyrogram.types import Message
-
-from config import OWNER_ID
-from nexichat import SUDOERS
 from nexichat.database.reactions import (
     DEFAULT_EMOJIS,
     get_chat_emojis,

@@ -22,11 +22,9 @@ Features:
 """
 
 import time
-import asyncio
-from datetime import datetime
 from typing import Dict
 from pyrogram import Client, filters
-from pyrogram.enums import ChatAction, ChatType, MessageEntityType
+from pyrogram.enums import ChatAction, MessageEntityType
 from pyrogram.types import Message
 
 from nexichat import nexichat

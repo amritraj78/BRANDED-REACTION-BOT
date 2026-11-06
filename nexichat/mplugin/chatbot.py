@@ -31,7 +31,6 @@ from pyrogram.types import (
     CallbackQuery
 )
 
-import config
 from config import OWNER_ID
 from nexichat import SUDOERS
 from nexichat.database.chatbot import (
@@ -40,10 +39,8 @@ from nexichat.database.chatbot import (
     is_voicemode_enabled,
     set_voicemode_enabled,
     save_chat_reply,
-    get_chat_reply,
     save_sticker,
     get_random_sticker,
-    save_qa_pair,
     save_user_nickname,
     get_user_nickname
 )

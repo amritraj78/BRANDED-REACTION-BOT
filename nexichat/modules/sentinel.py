@@ -31,10 +31,10 @@ import shutil
 import time
 import asyncio
 import logging
-from typing import Dict, Any, Tuple, Set
+from typing import Dict, Tuple, Set
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from config import OWNER_ID, SUPPORT_GRP
+from config import OWNER_ID
 from nexichat import nexichat, SUDOERS
 
 logger = logging.getLogger(__name__)

@@ -1,28 +1,16 @@
-import asyncio
-import logging
-import random
 import time
-import config
-import os
-from nexichat import _boot_
-from nexichat import get_readable_time
-from nexichat import nexichat
-from datetime import datetime
-from pymongo import MongoClient
-from pyrogram.enums import ChatType
+import logging
 from pyrogram import Client, filters
-from nexichat import db
-from config import OWNER_ID, MONGO_URL, OWNER_USERNAME
-from pyrogram.errors import FloodWait, ChatAdminRequired
-from nexichat.database.chats import get_served_chats, add_served_chat
-from nexichat.database.users import get_served_users, add_served_user
-from nexichat.database.clonestats import get_served_cchats, get_served_cusers, add_served_cuser, add_served_cchat
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
-from pyrogram.types import InlineKeyboardButton
+from pyrogram.enums import ParseMode
+from pyrogram.types import Message
 
-from config import SUPPORT_GRP, UPDATE_CHNL
-from nexichat import OWNER, nexichat
+from config import OWNER_ID, SUPPORT_GRP
+from nexichat import _boot_, get_readable_time
+from nexichat.database.chats import get_served_chats
+from nexichat.database.users import get_served_users
+from nexichat.database.chatbot import get_user_nickname
 
+logger = logging.getLogger(__name__)
 
 
 @Client.on_message(filters.command("stats"))
@@ -39,15 +27,10 @@ async def stats(cli: Client, message: Message):
     )
 
 
-from pyrogram.enums import ParseMode
-
-from nexichat import nexichat
-
-
 @Client.on_message(filters.command("id"))
-async def getid(client, message):
+async def getid(client: Client, message: Message):
     chat = message.chat
-    your_id = message.from_user.id
+    your_id = message.from_user.id if message.from_user else 0
     message_id = message.id
     reply = message.reply_to_message
 
@@ -57,15 +40,11 @@ async def getid(client, message):
     if not message.command:
         message.command = message.text.split()
 
-    if not message.command:
-        message.command = message.text.split()
-
     if len(message.command) == 2:
         try:
             split = message.text.split(None, 1)[1].strip()
             user_id = (await client.get_users(split)).id
             text += f"**[ᴜsᴇʀ ɪᴅ:](tg://user?id={user_id})** `{user_id}`\n"
-
         except Exception:
             return await message.reply_text("ᴛʜɪs ᴜsᴇʀ ᴅᴏᴇsɴ'ᴛ ᴇxɪsᴛ.", quote=True)
 
@@ -81,11 +60,9 @@ async def getid(client, message):
 
     if reply and reply.forward_from_chat:
         text += f"ᴛʜᴇ ғᴏʀᴡᴀʀᴅᴇᴅ ᴄʜᴀɴɴᴇʟ, {reply.forward_from_chat.title}, ʜᴀs ᴀɴ ɪᴅ ᴏғ `{reply.forward_from_chat.id}`\n\n"
-        print(reply.forward_from_chat)
 
     if reply and reply.sender_chat:
         text += f"ɪᴅ ᴏғ ᴛʜᴇ ʀᴇᴘʟɪᴇᴅ ᴄʜᴀᴛ/ᴄʜᴀɴɴᴇʟ, ɪs `{reply.sender_chat.id}`"
-        print(reply.sender_chat)
 
     await message.reply_text(
         text,
@@ -104,7 +81,6 @@ async def user_profile(client: Client, message: Message):
     is_owner = (user.id == int(OWNER_ID))
     role = "👑 ᴏᴡɴᴇʀ / ʙᴏss" if is_owner else "💎 ᴠɪᴘ ᴍᴇᴍʙᴇʀ"
     
-    from nexichat.database.chatbot import get_user_nickname
     nickname = await get_user_nickname(user.id)
     nick_str = f"│ ✦ **ɴɪᴄᴋɴᴀᴍᴇ :** `{nickname}`\n" if nickname else ""
     
@@ -126,7 +102,3 @@ async def user_profile(client: Client, message: Message):
 📡 **ᴘᴏᴡᴇʀᴇᴅ ʙʏ :** [ᴀᴍʀɪᴛ ғᴇᴇʟ](https://t.me/{SUPPORT_GRP}) 💞**
 """
     await message.reply_text(text, disable_web_page_preview=True)
-
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)

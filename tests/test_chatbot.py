@@ -1,5 +1,4 @@
 import os
-import asyncio
 import unittest
 from nexichat.database.chatbot import (
     is_chatbot_enabled,

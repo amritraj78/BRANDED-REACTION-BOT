@@ -1,26 +1,16 @@
+import os
+import time
+import json
 import asyncio
 import logging
-import random
-import time
-import config
-import os
-from nexichat import _boot_
-from nexichat import get_readable_time
-from nexichat.mplugin.helpers import is_owner
-from nexichat import mongo
 from datetime import datetime
-from pymongo import MongoClient
-from pyrogram.enums import ChatType
 from pyrogram import Client, filters
+from pyrogram.errors import FloodWait
+
 from config import OWNER_ID
-from pyrogram.errors import FloodWait, ChatAdminRequired
-from nexichat.database.chats import get_served_chats, add_served_chat
-from nexichat.database.users import get_served_users, add_served_user
-from nexichat.database.clonestats import get_served_cchats, get_served_cusers, add_served_cuser, add_served_cchat
+from nexichat.mplugin.helpers import is_owner
+from nexichat.database.clonestats import get_served_cchats, get_served_cusers
 
-
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 AUTO_SLEEP = 5

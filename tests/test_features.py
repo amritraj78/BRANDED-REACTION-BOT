@@ -287,7 +287,6 @@ class TestReactionFeatures(unittest.TestCase):
 
     def test_cloned_bot_telegram_db_fallback(self):
         from nexichat.database.telegram_db import send_to_telegram_db
-        import nexichat.database.telegram_db as tdb
 
         # Cloned bot client that always throws permission error
         mock_clone_client = MagicMock()
@@ -452,7 +451,7 @@ class TestReactionFeatures(unittest.TestCase):
 
 
     def test_id_clone_database_and_operations(self):
-        from nexichat.modules.clone import cloneuserdb, USER_CLONES
+        from nexichat.modules.clone import cloneuserdb
         uid = 123456789
         dummy_session = "1BVtsOMQBu7...dummy_session..."
         details = {

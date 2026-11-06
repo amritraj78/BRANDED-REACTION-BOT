@@ -1,23 +1,10 @@
-import random
-from pymongo import MongoClient
-from pyrogram import Client, filters
-from pyrogram.errors import MessageEmpty
-from pyrogram.enums import ChatAction
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-from nexichat.database.chats import add_served_chat
-from nexichat.database.users import add_served_user
-from config import MONGO_URL
-from nexichat import nexichat, mongo
-from pyrogram.enums import ChatMemberStatus as CMS
-from pyrogram.types import CallbackQuery
-import asyncio
-import config
-from nexichat import LOGGER, nexichat, db
-from nexichat.modules.helpers import (
+from pyrogram import Client
+from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
+
+from nexichat.mplugin.helpers import (
     ABOUT_BTN,
     ABOUT_READ,
     ADMIN_READ,
-    BACK,
     CHATBOT_BACK,
     CHATBOT_READ,
     AI_CHATBOT_READ,
@@ -26,10 +13,7 @@ from nexichat.modules.helpers import (
     HELP_READ,
     HELP_GAMES_READ,
     HELP_GROUP_READ,
-    MUSIC_BACK_BTN,
-    START,
     TOOLS_DATA_READ,
-    
 )
 
 

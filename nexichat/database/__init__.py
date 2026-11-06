@@ -15,7 +15,6 @@ Is file ka kya kaam hai?
 ================================================================================
 """
 
-import config
 from .chats import *
 from .users import *
 from .clonestats import *

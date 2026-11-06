@@ -28,7 +28,6 @@ from pyrogram.errors import FloodWait
 from pyrogram.types import Message
 
 from nexichat import nexichat, SUDOERS
-from config import OWNER_ID
 
 
 @nexichat.on_message(filters.command("givelink") & SUDOERS)

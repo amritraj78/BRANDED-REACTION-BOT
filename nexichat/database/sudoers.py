@@ -21,7 +21,6 @@ Kaise kaam karta hai?
 """
 
 from nexichat import mongodb
-from typing import Dict, List, Union
 
 sudoersdb = mongodb.sudoers
 

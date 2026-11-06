@@ -66,6 +66,7 @@ class TestCoreArchitecture(unittest.TestCase):
         self.assertIn("BOT_TOKEN HAS BEEN REVOKED", msg)
 
     def test_port_finder(self):
+        self.assertTrue(is_port_available(18889))
         port = find_available_port(18888)
         self.assertIsInstance(port, int)
         self.assertTrue(port >= 18888)

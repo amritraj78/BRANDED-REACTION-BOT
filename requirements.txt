@@ -8,6 +8,5 @@ python-dotenv
 Flask
 psutil
 speedtest-cli
-apscheduler
 uvloop
 Abg==2.3.1

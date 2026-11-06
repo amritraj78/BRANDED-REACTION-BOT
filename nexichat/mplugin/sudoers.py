@@ -22,8 +22,7 @@ Kaise kaam karta hai?
 from pyrogram import filters, Client
 from pyrogram.types import Message
 
-from config import MONGO_URL, OWNER_ID
-from nexichat import nexichat as app
+from config import OWNER_ID
 from nexichat import SUDOERS
 from nexichat.database import add_sudo, remove_sudo
 

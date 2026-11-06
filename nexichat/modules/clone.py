@@ -19,18 +19,13 @@ Is file ka kya kaam hai?
 
 import logging
 import os
-import sys
-import shutil
 import asyncio
 from datetime import datetime
-from pyrogram.enums import ParseMode
 from pyrogram import Client, filters
 from pyrogram.errors import PeerIdInvalid
 from pyrogram.errors.exceptions.bad_request_400 import AccessTokenExpired, AccessTokenInvalid
-import config
 from pyrogram.types import BotCommand
 from config import API_HASH, API_ID, OWNER_ID
-from nexichat import CLONE_OWNERS
 from nexichat import nexichat as app, save_clonebot_owner
 from nexichat import db as mongodb
 

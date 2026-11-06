@@ -22,7 +22,6 @@ import asyncio
 import speedtest
 from pyrogram import filters, Client
 from pyrogram.types import Message
-from nexichat import nexichat
 
 server_result_template = (
     "✯ sᴩᴇᴇᴅᴛᴇsᴛ ʀᴇsᴜʟᴛs ✯\n\n"
