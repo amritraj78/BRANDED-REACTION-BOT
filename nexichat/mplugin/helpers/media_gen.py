@@ -30,12 +30,32 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 
 
 def clean_tts_text(text: str) -> str:
-    """Clean text for TTS by removing markdown symbols, emojis, and urls."""
-    text = re.sub(r"http\S+", "", text)
-    text = re.sub(r"[*_`~#|]", "", text)
-    # Retain Latin letters, Devanagari Hindi characters, and basic punctuation
-    text = re.sub(r"[^\w\s,\.\?\!\'\-\u0900-\u097F]", "", text)
-    return text.strip()[:250]
+    """
+    Clean and naturalize text for sweet, realistic human girl speech.
+    Removes bot artifacts, links, user tags, markdown, and emojis.
+    Softens punctuation and texting abbreviations so the speech flows naturally like talking into a phone mic.
+    """
+    if not text:
+        return "Haanji, sun rahi hoon main!"
+    # Strip URLs, mentions, bot markers
+    t = re.sub(r"https?://\S+", "", text)
+    t = re.sub(r"@\w+", "", t)
+    for ch in ["*", "_", "`", "~", "#", "|", ">", "[", "]", "(", ")"]:
+        t = t.replace(ch, " ")
+    # Retain Latin letters, Devanagari Hindi, and essential punctuation
+    t = re.sub(r"[^\w\s,\.\?\!\'\-\u0900-\u097F]", " ", t)
+    # Soften harsh punctuation to natural breath pauses
+    t = re.sub(r"[!]+", ", ", t)
+    t = re.sub(r"\.{2,}", ", ", t)
+    t = re.sub(r"\?+", "? ", t)
+    # Convert texting shorthand to natural spoken words
+    t = re.sub(r"\byrr\b", "yaar", t, flags=re.I)
+    t = re.sub(r"\bhnn\b", "haan", t, flags=re.I)
+    t = re.sub(r"\bmsg\b", "message", t, flags=re.I)
+    t = re.sub(r"\bpls\b", "please", t, flags=re.I)
+    words = [w for w in t.split() if w]
+    cleaned = " ".join(words)
+    return cleaned[:220]
 
 
 def hinglish_to_hindi(text: str) -> str:
@@ -66,34 +86,40 @@ def generate_voice_file(text: str, lang: str = "hi", voice: str = "Aditi") -> Op
     """
     Generate an audio voice file in a natural, sweet Indian girl voice (Amazon Polly Aditi/Raveena).
     Unlike robotic Google TTS, Amazon Polly Aditi is recorded by a real human Indian female voice artist.
-    Falls back gracefully to Raveena and then Google transliterated TTS if needed.
+    Uses conversational prosody (rate: 95%, pitch: +2%) so it sounds like a real girl speaking into a phone,
+    not reading a script.
     """
     cleaned = clean_tts_text(text)
     if not cleaned:
         cleaned = "Haanji, boliye kya kehna chahte hain aap!"
 
     # 1. Primary: Natural Indian Female Voice via Amazon Polly (Aditi & Raveena)
+    polly_url = "https://streamlabs.com/polly/speak"
+    polly_headers = {
+        "Referer": "https://streamlabs.com",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+    }
+
+    # Wrap in gentle speech SSML for natural cadence
+    ssml_text = f'<speak><prosody rate="95%" pitch="+2%">{cleaned}</prosody></speak>'
+
     for polly_voice in [voice, "Aditi", "Raveena"]:
-        try:
-            polly_url = "https://streamlabs.com/polly/speak"
-            polly_headers = {
-                "Referer": "https://streamlabs.com",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-            }
-            r = requests.post(polly_url, headers=polly_headers, data={"text": cleaned, "voice": polly_voice}, timeout=6)
-            if r.status_code == 200:
-                data = r.json()
-                if data.get("success") and data.get("speak_url"):
-                    audio_r = requests.get(data["speak_url"], timeout=10)
-                    if audio_r.status_code == 200 and len(audio_r.content) > 500:
-                        file_name = f"voice_{uuid.uuid4().hex[:8]}.mp3"
-                        file_path = os.path.join(CACHE_DIR, file_name)
-                        with open(file_path, "wb") as f:
-                            f.write(audio_r.content)
-                        return file_path
-        except Exception as pe:
-            logger.debug(f"Polly voice ({polly_voice}) attempt: {pe}")
+        for payload_text in [ssml_text, cleaned]:
+            try:
+                r = requests.post(polly_url, headers=polly_headers, data={"text": payload_text, "voice": polly_voice}, timeout=6)
+                if r.status_code == 200:
+                    data = r.json()
+                    if data.get("success") and data.get("speak_url"):
+                        audio_r = requests.get(data["speak_url"], timeout=10)
+                        if audio_r.status_code == 200 and len(audio_r.content) > 500:
+                            file_name = f"voice_{uuid.uuid4().hex[:8]}.mp3"
+                            file_path = os.path.join(CACHE_DIR, file_name)
+                            with open(file_path, "wb") as f:
+                                f.write(audio_r.content)
+                            return file_path
+            except Exception as pe:
+                logger.debug(f"Polly voice ({polly_voice}) attempt: {pe}")
 
     # 2. Secondary Fallback: Google Transliterated Hindi TTS
     try:

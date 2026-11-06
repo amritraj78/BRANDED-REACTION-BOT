@@ -79,9 +79,10 @@ JOKES = [
 ]
 
 VOICE_REPLIES = [
-    "Aww! Aapki pyari si voice sun kar bahut achha laga ji! 🥰 Bolo na, main sun rahi hoon! 🌸",
-    "Aapki awaz mein ek alag hi mithaas hai ji! Sunke maza aa gaya! 🙈✨",
-    "Haanji, maine aapka voice note sun liya! Kitne cute ho aap! 💖 Aur batao?",
+    "Aww, aapki voice sun kar bahut achha laga! Bolo na, main sun rahi hoon!",
+    "Aapki awaz mein alag hi mithaas hai yaar, sunke maza aa gaya! Aur sunao?",
+    "Haanji, maine aapka voice note sun liya, kitne pyare ho aap! Aur batao kya chal raha?",
+    "Arey waah, itni pyari awaz! Sunke mood fresh ho gaya mera! Aur sunao sab theek thaak?",
 ]
 
 PHOTO_REPLIES = [

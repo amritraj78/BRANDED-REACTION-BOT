@@ -80,6 +80,7 @@ logger = logging.getLogger(__name__)
 # Anti-spam flood protection
 _message_counts = {}
 _blocklist = {}
+_chat_text_streak = {}
 
 
 async def is_admin_or_sudo(client: Client, message: Message) -> bool:
@@ -616,8 +617,8 @@ async def auto_chatbot_listener(client: Client, message: Message):
         voice_path = generate_voice_file(chosen_voice_txt, lang="hi")
         if voice_path and os.path.exists(voice_path):
             try:
-                caption_msg = f"🌸 **Voice Note for you ji!** 🥰\n💬 *\"{chosen_voice_txt}\"*"
-                await message.reply_voice(voice=voice_path, caption=caption_msg)
+                # Pure Voice Note (No text caption!)
+                await message.reply_voice(voice=voice_path)
                 try:
                     os.remove(voice_path)
                 except Exception:
@@ -727,7 +728,7 @@ async def auto_chatbot_listener(client: Client, message: Message):
     )
     if voice_trigger_match:
         voice_responses = [
-            f"Namaste {user_name} ji! Kaise ho aap? Main 𝐀ɴɢʟᴇ‹✨ hoon, aapki pyari dost! Kahiye na, kya haal chaal hain? 🌸",
+            f"Namaste {user_name} ji! Kaise ho aap? Kahiye na, kya haal chaal hain? 🌸",
             f"Arey suniye na {user_name}! Main toh hamesha aapke sath hoon! Kabhi bhi udaas mat hona, theek hai na? ✨",
             f"Hehe {user_name}! Aapne itne pyaar se bola toh main kaise na bolti! Kahiye na, aur kya chal raha hai? 🙈",
             f"Hii {user_name}! Main sun rahi hoon aapko ji! Aur batao khana khaya sabne? Dher saara pyaar! 🌸💖"
@@ -737,8 +738,8 @@ async def auto_chatbot_listener(client: Client, message: Message):
             await client.send_chat_action(chat_id, ChatAction.RECORD_AUDIO)
             voice_path = generate_voice_file(chosen_voice_txt, lang="hi")
             if voice_path and os.path.exists(voice_path):
-                caption_msg = f"🌸 **Voice Note for you ji!** 🥰\n💬 *\"{chosen_voice_txt}\"*"
-                await message.reply_voice(voice=voice_path, caption=caption_msg)
+                # PURE VOICE NOTE ONLY (NO CAPTION!)
+                await message.reply_voice(voice=voice_path)
                 try:
                     os.remove(voice_path)
                 except Exception:
@@ -755,22 +756,37 @@ async def auto_chatbot_listener(client: Client, message: Message):
     # Generate girl-style AI conversational response with multi-turn context
     response_text = await generate_conversational_response(clean_text, user_name, client=client, user_id=user_id)
 
-    # If Voice Mode is ENABLED for this chat, reply in natural girl Voice Note!
-    if await is_voicemode_enabled(chat_id):
+    # Automatic Natural Switcher: alternates between pure Voice Note and pure Text Message!
+    streak = _chat_text_streak.get(chat_id, 0)
+    voicemode_on = await is_voicemode_enabled(chat_id)
+    is_greeting_phrase = bool(re.search(r"\b(hii?|hello|kaise\s+ho|kya\s+haal|aur\s+batao|kya\s+kar\s+rahi|suno|kaha\s+ho)\b", clean_text, re.IGNORECASE))
+
+    # Send voice note if voicemode is on, or after 2-4 text messages naturally
+    should_send_voice = (
+        voicemode_on
+        or streak >= 4
+        or (streak >= 2 and random.random() < 0.45)
+        or (streak >= 1 and is_greeting_phrase and random.random() < 0.50)
+    )
+
+    if should_send_voice:
         try:
             await client.send_chat_action(chat_id, ChatAction.RECORD_AUDIO)
             voice_path = generate_voice_file(response_text, lang="hi")
             if voice_path and os.path.exists(voice_path):
-                caption_msg = f"🌸 **𝐀ɴɢʟᴇ :** {response_text}"
-                await message.reply_voice(voice=voice_path, caption=caption_msg)
+                _chat_text_streak[chat_id] = 0
+                # PURE VOICE NOTE ONLY (NO TEXT CAPTION!)
+                await message.reply_voice(voice=voice_path)
                 try:
                     os.remove(voice_path)
                 except Exception:
                     pass
                 return
         except Exception as ve:
-            logger.debug(f"Voice mode dispatch notice: {ve}")
+            logger.debug(f"Voice auto-switch dispatch notice: {ve}")
 
+    # Otherwise send PURE TEXT MESSAGE ONLY (NO VOICE NOTE!)
+    _chat_text_streak[chat_id] = streak + 1
     try:
         typing_delay = min(max(len(response_text) * 0.015, 0.6), 1.5)
         await asyncio.sleep(typing_delay)
