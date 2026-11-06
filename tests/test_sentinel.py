@@ -9,9 +9,17 @@ class TestSentinel(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
+        try:
+            from nexichat import nexichat
+            nexichat.loop = self.loop
+            if hasattr(nexichat, "dispatcher"):
+                nexichat.dispatcher.loop = self.loop
+        except Exception:
+            pass
 
     def tearDown(self):
         self.loop.close()
+
 
     def test_disk_stats(self):
         from nexichat.modules.sentinel import get_disk_stats

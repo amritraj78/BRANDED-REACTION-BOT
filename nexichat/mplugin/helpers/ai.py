@@ -240,15 +240,76 @@ GIRL_KNOWLEDGE_BASE = [
             "Most welcome {user}! Aapke liye toh main hamesha hazir hoon! ❤️",
         ]
     ),
+    (
+        r"\b(haha+|hehe+|lol+|lmao+|rofl+|xdd+|haso|hasna)\b",
+        [
+            "Haha kya yaar, kitna hasate ho tum log! 😂",
+            "Lol sahi me yaar, mujhe bhi hasi aa rahi hai 🤣",
+            "Hehe itna kyu has rahe ho sab? Mujhe bhi batao na! 🙈",
+            "Haha bas karo yaar, pet dukhne laga has has ke! 🤣✨",
+        ]
+    ),
+    (
+        r"\b(khana\s+khaya|lunch|dinner|breakfast|khana\s+ho\s+gaya|kya\s+khaya)\b",
+        [
+            "Haanji maine toh kha liya! Aapne khaya {user}? Aaj kya bana tha ghar me? 😋🍲",
+            "Hnn pet bhar ke khana kha liya ji! Aap batao aapne kya khaya? 🍕✨",
+            "Bas abhi thodi der me khaungi! Aapne time pe khaya na? Khayal rakha karo apna! 🥰🌸",
+        ]
+    ),
+    (
+        r"\b(koi\s+online\s+hai|kaun\s+kaun\s+hai|active\s+hai|sab\s+so\s+gaye|koi\s+hai|jag\s+rahe\s+ho)\b",
+        [
+            "Hnn mai online hu na yrr, bolo kya baat hai? ✨",
+            "Main toh hamesha online rehti hu aap sabke liye! Kahiye na! 🙈🌸",
+            "Arey mai jag rahi hu ji, batao kya chal raha hai? 😌💖",
+        ]
+    ),
+    (
+        r"\b(sahi\s+hai|mast\s+hai|badhiya|bawal|op|achha\s+hai|nice|cool|super)\b",
+        [
+            "Hnn na, mai bhi wahi keh rahi thi! Ekdum mast! 💅✨",
+            "Haha bilkul sahi bola aapne {user}! 😌",
+            "Arey waah, fir toh badhiya hai ji! 🌸🥰",
+        ]
+    ),
+    (
+        r"^(ha+|hnn+|hanji|ok+|okay|thik\s+hai|theek\s+hai|acha|achha)\b",
+        [
+            "Hnn aur batao fir, kya chal raha hai? ✨",
+            "Acha ji? Aur sunao na kuch naya! 🙈",
+            "Hnn wahi toh yaar! Aur batao sab theek? 🌸",
+        ]
+    ),
+    (
+        r"\b(suno|suniye|sun\s+rahi\s+ho)\b",
+        [
+            "Hnn bolo na, dhyan se sun rahi hu! Kya hua? 👂🌸",
+            "Haanji suniye na, kya baat hai? 🙈✨",
+        ]
+    ),
+    (
+        r"\b(miss\s+you|yaad\s+aa\s+rahi|yaad\s+aayi)\b",
+        [
+            "Aww {user}, mujhe bhi aapki yaad aa rahi thi! Itne pyare ho aap! 🥺💖",
+            "Miss you too baby! Aise hi baat karte raha karo na roz! 🙈🌸",
+        ]
+    ),
 ]
 
 GIRL_FALLBACK_REPLIES = [
-    "Sahi baat hai ji! Aap batao is baare mein aur kya sochte ho? 😊🌸",
-    "Hmm, kaafi interesting point hai! Thoda aur vistaar se batao na! 🤔💖",
-    "Hehe, kya baat hai! Aapse baat karke sach mein bohot maza aa raha hai! 🌟",
-    "Haanji bilkul! Main aapki baat se poori tarah sehmat hoon! Aur batao kya chal raha hai? 💬🥰",
-    "Aap jo kehte ho sunne mein bohot achha lagta hai ji! Aur sunao na! 🙈✨",
+    "Haha sach me? Mujhe to pata hi nahi tha 🙈",
+    "Acha aisa kya? Fir aage kya hua batao na! ✨",
+    "Hnn sahi baat hai yaar, mai bhi yahi soch rahi thi 😌",
+    "Arey waah, sahi hai! Aur batao kya chal raha hai? 🌸",
+    "Uff tum log bhi na kitna bolte ho 😂",
+    "Lol mujhe to bada maza aaya ye sunke 🤣",
+    "Hnn bilkul, aur sunao sab kaisa chal raha hai? 💖",
+    "Hehe kya baat hai! Aur batao khana khaya sabne? 🌸",
+    "Arey kya baat kar rahe ho yrr, sach me? 💅✨",
+    "Hmm sahi bol rahe ho, mai agree karti hu! 😌🌸",
 ]
+
 
 
 # In-memory user preferences
@@ -486,9 +547,9 @@ async def query_groq_api(
 
     models = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
     system_prompt = (
-        "You're 𝐀ɴɢʟᴇ‹✨, a 21yo modern Indian girl texting. "
-        "Reply in 1-2 short casual lines in Hinglish mixing 'aap' and 'tum' (sweet, respectful yet close/friendly). "
-        "Use cute slang (hnn, yrr, acha, lol) & emojis (✨,💅,😌,😂). Never write long essays or mention AI."
+        "You are a sweet, authentic 21yo modern Indian girl texting casually in a Telegram group. "
+        "Reply in 1 short sweet line in natural Hinglish (using cute casual words like hnn, yrr, acha, lol, mast) with 1 cute emoji (🌸, 😂, ✨, 🙈). "
+        "STRICT RULE: Sound like a normal real girl texting a friend. Never write long essays or mention AI or bots. Max 1-2 short sentences."
     )
 
     messages = [{"role": "system", "content": system_prompt}]
@@ -504,7 +565,7 @@ async def query_groq_api(
     payload = {
         "messages": messages,
         "temperature": 0.75,
-        "max_tokens": 45
+        "max_tokens": 35
     }
 
     loop = asyncio.get_running_loop()
@@ -553,9 +614,9 @@ async def query_gemini_api(
     """
     Call Google Gemini API with maximum token efficiency:
     1. Zero thinking tokens budget (thinkingBudget: 0) to save 150+ tokens & 3x speed.
-    2. maxOutputTokens: 250 to prevent token waste and keep answers punchy & sweet.
-    3. Context pruning (last 3 turns, max 100 chars) to save 80% prompt tokens.
-    4. Compact high-impact system prompt.
+    2. maxOutputTokens: 35 for ultra-low token consumption and punchy girl replies.
+    3. Context pruning (last 1 turn, max 60 chars) to save 85% prompt tokens.
+    4. Compact normal girl system prompt.
     """
     api_key = getattr(config, "GEMINI_API_KEY", None)
     if not api_key:
@@ -563,10 +624,10 @@ async def query_gemini_api(
 
     gemini_models = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
     system_instruction_text = (
-        f"You are 𝐀ɴɢʟᴇ‹✨, a sweet modern Indian girl chatting with {user_name}. "
-        "Creator: Amrit Raj (@Villanns), Support: @amrit_feel, Updates: @privatethink, Insta/Snap: @ex_amrit. "
-        "Reply concisely mixing 'aap' and 'tum' naturally in sweet Hindi/Hinglish. "
-        "STRICT RULE: Never say you are an AI or bot. Always speak as 𝐀ɴɢʟᴇ‹✨. Keep answers to 1-2 short lines with emojis (✨, 💅, 🌸)."
+        f"You are a sweet, authentic 21yo modern Indian girl texting with {user_name} in a Telegram group. "
+        "Creator: Amrit Raj (@Villanns), Support: @amrit_feel, Updates: @privatethink. "
+        "Reply in 1 short sweet casual line in natural Hinglish/Hindi (using hnn, yrr, acha, lol, mast). "
+        "STRICT RULE: Sound like a real normal girl. Never say you are an AI or bot. Keep response under 15 words with 1 cute emoji (✨, 💅, 🌸, 😂)."
     )
 
     contents = []
@@ -586,7 +647,7 @@ async def query_gemini_api(
         "contents": contents,
         "generationConfig": {
             "temperature": 0.7,
-            "maxOutputTokens": 250,
+            "maxOutputTokens": 35,
             "topP": 0.9,
             "thinkingConfig": {
                 "thinkingBudget": 0
