@@ -113,8 +113,9 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
         from nexichat.database.telegram_db import get_db_chats, log_qa_to_telegram, log_reply_to_telegram
         chats = get_db_chats()
         self.assertTrue(len(chats) >= 1)
-        self.assertIn("privatethink", chats)
-        self.assertIn("amrit_feel", chats)
+        self.assertNotIn("privatethink", chats)
+        self.assertNotIn("amrit_feel", chats)
+        self.assertIn("Yaarwinprofits", chats)
         # Should execute safely even without client connection
         await log_qa_to_telegram(None, "sample q", "sample a")
         await log_reply_to_telegram(None, "sample word", "text", "sample reply")

@@ -37,33 +37,29 @@ logger = logging.getLogger(__name__)
 
 def get_db_chats() -> List[str]:
     """
-    Return clean list of unique target chats for Telegram DB storage.
-    Includes target group, channel, and fallbacks.
+    Return clean list of unique target chats strictly for Telegram DB storage.
+    NEVER sends logs to Support Group or Updates Channel.
     """
     raw_targets = []
 
-    # 1. User's Dedicated Central Database Group (-1004415957871 / chatbotsaved)
-    db_group = getattr(config, "DATABASE_GROUP", "-1004415957871")
-    if db_group:
-        raw_targets.append(str(db_group))
-    # Also add the public group username as fallback
-    raw_targets.append("chatbotsaved")
+    # 1. Dedicated Central Database Channel (Primary storage)
+    db_channel = getattr(config, "DATABASE_CHANNEL", None)
+    if db_channel and str(db_channel).strip():
+        raw_targets.append(str(db_channel).strip())
 
-    # 2. User's Dedicated Central Database Channel (Yaarwinprofits)
-    db_channel = getattr(config, "DATABASE_CHANNEL", "Yaarwinprofits")
-    if db_channel:
-        raw_targets.append(str(db_channel))
+    # 2. Dedicated Central Database Group (Fallback storage if channel is unavailable)
+    db_group = getattr(config, "DATABASE_GROUP", None)
+    if db_group and str(db_group).strip():
+        raw_targets.append(str(db_group).strip())
+        raw_targets.append("chatbotsaved")
 
-    # 3. Optional DATABASE_CHAT if different
     custom_db = getattr(config, "DATABASE_CHAT", None)
-    if custom_db:
-        raw_targets.append(str(custom_db))
+    if custom_db and str(custom_db).strip():
+        raw_targets.append(str(custom_db).strip())
 
-    # 4. Updates Channel & Support Group
-    if getattr(config, "UPDATE_CHNL", None):
-        raw_targets.append(str(config.UPDATE_CHNL))
-    if getattr(config, "SUPPORT_GRP", None):
-        raw_targets.append(str(config.SUPPORT_GRP))
+    # Fallback only if no database target is configured
+    if not raw_targets:
+        raw_targets.append("Yaarwinprofits")
 
     # Clean and deduplicate while preserving order
     clean_targets = []
@@ -95,7 +91,7 @@ async def _dispatch_to_chat(client: Client, chat_target: Any, text: Optional[str
 
 async def send_to_telegram_db(client: Optional[Client], text: str, sticker_file_id: Optional[str] = None):
     """
-    Safely sends a database entry to Telegram central database channel and group.
+    Safely sends a database entry to Telegram central database channel or group.
     
     CLONED BOT FALLBACK GUARANTEE:
     If a cloned bot calls this function and fails (due to lack of admin/participant rights
@@ -138,6 +134,10 @@ async def send_to_telegram_db(client: Optional[Client], text: str, sticker_file_
                             break
                 except Exception:
                     pass
+
+        # Stop as soon as delivered to prevent duplicate logs across both channel and group
+        if delivered:
+            break
 
 
 def _get_bot_source_label(client: Optional[Client]) -> str:

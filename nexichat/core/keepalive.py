@@ -73,25 +73,34 @@ async def run_koyeb_keepalive(port: int, public_url: str = None):
     """
     local_url = f"http://127.0.0.1:{port}/health"
 
+    # Auto-detect public URL from common platform environment variables if not provided
+    if not public_url:
+        public_url = (
+            os.environ.get("KOYEB_PUBLIC_URL")
+            or os.environ.get("PING_URL")
+            or (f"https://{os.environ.get('KOYEB_APP_NAME')}.koyeb.app" if os.environ.get("KOYEB_APP_NAME") else None)
+        )
+
     while True:
         try:
-            # 4 minutes + random jitter (5-15s)
-            jitter = random.randint(5, 15)
-            await asyncio.sleep(240 + jitter)
+            # 90-120s interval to prevent Koyeb free tier edge proxy idle timeout
+            sleep_duration = 90 + random.randint(5, 30)
+            await asyncio.sleep(sleep_duration)
 
             # 1. Local loopback ping
             req_local = urllib.request.Request(local_url, headers={"User-Agent": "KoyebKeepAlive/2.0"})
             with urllib.request.urlopen(req_local, timeout=8) as resp:
                 pass
 
-            # 2. Public URL ping (if provided)
+            # 2. Public URL ping (traverses Koyeb edge router to guarantee 24/7 active status)
             if public_url and public_url.strip():
                 clean_url = public_url.strip().rstrip("/")
                 target = clean_url if clean_url.endswith("/health") else f"{clean_url}/health"
                 req_pub = urllib.request.Request(target, headers={"User-Agent": "KoyebKeepAlive/2.0"})
                 with urllib.request.urlopen(req_pub, timeout=12) as pub_resp:
                     pass
-
-            logger.info("Koyeb Keep-Alive Ping successful (Container kept active 24/7).")
+                logger.info(f"Koyeb 24/7 Keep-Alive Ping successful to {target}.")
+            else:
+                logger.info("Local keepalive ping successful. 💡 Tip: Set KOYEB_PUBLIC_URL in Koyeb settings to keep it awake 24/7.")
         except Exception as e:
             logger.debug(f"Keep-Alive notice: {e}")
