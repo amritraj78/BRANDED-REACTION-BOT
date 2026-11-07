@@ -319,6 +319,39 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
         hist = await get_dm_history(test_uid)
         self.assertEqual(len(hist), 0)
 
+    def test_moderate_emojis(self):
+        from nexichat.modules.helpers.ai import moderate_emojis, EMOJI_PATTERN
+        text_with_emojis = "Arey kya hua yrr? Aise udaas mat ho na! 🥺❤️🌸"
+        
+        # Test 100 runs to verify 75-80% plain text distribution
+        plain_count = 0
+        single_emoji_count = 0
+        for _ in range(100):
+            res = moderate_emojis(text_with_emojis)
+            found = EMOJI_PATTERN.findall(res)
+            if len(found) == 0:
+                plain_count += 1
+            else:
+                single_emoji_count += 1
+                # Must never retain more than 1 emoji!
+                self.assertLessEqual(len(found), 2)  # Single emoji + possible variation selector
+
+        # Plain text should be the strong majority (approx 75%)
+        self.assertGreaterEqual(plain_count, 55)
+        self.assertGreaterEqual(single_emoji_count, 5)
+
+        # Test variation selector cleanliness (no orphaned \ufe0f)
+        heart_text = "Mujhe tumse pyar hai ❤️"
+        res_heart = moderate_emojis(heart_text)
+        self.assertNotIn("\ufe0f", res_heart.replace("❤️", ""))
+
+    def test_clean_modern_girl_reply_brevity_and_emojis(self):
+        from nexichat.modules.helpers.ai import clean_modern_girl_reply
+        # Test Priya intercept
+        ans = clean_modern_girl_reply("Mera naam Priya hai aur main aapki sahayata karungi 🌸✨")
+        self.assertNotIn("Priya", ans)
+        self.assertNotIn("sahayata", ans)
+
 
 if __name__ == "__main__":
     unittest.main()

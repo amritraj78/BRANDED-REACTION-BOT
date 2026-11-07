@@ -480,6 +480,35 @@ async def setname_command(client: Client, message: Message):
     await message.reply_text(f"🌸 **Maine yaad kar liya ji!** 🥰\nAb se main aapko **{new_name}** bulaungi! ✨")
 
 
+async def send_natural_chat_reply(client: Client, message: Message, response_text: str):
+    """
+    Sends conversational reply with natural human girl timing for cloned bots:
+    - 1.2s to 2.2s human reading pause
+    - 2.2s to 5.5s active typing indicator ('typing...')
+    - Eliminates robotic instantaneous machine-speed replies!
+    """
+    chat_id = message.chat.id
+    try:
+        # 1. Realistic human reading pause
+        await asyncio.sleep(random.uniform(1.2, 2.0))
+
+        # 2. Dynamic typing indicator scaled by length
+        typing_duration = min(max(len(response_text) * 0.08, 2.2), 5.5)
+        elapsed = 0.0
+        while elapsed < typing_duration:
+            try:
+                await client.send_chat_action(chat_id, ChatAction.TYPING)
+            except Exception:
+                pass
+            chunk = min(2.0, typing_duration - elapsed)
+            await asyncio.sleep(chunk)
+            elapsed += chunk
+
+        await message.reply_text(response_text)
+    except Exception as e:
+        logger.debug(f"Cloned bot failed to send natural chatbot reply: {e}")
+
+
 # Automatic conversational listener for cloned bots
 @Client.on_message(
     (filters.incoming & (filters.group | filters.private)),
@@ -549,10 +578,11 @@ async def auto_chatbot_listener(client: Client, message: Message):
         # Learn sticker in RAM, MongoDB, and Telegram DB!
         await save_sticker(message.sticker.file_id, client=client)
         reply_stk = get_random_sticker(fallback=message.sticker.file_id)
+        await asyncio.sleep(random.uniform(1.2, 2.0))
         if reply_stk:
             try:
                 await client.send_chat_action(chat_id, ChatAction.CHOOSE_STICKER)
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(1.0)
                 await message.reply_sticker(reply_stk)
                 return
             except Exception:
@@ -561,56 +591,35 @@ async def auto_chatbot_listener(client: Client, message: Message):
                     return
                 except Exception:
                     pass
-        try:
-            await client.send_chat_action(chat_id, ChatAction.TYPING)
-            await asyncio.sleep(0.5)
-            await message.reply_text("Hehe kitna cute sticker hai na ji! 🙈🥰")
-        except Exception:
-            pass
+        await send_natural_chat_reply(client, message, "Hehe kitna cute sticker hai na ji!")
         return
 
     # 2. Voice / Audio (Reply with Text Message)
     if message.voice or message.audio:
-        try:
-            await client.send_chat_action(chat_id, ChatAction.TYPING)
-            await asyncio.sleep(0.5)
-            await message.reply_text(get_voice_reply())
-        except Exception:
-            pass
+        await asyncio.sleep(random.uniform(2.2, 3.5))
+        await send_natural_chat_reply(client, message, get_voice_reply())
         return
 
     # 3. Photos
     if message.photo:
-        try:
-            await client.send_chat_action(chat_id, ChatAction.TYPING)
-            await asyncio.sleep(0.8)
-            if message.caption and len(message.caption.strip()) > 1:
-                caption_reply = await generate_conversational_response(message.caption.strip(), user_name, is_question_mode=True, client=client)
-                await message.reply_text(caption_reply)
-            else:
-                await message.reply_text(get_photo_reply())
-        except Exception:
-            pass
+        await asyncio.sleep(random.uniform(2.0, 3.2))
+        if message.caption and len(message.caption.strip()) > 1:
+            caption_reply = await generate_conversational_response(message.caption.strip(), user_name, is_question_mode=True, client=client, user_id=user_id)
+            await send_natural_chat_reply(client, message, caption_reply)
+        else:
+            await send_natural_chat_reply(client, message, get_photo_reply())
         return
 
     # 4. Videos
     if message.video:
-        try:
-            await client.send_chat_action(chat_id, ChatAction.TYPING)
-            await asyncio.sleep(0.8)
-            await message.reply_text(get_video_reply())
-        except Exception:
-            pass
+        await asyncio.sleep(random.uniform(2.5, 4.0))
+        await send_natural_chat_reply(client, message, get_video_reply())
         return
 
     # 5. Animations / GIFs
     if message.animation:
-        try:
-            await client.send_chat_action(chat_id, ChatAction.TYPING)
-            await asyncio.sleep(0.8)
-            await message.reply_text(get_animation_reply())
-        except Exception:
-            pass
+        await asyncio.sleep(random.uniform(1.5, 2.5))
+        await send_natural_chat_reply(client, message, get_animation_reply())
         return
 
     # 6. Text
@@ -632,26 +641,11 @@ async def auto_chatbot_listener(client: Client, message: Message):
             user_name = extracted.title()
 
     if is_abusive(clean_text):
-        try:
-            await client.send_chat_action(chat_id, ChatAction.TYPING)
-            await asyncio.sleep(0.6)
-            await message.reply_text(get_abuse_refusal())
-        except Exception:
-            pass
+        await send_natural_chat_reply(client, message, get_abuse_refusal())
         return
-
-    try:
-        await client.send_chat_action(chat_id, ChatAction.TYPING)
-    except Exception:
-        pass
 
     # Generate girl-style AI conversational response with vivid user memory
     response_text = await generate_conversational_response(clean_text, user_name, client=client, user_id=user_id)
 
-    # Pure text reply only (Zero voice notes)
-    try:
-        typing_delay = min(max(len(response_text) * 0.015, 0.6), 1.5)
-        await asyncio.sleep(typing_delay)
-        await message.reply_text(response_text)
-    except Exception as e:
-        logger.debug(f"Cloned bot failed to send chatbot reply: {e}")
+    # Pure text reply only with realistic human timing
+    await send_natural_chat_reply(client, message, response_text)
