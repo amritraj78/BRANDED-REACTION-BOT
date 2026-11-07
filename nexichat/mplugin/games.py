@@ -325,7 +325,7 @@ async def propose_command(client: Client, message: Message):
         if target.id == client.me.id:
             return await message.reply_text(
                 f"Aww {proposer.mention}! 🙈 Main toh bohot sharma gayi! "
-                "Par main toh sabki pyari dost 𝐀ɴɢʟᴇ‹✨ hoon ji! Chalo hum hamesha ke liye best friends ban jaate hain! 💖✨"
+                "Par main toh sabki pyari dost Anshika hoon ji! Chalo hum hamesha ke liye best friends ban jaate hain! 💖✨"
             )
         return await message.reply_text("Bot ko propose mat karo ji, wo reply nahi karega! 🤖😂")
 

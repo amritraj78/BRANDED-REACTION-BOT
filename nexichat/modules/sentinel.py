@@ -34,6 +34,7 @@ import logging
 from typing import Dict, Tuple, Set
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+import config
 from config import OWNER_ID
 from nexichat import nexichat, SUDOERS
 
@@ -48,6 +49,7 @@ MILESTONES = [10, 20, 30, 40, 50, 60, 70, 80, 90, 95]
 _reported_ram_milestones: Set[int] = set()
 _reported_disk_milestones: Set[int] = set()
 _last_clean_time = 0
+_last_auto_clean_report_time = 0
 
 
 def get_disk_stats() -> Dict[str, float]:
@@ -256,29 +258,33 @@ async def check_and_alert_storage(client: Client):
 
     _reported_disk_milestones = {m for m in _reported_disk_milestones if current_disk_p >= (m - 4)}
 
-    # 3. Critical threshold (>= 85%): Auto-clean when owner is unavailable
-    if disk["percent"] >= 85.0 or ram["percent"] >= 85.0:
+    # 3. Critical threshold check: Auto-clean when resource exceeds threshold
+    global _last_auto_clean_report_time
+    crit_threshold = float(getattr(config, "STORAGE_THRESHOLD", 90))
+    if disk["percent"] >= crit_threshold or ram["percent"] >= crit_threshold:
         deleted, freed = clean_cache(max_age_seconds=0)
         gc.collect()
-        logger.warning(f"High Resource Alert (>=85%)! Auto-cleaned {deleted} files ({freed} MB) and ran gc.collect().")
-        
-        # Notify owner that auto-clean occurred while they were away
-        auto_report = (
-            f"🤖 **[KOYEB AUTO-CLEAN EXECUTED]** 🤖\n"
-            f"────────────────────────────\n"
-            f"⚠️ **High usage detected ({max(disk['percent'], ram['percent'])}%)!**\n"
-            f"Since owner action was pending, Sentinel automatically cleaned caches to protect your free Koyeb instance:\n\n"
-            f"• **Files Cleaned:** `{deleted} temp cache files`\n"
-            f"• **Space Freed:** `{freed} MB`\n"
-            f"• **RAM Action:** `gc.collect() executed`\n"
-            f"• **Learned Data:** `100% Safe in Telegram DB` ☁️\n"
-            f"────────────────────────────\n\n"
-            f"💡 Koyeb is running smoothly without lag or risk of crash! 🚀"
-        )
-        try:
-            await client.send_message(int(OWNER_ID), auto_report, reply_markup=keyboard)
-        except Exception as e:
-            logger.debug(f"Failed to send auto-clean notification: {e}")
+        if deleted > 0 or freed > 0:
+            logger.info(f"High Resource Sentinel (>{crit_threshold}%): Auto-cleaned {deleted} files ({freed} MB).")
+            # Debounce alert: At most once per 2 hours to prevent alert spamming
+            if (now - _last_auto_clean_report_time) >= 7200:
+                _last_auto_clean_report_time = now
+                auto_report = (
+                    f"🤖 **[KOYEB AUTO-CLEAN EXECUTED]** 🤖\n"
+                    f"────────────────────────────\n"
+                    f"⚠️ **High usage detected ({max(disk['percent'], ram['percent'])}%)!**\n"
+                    f"Since owner action was pending, Sentinel automatically cleaned caches to protect your instance:\n\n"
+                    f"• **Files Cleaned:** `{deleted} temp cache files`\n"
+                    f"• **Space Freed:** `{freed} MB`\n"
+                    f"• **RAM Action:** `gc.collect() executed`\n"
+                    f"• **Learned Data:** `100% Safe in Telegram DB` ☁️\n"
+                    f"────────────────────────────\n\n"
+                    f"💡 System is running smoothly without lag or risk of crash! 🚀"
+                )
+                try:
+                    await client.send_message(int(OWNER_ID), auto_report, reply_markup=keyboard)
+                except Exception as e:
+                    logger.debug(f"Failed to send auto-clean notification: {e}")
 
 
 async def sentinel_monitor_loop(client: Client):

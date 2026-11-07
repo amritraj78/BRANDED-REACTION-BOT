@@ -20,6 +20,7 @@ for mod_name in [
 # Make nexichat instance's on_message return a pass-through decorator
 from nexichat import nexichat
 nexichat.on_message = MagicMock(return_value=lambda f: f)
+nexichat.on_callback_query = MagicMock(return_value=lambda f: f)
 
 
 
@@ -133,6 +134,8 @@ class TestReactionFeatures(unittest.TestCase):
         mock_client = MagicMock()
         mock_client.bot_token = "test_token"
         mock_msg = MagicMock()
+        mock_msg.empty = False
+        mock_msg.service = False
         mock_msg.id = 555
         mock_msg.text = "testing 1 2 3 neutral text"
         mock_msg.caption = None
@@ -153,6 +156,8 @@ class TestReactionFeatures(unittest.TestCase):
         mock_client = MagicMock()
         mock_client.bot_token = "test_token"
         mock_msg = MagicMock()
+        mock_msg.empty = False
+        mock_msg.service = False
         mock_msg.id = 556
         mock_msg.text = "haha lol funny"
         mock_msg.caption = None
@@ -195,7 +200,7 @@ class TestReactionFeatures(unittest.TestCase):
         mock_msg.reply_dice.assert_called_once_with(emoji="🎲")
         mock_client.send_dice.assert_called_once_with(-100123, emoji="🎲")
         mock_status.edit_text.assert_called_once()
-        self.assertIn("𝐀ɴɢʟᴇ", mock_status.edit_text.call_args[0][0])
+        self.assertIn("Anshika", mock_status.edit_text.call_args[0][0])
 
     def test_animated_dice_emoji_match(self):
         from nexichat.modules import games
@@ -220,7 +225,7 @@ class TestReactionFeatures(unittest.TestCase):
         self.loop.run_until_complete(games.interactive_dice_match(mock_client, mock_msg))
         mock_client.send_dice.assert_called_once_with(-100123, emoji="🎲")
         mock_status.edit_text.assert_called_once()
-        self.assertIn("𝐀ɴɢʟᴇ", mock_status.edit_text.call_args[0][0])
+        self.assertIn("Anshika", mock_status.edit_text.call_args[0][0])
 
     def test_afk_system_and_formatting(self):
         from nexichat.database.chatbot import set_user_afk, get_user_afk, remove_user_afk

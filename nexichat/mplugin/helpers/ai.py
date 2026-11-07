@@ -71,6 +71,17 @@ _ai_adapter = HTTPAdapter(
 _ai_session.mount("https://", _ai_adapter)
 _ai_session.mount("http://", _ai_adapter)
 
+import time
+_key_cooldowns: Dict[str, float] = {}
+
+def is_key_cooling_down(key: str) -> bool:
+    """Check if an API key is temporarily cooling down after HTTP 429 rate limit."""
+    return time.time() < _key_cooldowns.get(key, 0.0)
+
+def set_key_cooldown(key: str, seconds: float = 60.0):
+    """Mark an API key in cooldown to avoid wasting network requests and delay on rate-limited keys."""
+    _key_cooldowns[key] = time.time() + seconds
+
 EMOJI_PATTERN = re.compile(
     r"[\U00010000-\U0010ffff\u2600-\u26ff\u2700-\u27bf\U0001f300-\U0001f5ff\U0001f600-\U0001f64f\U0001f680-\U0001f6ff\U0001f900-\U0001f9ff\ufe00-\ufe0f\u200d]"
 )
@@ -722,6 +733,8 @@ async def query_groq_api(
     loop = asyncio.get_running_loop()
 
     for idx, api_key in enumerate(keys):
+        if is_key_cooling_down(api_key):
+            continue
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
@@ -753,11 +766,19 @@ async def query_groq_api(
                             if cleaned:
                                 return cleaned
                 elif resp.status_code == 429:
-                    logger.warning(f"Groq API key #{idx + 1} quota exhausted (429), failing over...")
+                    retry_after = 60.0
+                    try:
+                        ra = resp.headers.get("retry-after")
+                        if ra:
+                            retry_after = max(float(ra), 30.0)
+                    except Exception:
+                        pass
+                    set_key_cooldown(api_key, retry_after)
+                    logger.warning(f"Groq API key #{idx + 1} quota reached (429), cooling down for {int(retry_after)}s...")
                     asyncio.create_task(notify_owner_api_switch(
                         f"Groq Key #{idx + 1}",
                         "Next Groq Key / Google Gemini AI",
-                        reason="Rate limit / Quota reached (HTTP 429)",
+                        reason=f"Rate limit reached (HTTP 429, cooling down {int(retry_after)}s)",
                         client=client
                     ))
                     break  # Fail over to next key
@@ -827,6 +848,8 @@ async def query_gemini_api(
 
     loop = asyncio.get_running_loop()
     for idx, api_key in enumerate(keys):
+        if is_key_cooling_down(api_key):
+            continue
         for model in gemini_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             def _fetch(m_url=url):
@@ -850,11 +873,12 @@ async def query_gemini_api(
                                 if cleaned:
                                     return cleaned
                 elif resp.status_code == 429:
-                    logger.warning(f"Gemini API key #{idx + 1} quota exhausted (429), failing over...")
+                    set_key_cooldown(api_key, 60.0)
+                    logger.warning(f"Gemini API key #{idx + 1} quota reached (429), cooling down for 60s...")
                     asyncio.create_task(notify_owner_api_switch(
                         f"Gemini Key #{idx + 1}",
                         "Next Gemini Key / NVIDIA NIM AI",
-                        reason="Rate limit / Quota reached (HTTP 429)",
+                        reason="Rate limit reached (HTTP 429, cooling down 60s)",
                         client=client
                     ))
                     break  # Fail over to next key
@@ -879,7 +903,7 @@ async def query_nvidia_api(
     NVIDIA NIM API failover integration using nemotron reasoning model.
     """
     api_key = getattr(config, "NVIDIA_API_KEY", None)
-    if not api_key:
+    if not api_key or is_key_cooling_down(api_key):
         return None
 
     system_prompt = ANSHIKA_CHARACTER_PROMPT
@@ -934,11 +958,12 @@ async def query_nvidia_api(
                         if cleaned:
                             return cleaned
             elif resp.status_code == 429:
-                logger.warning("NVIDIA NIM API quota exhausted (429), failing over...")
+                set_key_cooldown(api_key, 60.0)
+                logger.warning("NVIDIA NIM API quota reached (429), cooling down for 60s...")
                 asyncio.create_task(notify_owner_api_switch(
                     "NVIDIA NIM AI",
                     "Free Waterfall AI",
-                    reason="Rate limit / Quota reached (HTTP 429)",
+                    reason="Rate limit reached (HTTP 429, cooling down 60s)",
                     client=client
                 ))
                 break

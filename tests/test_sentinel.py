@@ -48,9 +48,11 @@ class TestSentinel(unittest.TestCase):
         self.assertGreaterEqual(deleted, 1)
         self.assertFalse(os.path.exists(test_file))
 
+    @patch("nexichat.modules.sentinel.clean_cache", return_value=(5, 12.5))
     @patch("nexichat.modules.sentinel.get_disk_stats")
-    def test_check_and_alert_storage_triggers_alert(self, mock_disk):
+    def test_check_and_alert_storage_triggers_alert(self, mock_disk, mock_clean):
         from nexichat.modules import sentinel
+        sentinel._last_auto_clean_report_time = 0.0
         mock_disk.return_value = {
             "total_gb": 10.0,
             "used_gb": 9.5,

@@ -81,7 +81,7 @@ async def anony_boot():
             await nexichat.send_message(
                 int(OWNER_ID),
                 f"**{nexichat.mention} Is started✅**\n\n"
-                f"✦ **Engine:** 𝐀ɴɢʟᴇ‹✨ AI\n"
+                f"✦ **Engine:** Anshika AI\n"
                 f"✦ **Health Port:** `{port}`\n"
                 f"✦ **RAM & Storage Sentinel:** Active 🛡️"
             )
@@ -127,15 +127,15 @@ async def anony_boot():
             commands=[
                 BotCommand("start", "Start the bot & main menu"),
                 BotCommand("help", "Help & all commands guide"),
-                BotCommand("chatbot", "Toggle 𝐀ɴɢʟᴇ‹✨ AI chat (on/off)"),
+                BotCommand("chatbot", "Toggle Anshika AI chat (on/off)"),
                 BotCommand("reactions", "Toggle reactions (on/off)"),
-                BotCommand("ask", "Ask 𝐀ɴɢʟᴇ‹✨ AI any question"),
+                BotCommand("ask", "Ask Anshika AI any question"),
                 BotCommand("couples", "Couple of the day game 💍"),
                 BotCommand("propose", "Group propose game 💕"),
                 BotCommand("afk", "Set AFK status 😴"),
                 BotCommand("tagall", "Mention all members in batches 📢"),
                 BotCommand("cancel", "Cancel tag-all process 🛑"),
-                BotCommand("dice", "Dice match game vs 𝐀ɴɢʟᴇ‹✨ 🎲"),
+                BotCommand("dice", "Dice match game vs Anshika 🎲"),
                 BotCommand("toss", "Flip coin (Heads/Tails) 🪙"),
                 BotCommand("truth", "Fun spicy truth game"),
                 BotCommand("dare", "Exciting dare game"),

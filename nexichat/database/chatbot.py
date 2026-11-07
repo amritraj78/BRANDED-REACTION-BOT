@@ -445,8 +445,14 @@ async def save_user_nickname(user_id: int, nickname: str):
     global _nicknames_cache
     if not user_id or not nickname:
         return
-    clean_name = nickname.strip().title()
+    clean_name = str(nickname).strip()[:50]
     _nicknames_cache[user_id] = clean_name
+    if len(_nicknames_cache) > 1000:
+        try:
+            oldest_k = next(iter(_nicknames_cache))
+            _nicknames_cache.pop(oldest_k, None)
+        except Exception:
+            pass
     try:
         await user_nicknames_db.update_one(
             {"user_id": user_id},
@@ -546,6 +552,13 @@ def append_user_context(user_id: int, role: str, text: str):
     if len(_conversation_context[user_id]) > 6:
         _conversation_context[user_id] = _conversation_context[user_id][-6:]
 
+    if len(_conversation_context) > 500:
+        try:
+            oldest_k = next(iter(_conversation_context))
+            _conversation_context.pop(oldest_k, None)
+        except Exception:
+            pass
+
 
 def get_user_context(user_id: int) -> List[Dict[str, Any]]:
     """Fetch active dialogue history for user within last 5 minutes."""
@@ -584,6 +597,13 @@ async def save_dm_message(user_id: int, role: str, text: str, user_name: str = "
     _dm_history_cache[user_id].append(turn)
     if len(_dm_history_cache[user_id]) > 40:
         _dm_history_cache[user_id] = _dm_history_cache[user_id][-40:]
+
+    if len(_dm_history_cache) > 500:
+        try:
+            oldest_k = next(iter(_dm_history_cache))
+            _dm_history_cache.pop(oldest_k, None)
+        except Exception:
+            pass
 
     try:
         update_doc = {
@@ -723,6 +743,12 @@ async def update_vivid_user_memory(
     mem["dialogue"] = dialogue
 
     _user_vivid_memory[user_id] = mem
+    if len(_user_vivid_memory) > 500:
+        try:
+            oldest_k = next(iter(_user_vivid_memory))
+            _user_vivid_memory.pop(oldest_k, None)
+        except Exception:
+            pass
 
     # Asynchronously persist to MongoDB
     try:

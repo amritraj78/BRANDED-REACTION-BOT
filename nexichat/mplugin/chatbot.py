@@ -543,7 +543,13 @@ async def auto_chatbot_listener(client: Client, message: Message):
     else:
         await add_served_cchat(bot_id, chat_id, client=client, chat=message.chat)
 
+    # Clean expired blocks and stale message counts to eliminate memory leaks
     _blocklist = {uid: t for uid, t in _blocklist.items() if t > current_time}
+    if len(_message_counts) > 200:
+        _message_counts = {
+            uid: data for uid, data in _message_counts.items()
+            if (current_time - data["last_time"]).total_seconds() < 20
+        }
     if user_id in _blocklist:
         return
 

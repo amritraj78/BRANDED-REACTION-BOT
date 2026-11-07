@@ -28,13 +28,20 @@ class TestNewFeatures(unittest.TestCase):
         status = self.loop.run_until_complete(reactions.is_welcome_enabled(-1001234))
         self.assertTrue(status)
 
-    @patch("requests.get")
-    def test_generate_voice_file(self, mock_get):
+    @patch("nexichat.modules.helpers.media_gen._media_session.get")
+    @patch("nexichat.modules.helpers.media_gen._media_session.post")
+    def test_generate_voice_file(self, mock_post, mock_get):
         from nexichat.modules.helpers.media_gen import generate_voice_file
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.content = b"a" * 1024
-        mock_get.return_value = mock_resp
+        # Mock Polly post failing over or succeeding
+        mock_post_resp = MagicMock()
+        mock_post_resp.status_code = 200
+        mock_post_resp.json.return_value = {"speak_url": "https://streamlabs.com/polly/audio.mp3"}
+        mock_post.return_value = mock_post_resp
+
+        mock_get_resp = MagicMock()
+        mock_get_resp.status_code = 200
+        mock_get_resp.content = b"a" * 1024
+        mock_get.return_value = mock_get_resp
 
         filepath = generate_voice_file("Namaste aap kaise hain?", "hi")
         self.assertIsNotNone(filepath)
@@ -43,7 +50,7 @@ class TestNewFeatures(unittest.TestCase):
         if os.path.exists(filepath):
             os.remove(filepath)
 
-    @patch("requests.get")
+    @patch("nexichat.modules.helpers.media_gen._media_session.get")
     def test_generate_ai_image(self, mock_get):
         from nexichat.modules.helpers.media_gen import generate_ai_image
         mock_resp = MagicMock()

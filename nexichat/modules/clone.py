@@ -353,7 +353,7 @@ async def id_clone_txt(client, message):
             f"  🌸 **Congratulations! Your ID Clone is LIVE!** ⚡\n\n"
             f"  ✦ **Account :** {user_tag}\n"
             f"  ✦ **User ID :** `{me.id}`\n"
-            f"  ✦ **Persona :** 𝐀ɴɢʟᴇ‹✨ AI Companion\n"
+            f"  ✦ **Persona :** Anshika AI Companion\n"
             f"  ✦ **Auto-React :** Enabled ⚡\n"
             f"  ✦ **Status :** 🟢 Online & Active\n\n"
             f"╭─────────────────────────────────╮\n"
