@@ -298,7 +298,7 @@ async def couple_command(client: Client, message: Message):
         f"  ✦ **ʟᴜᴄᴋʏ ᴄᴏᴜᴘʟᴇ :**\n"
         f"    {user1.mention} 💕 + {user2.mention} 💕\n\n"
         f"  ✦ **ᴄᴏᴍᴘᴀᴛɪʙɪʟɪᴛʏ :** **{compat}%** 🔥\n"
-        f"  ✦ **ᴘʀɪʏᴀ's ᴠᴇʀᴅɪᴄᴛ :**\n"
+        f"  ✦ **ᴀɴsʜɪᴋᴀ's ᴠᴇʀᴅɪᴄᴛ :**\n"
         f"    _{verdict}_\n\n"
         f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
     )

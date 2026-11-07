@@ -62,7 +62,7 @@ BACK = [
 
 HELP_BTN = [
     [
-        InlineKeyboardButton(text="🤖 ᴀɪ ᴄʜᴀᴛ & ᴠᴏɪᴄᴇ", callback_data="AI_CHATBOT_CMD"),
+        InlineKeyboardButton(text="🌸 ᴀɪ ɢɪʀʟ ᴄʜᴀᴛ", callback_data="AI_CHATBOT_CMD"),
         InlineKeyboardButton(text="⚡ ʀᴇᴀᴄᴛɪᴏɴs", callback_data="CHATBOT_CMD"),
     ],
     [
@@ -70,11 +70,14 @@ HELP_BTN = [
         InlineKeyboardButton(text="👥 ɢʀᴏᴜᴘ & ᴡᴇʟᴄᴏᴍᴇ", callback_data="HELP_GROUP"),
     ],
     [
+        InlineKeyboardButton(text="🛠️ ᴛᴏᴏʟs & ᴜᴛɪʟs", callback_data="TOOLS_DATA"),
         InlineKeyboardButton(text="👑 ᴏᴡɴᴇʀ & ᴀᴅᴍɪɴ", callback_data="ADMINS"),
-        InlineKeyboardButton(text="☁️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="ABOUT"),
     ],
     [
+        InlineKeyboardButton(text="☁️ ᴀʙᴏᴜᴛ ᴍᴇ", callback_data="ABOUT"),
         InlineKeyboardButton(text="⦿ ʙᴀᴄᴋ ⦿", callback_data="BACK"),
+    ],
+    [
         InlineKeyboardButton(text="⦿ ᴄʟᴏsᴇ ⦿", callback_data="CLOSE"),
     ],
 ]

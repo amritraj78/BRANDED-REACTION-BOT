@@ -273,6 +273,15 @@ GIRL_KNOWLEDGE_BASE = [
             "Number nahi de sakti baba, yahi chat kar lo na! 🌸",
         ]
     ),
+    # Group link / channel link
+    (
+        r"\b(group\s+link|channel\s+link|support\s+group|group\s+ka\s+link)\b",
+        [
+            "Group link chahiye? Hamare support group me aa jao na! 🌸",
+            "Mera group link /help menu me hai ji, check kar lo! ✨",
+            "Support chat ka link chahiye toh /help open karo! 💖",
+        ]
+    ),
     # How are you
     (
         r"\b(kaise ho|how are you|kya haal|kya haal hai|sab theek|kaisa chal raha|kase ho)\b",

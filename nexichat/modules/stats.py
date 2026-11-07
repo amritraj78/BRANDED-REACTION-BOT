@@ -21,7 +21,7 @@ import time
 import logging
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config import OWNER_ID, SUPPORT_GRP
 from nexichat import _boot_, get_readable_time, nexichat, SUDOERS
@@ -71,8 +71,8 @@ async def getid(client: Client, message: Message):
     text = f"**[ᴍᴇssᴀɢᴇ ɪᴅ:]({message.link})** `{message_id}`\n"
     text += f"**[ʏᴏᴜʀ ɪᴅ:](tg://user?id={your_id})** `{your_id}`\n"
 
-    if not message.command:
-        message.command = message.text.split()
+    if not getattr(message, "command", None):
+        message.command = (getattr(message, "text", "") or "").split()
 
     if len(message.command) == 2:
         try:
@@ -82,7 +82,11 @@ async def getid(client: Client, message: Message):
         except Exception:
             return await message.reply_text("ᴛʜɪs ᴜsᴇʀ ᴅᴏᴇsɴ'ᴛ ᴇxɪsᴛ.", quote=True)
 
-    text += f"**[ᴄʜᴀᴛ ɪᴅ:](https://t.me/{chat.username})** `{chat.id}`\n\n"
+    chat_username = getattr(chat, "username", None)
+    if chat_username:
+        text += f"**[ᴄʜᴀᴛ ɪᴅ:](https://t.me/{chat_username})** `{chat.id}`\n\n"
+    else:
+        text += f"**ᴄʜᴀᴛ ɪᴅ :** `{chat.id}`\n\n"
 
     if (
         not getattr(reply, "empty", True)
@@ -105,7 +109,7 @@ async def getid(client: Client, message: Message):
     )
 
 
-@nexichat.on_message(filters.command(["profile", "me"]))
+@nexichat.on_message(filters.command(["profile", "me", "myinfo"]))
 async def user_profile(client: Client, message: Message):
     user = message.from_user
     if not user:
@@ -135,4 +139,14 @@ async def user_profile(client: Client, message: Message):
 
 📡 **ᴘᴏᴡᴇʀᴇᴅ ʙʏ :** [ᴀᴍʀɪᴛ ғᴇᴇʟ](https://t.me/{SUPPORT_GRP}) 💞**
 """
-    await message.reply_text(text, disable_web_page_preview=True)
+    btn = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("📷 ɪɴsᴛᴀɢʀᴀᴍ", url="https://instagram.com/ex_amrit"),
+            InlineKeyboardButton("👻 sɴᴀᴘᴄʜᴀᴛ", url="https://snapchat.com/add/ex_amrit"),
+        ],
+        [
+            InlineKeyboardButton("👑 ᴄʀᴇᴀᴛᴏʀ", url="https://t.me/Villanns"),
+            InlineKeyboardButton("⦿ ᴄʟᴏsᴇ ⦿", callback_data="CLOSE"),
+        ]
+    ])
+    await message.reply_text(text, reply_markup=btn, disable_web_page_preview=True)
