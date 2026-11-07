@@ -22,8 +22,12 @@ Isme kya-kya save hota hai?
 """
 
 import random
+import asyncio
+import logging
 from typing import Optional, Dict, Any, List
 from nexichat import db
+
+logger = logging.getLogger(__name__)
 
 from nexichat.database.telegram_db import (
     log_qa_to_telegram,
@@ -167,10 +171,35 @@ def is_toxic_or_canned_reply(text: str) -> bool:
     return any(marker in lower for marker in toxic_markers)
 
 
+async def ensure_database_indexes():
+    """Create essential MongoDB indexes asynchronously to guarantee ultra-fast, lag-free queries."""
+    try:
+        from nexichat.database.reactions import reactionsdb
+        from nexichat.database.chats import chatsdb
+        from nexichat.database.users import usersdb
+
+        await dm_history_db.create_index("user_id", background=True)
+        await user_vivid_memory_db.create_index("user_id", background=True)
+        await user_nicknames_db.create_index("user_id", background=True)
+        await qa_cache_db.create_index("q", background=True)
+        await chatai_db.create_index("word", background=True)
+        await chatbot_status_db.create_index("chat_id", background=True)
+        await api_usage_db.create_index("date", background=True)
+        await reactionsdb.create_index("chat_id", background=True)
+        await chatsdb.create_index("chat_id", background=True)
+        await usersdb.create_index("user_id", background=True)
+        logger.info("MongoDB high-performance indexes verified.")
+    except Exception as e:
+        logger.debug(f"MongoDB indexing notice: {e}")
+
+
 async def load_replies_cache():
     """Load all learned replies, Q&A memory, and stickers into cache."""
     global _replies_cache, _qa_cache, _stickers_cache, _cache_loaded
     try:
+        # Trigger background indexing for lag-free lookups
+        asyncio.create_task(ensure_database_indexes())
+
         cursor = chatai_db.find()
         _replies_cache = await cursor.to_list(length=None)
 

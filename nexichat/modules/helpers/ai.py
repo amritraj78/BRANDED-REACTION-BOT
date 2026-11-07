@@ -56,8 +56,20 @@ from nexichat.database.chatbot import (
     is_toxic_or_canned_reply
 )
 import config
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 logger = logging.getLogger(__name__)
+
+# High-Performance Connection Pool for AI queries (Keep-Alive eliminates 200-300ms SSL handshakes)
+_ai_session = requests.Session()
+_ai_adapter = HTTPAdapter(
+    pool_connections=25,
+    pool_maxsize=25,
+    max_retries=Retry(total=1, backoff_factor=0.2)
+)
+_ai_session.mount("https://", _ai_adapter)
+_ai_session.mount("http://", _ai_adapter)
 
 EMOJI_PATTERN = re.compile(
     r"[\U00010000-\U0010ffff\u2600-\u26ff\u2700-\u27bf\U0001f300-\U0001f5ff\U0001f600-\U0001f64f\U0001f680-\U0001f6ff\U0001f900-\U0001f9ff\ufe00-\ufe0f\u200d]"
@@ -594,7 +606,7 @@ async def query_pollinations_free_ai(
     }
 
     def _fetch():
-        resp = requests.post(
+        resp = _ai_session.post(
             "https://text.pollinations.ai/",
             json=payload,
             headers=headers,
@@ -723,7 +735,7 @@ async def query_groq_api(
                 "max_tokens": 30
             }
             def _fetch(m_payload=dict(payload), m_headers=headers):
-                return requests.post(
+                return _ai_session.post(
                     "https://api.groq.com/openai/v1/chat/completions",
                     json=m_payload,
                     headers=m_headers,
@@ -818,7 +830,7 @@ async def query_gemini_api(
         for model in gemini_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             def _fetch(m_url=url):
-                return requests.post(
+                return _ai_session.post(
                     m_url,
                     json=payload,
                     headers={"Content-Type": "application/json"},
@@ -900,10 +912,10 @@ async def query_nvidia_api(
             "model": model,
             "messages": messages,
             "temperature": 0.75,
-            "max_tokens": 30
+            "max_tokens": 45
         }
         def _fetch(m_payload=dict(payload)):
-            return requests.post(
+            return _ai_session.post(
                 "https://integrate.api.nvidia.com/v1/chat/completions",
                 headers=headers,
                 json=m_payload,
@@ -916,9 +928,9 @@ async def query_nvidia_api(
                 choices = data.get("choices", [])
                 if choices:
                     msg = choices[0].get("message", {})
-                    content = msg.get("content")
-                    if content and len(content.strip()) > 1 and not is_abusive(content):
-                        cleaned = clean_modern_girl_reply(content)
+                    content = msg.get("content") or msg.get("reasoning_content")
+                    if content and len(str(content).strip()) > 1 and not is_abusive(str(content)):
+                        cleaned = clean_modern_girl_reply(str(content))
                         if cleaned:
                             return cleaned
             elif resp.status_code == 429:

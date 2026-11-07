@@ -23,8 +23,8 @@ from nexichat import db
 
 reactionsdb = db.reactions
 
-# Default emojis used when no custom emojis are set for a chat
-DEFAULT_EMOJIS = ["👍", "❤️", "🔥", "🥰", "👏", "🎉", "🤩", "👌", "😍", "⚡", "🫡", "💖"]
+# Default emojis used when no custom emojis are set for a chat (All 100% supported by Telegram Bot API)
+DEFAULT_EMOJIS = ["👍", "❤️", "🔥", "🥰", "👏", "🎉", "🤩", "👌", "😍", "⚡", "🫡", "💯"]
 
 async def is_reactions_enabled(chat_id: int) -> bool:
     """Check if automatic reactions are enabled for this chat (defaults to True)."""

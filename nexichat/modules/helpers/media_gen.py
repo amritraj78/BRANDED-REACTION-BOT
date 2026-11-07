@@ -23,9 +23,16 @@ import uuid
 import urllib.parse
 import logging
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+_media_session = requests.Session()
+_media_adapter = HTTPAdapter(pool_connections=15, pool_maxsize=15, max_retries=Retry(total=1, backoff_factor=0.2))
+_media_session.mount("https://", _media_adapter)
+_media_session.mount("http://", _media_adapter)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 CACHE_DIR = os.path.join(BASE_DIR, "cache")
@@ -73,7 +80,7 @@ def hinglish_to_hindi(text: str) -> str:
         return text
     try:
         url = f"https://inputtools.google.com/request?text={urllib.parse.quote(text)}&itc=hi-t-i0-und&num=1"
-        r = requests.get(url, timeout=3.5)
+        r = _media_session.get(url, timeout=3.5)
         if r.status_code == 200:
             data = r.json()
             if isinstance(data, list) and len(data) > 1 and data[0] == "SUCCESS":
@@ -110,11 +117,11 @@ def generate_voice_file(text: str, lang: str = "hi", voice: str = "Aditi") -> Op
     for polly_voice in [voice, "Aditi", "Raveena"]:
         for payload_text in [ssml_text, cleaned]:
             try:
-                r = requests.post(polly_url, headers=polly_headers, data={"text": payload_text, "voice": polly_voice}, timeout=6)
+                r = _media_session.post(polly_url, headers=polly_headers, data={"text": payload_text, "voice": polly_voice}, timeout=6)
                 if r.status_code == 200:
                     data = r.json()
                     if data.get("success") and data.get("speak_url"):
-                        audio_r = requests.get(data["speak_url"], timeout=10)
+                        audio_r = _media_session.get(data["speak_url"], timeout=10)
                         if audio_r.status_code == 200 and len(audio_r.content) > 500:
                             file_name = f"voice_{uuid.uuid4().hex[:8]}.mp3"
                             file_path = os.path.join(CACHE_DIR, file_name)
@@ -132,7 +139,7 @@ def generate_voice_file(text: str, lang: str = "hi", voice: str = "Aditi") -> Op
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        response = requests.get(url, headers=headers, timeout=8)
+        response = _media_session.get(url, headers=headers, timeout=8)
         if response.status_code == 200 and len(response.content) > 500:
             file_name = f"voice_{uuid.uuid4().hex[:8]}.mp3"
             file_path = os.path.join(CACHE_DIR, file_name)
@@ -157,7 +164,7 @@ def generate_ai_image(prompt: str) -> Optional[str]:
     url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=768&nologo=true&seed={uuid.uuid4().int % 100000}"
 
     try:
-        response = requests.get(url, timeout=25)
+        response = _media_session.get(url, timeout=25)
         if response.status_code == 200 and len(response.content) > 2000:
             file_name = f"image_{uuid.uuid4().hex[:8]}.jpg"
             file_path = os.path.join(CACHE_DIR, file_name)

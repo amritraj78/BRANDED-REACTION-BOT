@@ -104,8 +104,10 @@ async def anony_boot():
         except Exception as err:
             LOGGER.error(f"❌ Failed to load module '{all_module}': {err}", exc_info=True)
 
-    # 5. Restore & Sync Database from Telegram Cloud
+    # 5. Restore & Sync Database from Telegram Cloud & Initialize DB Indexes
     try:
+        from nexichat.database.chatbot import ensure_database_indexes
+        asyncio.create_task(ensure_database_indexes())
         from nexichat.database.telegram_db import sync_database_from_telegram, start_periodic_telegram_sync
         asyncio.create_task(sync_database_from_telegram(nexichat))
         asyncio.create_task(start_periodic_telegram_sync(nexichat, interval_seconds=600))

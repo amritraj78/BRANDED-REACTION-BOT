@@ -36,12 +36,18 @@ from nexichat.database.reactions import (
 from nexichat.database.clonestats import add_served_cchat, add_served_cuser
 from nexichat.mplugin.helpers.cowner import is_owner
 
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 logger = logging.getLogger(__name__)
 _http_session = requests.Session()
+_adapter = HTTPAdapter(pool_connections=25, pool_maxsize=30, max_retries=Retry(total=1, backoff_factor=0.1))
+_http_session.mount("https://", _adapter)
+_http_session.mount("http://", _adapter)
 
 
 async def send_bot_reaction(bot_token: str, chat_id: int, message_id: int, emoji: str) -> bool:
-    """Send an emoji reaction using Telegram Bot API setMessageReaction."""
+    """Send an emoji reaction using Telegram Bot API setMessageReaction with fallback."""
     url = f"https://api.telegram.org/bot{bot_token}/setMessageReaction"
     payload = {
         "chat_id": chat_id,
@@ -53,15 +59,24 @@ async def send_bot_reaction(bot_token: str, chat_id: int, message_id: int, emoji
     try:
         resp = await loop.run_in_executor(
             None,
-            lambda: _http_session.post(url, json=payload, timeout=5)
+            lambda: _http_session.post(url, json=payload, timeout=4)
         )
         data = resp.json()
         if not data.get("ok"):
-            logger.warning(f"Cloned Bot API reaction error: {data.get('description')}")
+            desc = data.get("description", "")
+            if "REACTION_INVALID" in desc and emoji != "❤️":
+                fb_payload = dict(payload, reaction=[{"type": "emoji", "emoji": "❤️"}])
+                fb_resp = await loop.run_in_executor(
+                    None,
+                    lambda: _http_session.post(url, json=fb_payload, timeout=3)
+                )
+                if fb_resp.json().get("ok"):
+                    return True
+            logger.debug(f"Cloned Bot API reaction notice: {desc}")
             return False
         return True
     except Exception as e:
-        logger.error(f"Failed to send cloned bot reaction: {e}")
+        logger.debug(f"Failed to send cloned bot reaction: {e}")
         return False
 
 
@@ -178,6 +193,14 @@ async def reset_reactions_cmd(client: Client, message: Message):
 async def clone_auto_react_handler(client: Client, message: Message):
     """Automatically reacts to messages and channel posts on cloned bots."""
     try:
+        # Ignore empty, service messages or media group extra triggers
+        if message.empty or getattr(message, "service", False):
+            return
+
+        # Ignore own messages (critical for userbot ID clones)
+        if client.me and message.from_user and message.from_user.id == client.me.id:
+            return
+
         text = message.text or message.caption
         if text and (text.startswith("/") or text.startswith("!") or text.startswith(".")):
             return
@@ -197,26 +220,22 @@ async def clone_auto_react_handler(client: Client, message: Message):
         if not emojis:
             emojis = DEFAULT_EMOJIS
 
-        # Smart contextual reaction detection
+        # Smart contextual reaction detection (Strict Telegram Bot API supported reactions)
         chosen_emoji = None
         lower_txt = (text or "").lower()
         if any(w in lower_txt for w in ["good morning", "gm", "suprabhat", "subah", "hello", "hi", "namaste", "pyar", "love"]):
-            chosen_emoji = random.choice(["❤️", "🥰", "💖", "🌸", "✨"])
+            chosen_emoji = random.choice(["❤️", "🥰", "😍", "😘", "💖"])
         elif any(w in lower_txt for w in ["haha", "hehe", "lol", "lmao", "xd", "rofl", "haso", "joke", "funny"]):
             chosen_emoji = random.choice(["😂", "🤣", "😁", "😆"])
         elif any(w in lower_txt for w in ["?", "kaun", "kya", "kaha", "kyu", "kaisa", "why", "how", "what", "who"]):
-            chosen_emoji = random.choice(["🤔", "🧐", "👀"])
+            chosen_emoji = random.choice(["🤔", "🤨", "👀"])
         elif any(w in lower_txt for w in ["fire", "op", "bawal", "super", "mast", "king", "pro", "best"]):
-            chosen_emoji = random.choice(["🔥", "⚡", "🎉", "👏", "🫡"])
+            chosen_emoji = random.choice(["🔥", "⚡", "🎉", "👏", "🫡", "💯"])
         elif any(w in lower_txt for w in ["sad", "dukhi", "cry", "bye", "alvida", "miss"]):
-            chosen_emoji = random.choice(["🥺", "🫂", "💔"])
+            chosen_emoji = random.choice(["🥺", "😢", "💔", "😭"])
 
         if not chosen_emoji:
             chosen_emoji = random.choice(emojis)
-
-        # Ignore own messages (critical for userbot ID clones)
-        if client.me and message.from_user and message.from_user.id == client.me.id:
-            return
 
         token = getattr(client, "bot_token", None) or getattr(client, "token", None)
         if token:
