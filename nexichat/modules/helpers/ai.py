@@ -633,7 +633,7 @@ async def query_groq_api(
     if not api_key:
         return None
 
-    models = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
+    models = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
     system_prompt = ANSHIKA_CHARACTER_PROMPT
     if vivid_context:
         system_prompt += f"\n{vivid_context}"
@@ -648,12 +648,6 @@ async def query_groq_api(
 
     messages.append({"role": "user", "content": prompt.strip()})
 
-    payload = {
-        "messages": messages,
-        "temperature": 0.75,
-        "max_tokens": 25
-    }
-
     loop = asyncio.get_running_loop()
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -662,7 +656,16 @@ async def query_groq_api(
     }
 
     for model in models:
-        payload["model"] = model
+        max_tokens = 50 if "qwen" in model else 150
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.75,
+            "max_tokens": max_tokens
+        }
+        if "gpt-oss" in model:
+            payload["reasoning_effort"] = "low"
+
         def _fetch(m_payload=dict(payload)):
             return requests.post(
                 "https://api.groq.com/openai/v1/chat/completions",
@@ -708,7 +711,7 @@ async def query_gemini_api(
     if not api_key:
         return None
 
-    gemini_models = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
+    gemini_models = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-pro-latest", "gemini-3.8-flash"]
     system_instruction_text = ANSHIKA_CHARACTER_PROMPT
     if vivid_context:
         system_instruction_text += f"\n{vivid_context}"
@@ -886,6 +889,52 @@ ENGLISH_FALLBACKS = [
     "Nice! What are you doing right now? 😊",
 ]
 
+_last_owner_quota_alert_time: float = 0.0
+
+
+async def notify_owner_api_exhausted(client: Optional[Any] = None) -> None:
+    """Notify the bot owner when live AI APIs hit quota limits and offer DB mode toggle."""
+    global _last_owner_quota_alert_time
+    import time
+    now = time.time()
+    if now - _last_owner_quota_alert_time < 3600:
+        return
+    _last_owner_quota_alert_time = now
+
+    owner_id = getattr(config, "OWNER_ID", None)
+    if not owner_id:
+        return
+
+    try:
+        from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+        from nexichat.database.chatbot import is_db_fallback_enabled
+        from nexichat import nexichat
+
+        bot_client = nexichat if (hasattr(nexichat, "is_connected") and nexichat.is_connected) else client
+        if not bot_client:
+            return
+
+        db_on = await is_db_fallback_enabled()
+        st_text = "🟢 **ENABLED**" if db_on else "🔴 **DISABLED (Strict API-Only)**"
+
+        btn = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🟢 Enable DB Fallback", callback_data="cb_dbmode_enable"),
+                InlineKeyboardButton("🔴 Keep API Only", callback_data="cb_dbmode_disable"),
+            ]
+        ])
+
+        msg = (
+            "⚠️ **[AI API ALERT] Quota Limit Reached!**\n\n"
+            "Live AI APIs (Groq & Gemini) daily rate limit / token quota par pahunch gayi hain (HTTP 429)!\n\n"
+            f"✦ **Current Mode:** {st_text}\n\n"
+            "👉 *Kya aap chahte hain ki bot Database Fallback mode se reply kare?*\n"
+            "Aap neeche diye gaye buttons ya `/dbmode on` / `/dbmode off` se control kar sakte hain."
+        )
+        await bot_client.send_message(chat_id=int(owner_id), text=msg, reply_markup=btn)
+    except Exception as e:
+        logger.debug(f"Failed to alert owner about API quota: {e}")
+
 
 async def generate_conversational_response(
     user_text: str,
@@ -1019,21 +1068,29 @@ async def generate_conversational_response(
     # =========================================================================
     # 6. DATABASE FALLBACK (ONLY EXECUTED IF ALL LIVE APIS HIT RATE LIMIT OR FAIL)
     # =========================================================================
-    await track_db_fallback_call()
+    # 1. Alert owner about API quota exhaustion (throttled to once per hour)
+    asyncio.create_task(notify_owner_api_exhausted(client))
 
-    # 6.1 Learned Q&A Memory Cache (Sync from Telegram Database)
-    cached_answer = await get_qa_answer(cleaned)
-    if cached_answer:
-        return await _finalize(cached_answer)
+    # 2. Check if the Owner has permitted Database Fallback Mode
+    from nexichat.database.chatbot import is_db_fallback_enabled, is_toxic_or_canned_reply
+    if await is_db_fallback_enabled():
+        await track_db_fallback_call()
 
-    # 6.2 Telegram Database Saved Word-Reply Fallback (Self-learned group replies)
-    try:
-        from nexichat.database.chatbot import get_chat_reply
-        learned = await get_chat_reply(cleaned)
-        if learned and learned.get("content") and not is_abusive(learned.get("content")):
-            return await _finalize(learned.get("content"))
-    except Exception:
-        pass
+        # 6.1 Learned Q&A Memory Cache (Sync from Telegram Database, strictly vetted)
+        cached_answer = await get_qa_answer(cleaned)
+        if cached_answer and not is_toxic_or_canned_reply(cached_answer):
+            return await _finalize(cached_answer)
+
+        # 6.2 Telegram Database Saved Word-Reply Fallback (strictly vetted)
+        try:
+            from nexichat.database.chatbot import get_chat_reply
+            learned = await get_chat_reply(cleaned)
+            if learned and learned.get("content"):
+                c = learned.get("content", "").strip()
+                if c and not is_abusive(c) and not is_toxic_or_canned_reply(c):
+                    return await _finalize(c)
+        except Exception:
+            pass
 
     # 6.3 Core greetings / Identity knowledge base
     for pattern, responses in GIRL_KNOWLEDGE_BASE:

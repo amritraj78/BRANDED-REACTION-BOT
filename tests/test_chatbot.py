@@ -237,10 +237,29 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(path)
         self.assertTrue(os.path.exists(path))
         self.assertTrue(os.path.getsize(path) > 500)
-        try:
-            os.remove(path)
-        except Exception:
-            pass
+    async def test_db_fallback_toggle(self):
+        from nexichat.database.chatbot import is_db_fallback_enabled, set_db_fallback_enabled
+        # Default should be False (Strict API Only)
+        self.assertFalse(await is_db_fallback_enabled())
+        # Enable DB fallback
+        await set_db_fallback_enabled(True)
+        self.assertTrue(await is_db_fallback_enabled())
+        # Disable DB fallback
+        await set_db_fallback_enabled(False)
+        self.assertFalse(await is_db_fallback_enabled())
+
+    async def test_toxic_filtering_and_db_fallback(self):
+        from nexichat.database.chatbot import is_toxic_or_canned_reply, save_chat_reply, get_chat_reply
+        self.assertTrue(is_toxic_or_canned_reply("में"))
+        self.assertTrue(is_toxic_or_canned_reply("heyy Rahul! 👋 finally message kiya"))
+        self.assertTrue(is_toxic_or_canned_reply("Hyy farzii"))
+        self.assertTrue(is_toxic_or_canned_reply("What are u finding for in the group"))
+        self.assertFalse(is_toxic_or_canned_reply("Main badhiya hoon, aap batao kaise ho?"))
+
+        # Should refuse to save toxic reply
+        await save_chat_reply("rahul", "text", "heyy Rahul!")
+        self.assertIsNone(await get_chat_reply("rahul"))
+
 
 if __name__ == "__main__":
     unittest.main()

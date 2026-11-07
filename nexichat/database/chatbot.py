@@ -85,15 +85,45 @@ async def set_voicemode_enabled(chat_id: int, enabled: bool):
     )
 
 
+async def is_db_fallback_enabled() -> bool:
+    """Check if database fallback is allowed when AI API quota is exhausted (defaults to False - strictly API first)."""
+    status_doc = await chatbot_status_db.find_one({"setting": "db_fallback_mode"})
+    if not status_doc:
+        return False
+    return status_doc.get("enabled", False)
+
+
+async def set_db_fallback_enabled(enabled: bool):
+    """Enable or disable database fallback when AI API quota is exhausted."""
+    await chatbot_status_db.update_one(
+        {"setting": "db_fallback_mode"},
+        {"$set": {"enabled": enabled}},
+        upsert=True
+    )
+
+
 def is_toxic_or_canned_reply(text: str) -> bool:
-    """Check if the text is robotic, search engine dump, or mentions Priya / AI assistant."""
+    """Check if the text is robotic, search engine dump, contains third-party names, or mentions Priya / AI assistant."""
     if not text:
         return True
-    lower = text.lower()
+    cleaned = text.strip()
+    if len(cleaned) <= 1:
+        return True
+
+    # Meaningless single words / particles (e.g. 'में', 'से', 'को', etc.)
+    single_word_junk = {"में", "से", "को", "का", "की", "के", "पर", "तक", "ने", "है", "था", "थी", "थे", "म", "न"}
+    if cleaned in single_word_junk:
+        return True
+
+    lower = cleaned.lower()
     toxic_markers = [
         "priya", "amrit", "safone", "as an ai", "i am an ai", "i'm an ai",
         "language model", "created by amrit", "maine is baare me search kiya",
-        "maine is baare me pata lagaya", "abstracttext", "wikipedia", "convert currencies"
+        "maine is baare me pata lagaya", "abstracttext", "wikipedia", "convert currencies",
+        "rahul", "farzii", "mannat", "jxtttvibes", "kanhaiya", "krrish", "dia",
+        "vinxvine", "maahi", "bus aur hell", "rhyme scheme", "what are u finding for",
+        "kidnap kiya", "call kyu kiya", "in the group", "local game ranking",
+        "guessed the word in record time", "climb the mini-game leaderboard"
     ]
     return any(marker in lower for marker in toxic_markers)
 
@@ -137,6 +167,9 @@ async def save_chat_reply(word: str, reply_type: str, content: str, client: Opti
     if not word or not content:
         return
 
+    if is_toxic_or_canned_reply(content) or is_toxic_or_canned_reply(word):
+        return
+
     word_clean = word.strip().lower()
     doc = {
         "word": word_clean,
@@ -174,13 +207,21 @@ async def get_chat_reply(word: str = "", clean_text: Optional[str] = None) -> Op
 
     word_clean = target_text.strip().lower()
 
-    exact_matches = [r for r in _replies_cache if r.get("word") == word_clean]
+    exact_matches = [
+        r for r in _replies_cache 
+        if r.get("word") == word_clean and not is_toxic_or_canned_reply(r.get("content", ""))
+    ]
     if exact_matches:
         return random.choice(exact_matches)
 
-    partial_matches = [r for r in _replies_cache if r.get("word") in word_clean or word_clean in r.get("word", "")]
-    if partial_matches:
-        return random.choice(partial_matches)
+    # Word-level token match (must match complete words, not arbitrary substrings)
+    tokens = set(word_clean.split())
+    token_matches = [
+        r for r in _replies_cache
+        if r.get("word") in tokens and len(r.get("word", "")) >= 3 and not is_toxic_or_canned_reply(r.get("content", ""))
+    ]
+    if token_matches:
+        return random.choice(token_matches)
 
     return None
 

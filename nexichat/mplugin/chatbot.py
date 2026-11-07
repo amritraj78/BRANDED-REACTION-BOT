@@ -36,6 +36,8 @@ from nexichat import SUDOERS
 from nexichat.database.chatbot import (
     is_chatbot_enabled,
     set_chatbot_enabled,
+    is_db_fallback_enabled,
+    set_db_fallback_enabled,
     save_chat_reply,
     save_sticker,
     get_random_sticker,
@@ -236,6 +238,105 @@ async def api_usage_callback_handler(client: Client, query: CallbackQuery):
         await query.answer("✅ Dashboard is up to date!")
 
 
+@Client.on_message(filters.command(["dbmode", "databasemode"]))
+async def db_mode_cmd(client: Client, message: Message):
+    """
+    Owner/Sudo command to control Database Fallback Mode when AI API quota is exhausted:
+    /dbmode on -> Enable database fallback when API quota is exhausted
+    /dbmode off -> Strict API Only mode (never use database replies)
+    /dbmode -> Check current mode
+    """
+    user_id = message.from_user.id if message.from_user else 0
+    if user_id not in SUDOERS and user_id != int(OWNER_ID):
+        return await message.reply_text("❌ **This setting is reserved for the Bot Creator/Sudoers.**")
+
+    if len(message.command) > 1:
+        action = message.command[1].lower()
+        if action in ["on", "enable", "yes", "true"]:
+            await set_db_fallback_enabled(True)
+            return await message.reply_text("🟢 **Database Fallback Mode: ENABLED**\nWhen live AI APIs hit quota/rate limits, verified database responses will be used as fallback.")
+        elif action in ["off", "disable", "no", "false"]:
+            await set_db_fallback_enabled(False)
+            return await message.reply_text("🔴 **Database Fallback Mode: DISABLED (Strict API-Only)**\nBot will strictly use Live AI APIs and will NOT fallback to database replies when API limit ends.")
+        else:
+            return await message.reply_text("ℹ️ **Usage:** `/dbmode on` or `/dbmode off`")
+
+    is_enabled = await is_db_fallback_enabled()
+    status_icon = "🟢 **ENABLED**" if is_enabled else "🔴 **DISABLED (API Only)**"
+
+    btn = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🟢 Enable DB Fallback", callback_data="cb_dbmode_enable"),
+            InlineKeyboardButton("🔴 Disable (API Only)", callback_data="cb_dbmode_disable"),
+        ],
+        [
+            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
+        ]
+    ])
+
+    text = (
+        f"╭━━━━━━━〔 🗄️ **DATABASE FALLBACK MODE** 〕━━━━━━━╮\n\n"
+        f"  ✦ **ᴄᴜʀʀᴇɴᴛ sᴛᴀᴛᴜs :** {status_icon}\n"
+        f"  ✦ **ᴘʀɪᴏʀɪᴛʏ :** ʟɪᴠᴇ ᴀɪ ᴀᴘɪ (ɢʀᴏǫ & ɢᴇᴍɪɴɪ) ғɪʀsᴛ\n\n"
+        f"⚙️ **Behavior:**\n"
+        f"• **Live AI First**: Bot always uses Groq and Gemini live APIs until quota is exhausted.\n"
+        f"• **If Disabled (Default)**: Bot remains strictly in API mode and sends natural girl messages if APIs are exhausted. Zero database junk is used.\n"
+        f"• **If Enabled**: Bot allows clean verified database responses when APIs hit rate limit.\n\n"
+        f"**Commands:**\n"
+        f"• `/dbmode on` - Enable Database Fallback\n"
+        f"• `/dbmode off` - Strict API-Only Mode\n"
+        f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
+    )
+    await message.reply_text(text, reply_markup=btn)
+
+
+@Client.on_callback_query(filters.regex(r"^cb_dbmode_(enable|disable)$"))
+async def dbmode_callback_handler(client: Client, query: CallbackQuery):
+    """Handles owner/sudo callbacks to toggle Database Fallback mode."""
+    user_id = query.from_user.id
+    if user_id not in SUDOERS and user_id != int(OWNER_ID):
+        return await query.answer("❌ Only Creator/Sudoers can change this!", show_alert=True)
+
+    action = query.data.split("_")[-1]
+    if action == "enable":
+        await set_db_fallback_enabled(True)
+        await query.answer("✅ Database fallback mode ENABLED!", show_alert=True)
+    else:
+        await set_db_fallback_enabled(False)
+        await query.answer("🛑 Strict API-only mode ENABLED!", show_alert=True)
+
+    is_enabled = await is_db_fallback_enabled()
+    status_icon = "🟢 **ENABLED**" if is_enabled else "🔴 **DISABLED (API Only)**"
+
+    btn = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🟢 Enable DB Fallback", callback_data="cb_dbmode_enable"),
+            InlineKeyboardButton("🔴 Disable (API Only)", callback_data="cb_dbmode_disable"),
+        ],
+        [
+            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
+        ]
+    ])
+
+    text = (
+        f"╭━━━━━━━〔 🗄️ **DATABASE FALLBACK MODE** 〕━━━━━━━╮\n\n"
+        f"  ✦ **ᴄᴜʀʀᴇɴᴛ sᴛᴀᴛᴜs :** {status_icon}\n"
+        f"  ✦ **ᴘʀɪᴏʀɪᴛʏ :** ʟɪᴠᴇ ᴀɪ ᴀᴘɪ (ɢʀᴏǫ & ɢᴇᴍɪɴɪ) ғɪʀsᴛ\n\n"
+        f"⚙️ **Behavior:**\n"
+        f"• **Live AI First**: Bot always uses Groq and Gemini live APIs until quota is exhausted.\n"
+        f"• **If Disabled (Default)**: Bot remains strictly in API mode and sends natural girl messages if APIs are exhausted. Zero database junk is used.\n"
+        f"• **If Enabled**: Bot allows clean verified database responses when APIs hit rate limit.\n\n"
+        f"**Commands:**\n"
+        f"• `/dbmode on` - Enable Database Fallback\n"
+        f"• `/dbmode off` - Strict API-Only Mode\n"
+        f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
+    )
+    try:
+        await query.message.edit_text(text, reply_markup=btn)
+    except Exception:
+        pass
+
+
 @Client.on_message(filters.command(["ask", "ai", "gemini", "gpt", "chatgpt"]))
 async def ask_ai_command(client: Client, message: Message):
     """Ask AI any question directly via command with animated typing effect."""
@@ -424,6 +525,7 @@ async def auto_chatbot_listener(client: Client, message: Message):
     if user_id in _blocklist:
         return
 
+    flood_threshold = 15 if message.chat.type == ChatType.PRIVATE else 7
     if user_id not in _message_counts:
         _message_counts[user_id] = {"count": 1, "last_time": current_time}
     else:
@@ -433,12 +535,12 @@ async def auto_chatbot_listener(client: Client, message: Message):
         else:
             _message_counts[user_id] = {"count": 1, "last_time": current_time}
 
-        if _message_counts[user_id]["count"] >= 5:
-            _blocklist[user_id] = current_time + timedelta(seconds=15)
+        if _message_counts[user_id]["count"] >= flood_threshold:
+            _blocklist[user_id] = current_time + timedelta(seconds=8)
             _message_counts.pop(user_id, None)
             await message.reply_text(
                 f"⚠️ Arey {message.from_user.mention}! Thoda sa aaram se na please! 🙈\n"
-                "Anshika thak jayegi! 10-15 second ruk ke baat karo na! 🌸✨"
+                "Anshika thak jayegi! Thoda ruk ke baat karo na! 🌸✨"
             )
             return
 
@@ -521,25 +623,6 @@ async def auto_chatbot_listener(client: Client, message: Message):
     # 6. Text
     if not message.text:
         return
-
-    if (
-        message.reply_to_message
-        and message.reply_to_message.from_user
-        and message.reply_to_message.from_user.id != bot_id
-        and message.reply_to_message.text
-        and not message.reply_to_message.text.startswith(("/", "!", "."))
-        and not is_abusive(message.text)
-        and not is_abusive(message.reply_to_message.text)
-    ):
-        try:
-            await save_chat_reply(
-                word=message.reply_to_message.text,
-                reply_type="text",
-                content=message.text,
-                client=client
-            )
-        except Exception:
-            pass
 
     clean_text = message.text
     if bot_username:
