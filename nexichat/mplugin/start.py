@@ -15,7 +15,7 @@ Is file ka kya kaam hai?
 """
 
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup
+from pyrogram.types import Message, InlineKeyboardMarkup, LinkPreviewOptions
 from pyrogram.enums import ChatType
 from nexichat.database.clonestats import add_served_cuser, add_served_cchat
 from nexichat.mplugin.helpers.inline import DEV_OP
@@ -34,23 +34,25 @@ async def start_message(client: Client, message: Message):
     bot_title = (bot_info.first_name or "VIP REACTION").upper()
 
     text = (
-        f"❖ **{bot_title}** ❖\n"
-        f"────────────────────────────\n"
+        f"╭────────────────────────────╮\n"
+        f"│    ❖ {bot_title} ❖   │\n"
+        f"╰────────────────────────────╯\n"
         f"🌸 **Hey {first_name}! Welcome** 💖\n\n"
         f"Main aapki pyari **Anshika** hoon! ✨\n"
         f"I chat with you like a real friend, reply to stickers, photos, videos and react to messages! ⚡\n\n"
-        f"────────────────────────────\n"
-        f"• **Persona:** Sweet Indian Girl 🌸\n"
-        f"• **Auto-React:** Groups & Channels ⚡\n"
-        f"• **Smart Chat:** Text, Sticker, Media 💬\n"
-        f"• **Memory:** Self-Learning Q&A 🧠\n"
-        f"• **Creator:** [Amrit Raj](https://t.me/Villanns) 👑\n"
-        f"────────────────────────────\n\n"
+        f"╭────────────────────────────╮\n"
+        f"│ ✦ **Persona:** Sweet Indian Girl 🌸\n"
+        f"│ ✦ **Auto-React:** Groups & Channels ⚡\n"
+        f"│ ✦ **Smart Chat:** Text, Sticker, Media 💬\n"
+        f"│ ✦ **Memory:** Persistent DM Recall 🧠\n"
+        f"│ ✦ **Creator:** [Amrit Raj](https://t.me/Villanns) 👑\n"
+        f"╰────────────────────────────╯\n\n"
         f"👇 **Tap the buttons below to explore more!**"
     )
     await message.reply_text(
         text=text,
         reply_markup=InlineKeyboardMarkup(DEV_OP),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
 
@@ -62,5 +64,5 @@ async def help_command(client: Client, message: Message):
     await message.reply_text(
         text=HELP_READ,
         reply_markup=InlineKeyboardMarkup(HELP_BTN),
-        disable_web_page_preview=True
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )

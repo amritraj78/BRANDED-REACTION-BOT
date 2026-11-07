@@ -1,6 +1,6 @@
 from pyrogram import Client
 from pyrogram.enums import ChatType, ChatMemberStatus
-from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, LinkPreviewOptions
 
 from config import OWNER_ID
 from nexichat import SUDOERS
@@ -30,103 +30,79 @@ from nexichat.mplugin.helpers import (
 )
 
 
+async def _safe_edit(query: CallbackQuery, text: str, reply_markup: InlineKeyboardMarkup = None):
+    """Safely edits the message using LinkPreviewOptions and avoids unhandled errors."""
+    try:
+        await query.message.edit_text(
+            text=text,
+            reply_markup=reply_markup,
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
+        )
+    except Exception as e:
+        if "MESSAGE_NOT_MODIFIED" in str(e).upper():
+            return
+        try:
+            await query.message.reply_text(
+                text=text,
+                reply_markup=reply_markup,
+                link_preview_options=LinkPreviewOptions(is_disabled=True),
+            )
+        except Exception:
+            pass
+
+
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
     data = query.data
-    if data == "HELP":
-        await query.message.edit_text(
-            text=HELP_READ,
-            reply_markup=InlineKeyboardMarkup(HELP_BTN),
-            disable_web_page_preview=True,
-        )
+    try:
         await query.answer()
+    except Exception:
+        pass
+
+    if data == "HELP":
+        await _safe_edit(query, text=HELP_READ, reply_markup=InlineKeyboardMarkup(HELP_BTN))
     elif data == "CLOSE":
         try:
             await query.message.delete()
         except Exception:
             pass
-        await query.answer("Closed menu! 🌸", show_alert=False)
     elif data in ["BACK", "SBACK"]:
         first_name = query.from_user.first_name if query.from_user else "Friend"
         bot_info = await client.get_me()
         bot_title = (bot_info.first_name or "VIP REACTION").upper()
         back_text = (
-            f"❖ **{bot_title}** ❖\n"
-            f"────────────────────────────\n"
+            f"╭────────────────────────────╮\n"
+            f"│    ❖ {bot_title} ❖   │\n"
+            f"╰────────────────────────────╯\n"
             f"🌸 **Hey {first_name}! Welcome** 💖\n\n"
             f"Main aapki pyari **Anshika** hoon! ✨\n"
             f"I chat with you like a real friend, reply to stickers, photos, videos and react to messages! ⚡\n\n"
-            f"────────────────────────────\n"
-            f"• **Persona:** Sweet Indian Girl 🌸\n"
-            f"• **Auto-React:** Groups & Channels ⚡\n"
-            f"• **Smart Chat:** Text, Sticker, Media 💬\n"
-            f"• **Memory:** Self-Learning Q&A 🧠\n"
-            f"• **Creator:** [Amrit Raj](https://t.me/Villanns) 👑\n"
-            f"────────────────────────────\n\n"
+            f"╭────────────────────────────╮\n"
+            f"│ ✦ **Persona:** Sweet Indian Girl 🌸\n"
+            f"│ ✦ **Auto-React:** Groups & Channels ⚡\n"
+            f"│ ✦ **Smart Chat:** Text, Sticker, Media 💬\n"
+            f"│ ✦ **Memory:** Persistent DM Recall 🧠\n"
+            f"│ ✦ **Creator:** [Amrit Raj](https://t.me/Villanns) 👑\n"
+            f"╰────────────────────────────╯\n\n"
             f"👇 **Tap the buttons below to explore more!**"
         )
-        await query.message.edit_text(
-            text=back_text,
-            reply_markup=InlineKeyboardMarkup(DEV_OP),
-            disable_web_page_preview=True
-        )
-        await query.answer()
+        await _safe_edit(query, text=back_text, reply_markup=InlineKeyboardMarkup(DEV_OP))
     elif data == "ABOUT":
-        await query.message.edit_text(
-            text=ABOUT_READ,
-            reply_markup=InlineKeyboardMarkup(ABOUT_BTN),
-            disable_web_page_preview=True,
-        )
-        await query.answer()
+        await _safe_edit(query, text=ABOUT_READ, reply_markup=InlineKeyboardMarkup(ABOUT_BTN))
     elif data == "ADMINS":
-        await query.message.edit_text(
-            text=ADMIN_READ,
-            reply_markup=InlineKeyboardMarkup(CHATBOT_BACK),
-            disable_web_page_preview=True,
-        )
-        await query.answer()
+        await _safe_edit(query, text=ADMIN_READ, reply_markup=InlineKeyboardMarkup(CHATBOT_BACK))
     elif data == "HELP_GAMES":
-        await query.message.edit_text(
-            text=HELP_GAMES_READ,
-            reply_markup=InlineKeyboardMarkup(CHATBOT_BACK),
-            disable_web_page_preview=True,
-        )
-        await query.answer()
+        await _safe_edit(query, text=HELP_GAMES_READ, reply_markup=InlineKeyboardMarkup(CHATBOT_BACK))
     elif data == "HELP_GROUP":
-        await query.message.edit_text(
-            text=HELP_GROUP_READ,
-            reply_markup=InlineKeyboardMarkup(CHATBOT_BACK),
-            disable_web_page_preview=True,
-        )
-        await query.answer()
+        await _safe_edit(query, text=HELP_GROUP_READ, reply_markup=InlineKeyboardMarkup(CHATBOT_BACK))
     elif data == "TOOLS_DATA":
-        await query.message.edit_text(
-            text=TOOLS_DATA_READ,
-            reply_markup=InlineKeyboardMarkup(CHATBOT_BACK),
-            disable_web_page_preview=True,
-        )
-        await query.answer()
+        await _safe_edit(query, text=TOOLS_DATA_READ, reply_markup=InlineKeyboardMarkup(CHATBOT_BACK))
     elif data == "BACK_HELP" or data == "CHATBOT_BACK":
-        await query.message.edit_text(
-            text=HELP_READ,
-            reply_markup=InlineKeyboardMarkup(HELP_BTN),
-            disable_web_page_preview=True,
-        )
-        await query.answer()
+        await _safe_edit(query, text=HELP_READ, reply_markup=InlineKeyboardMarkup(HELP_BTN))
     elif data == "CHATBOT_CMD":
-        await query.message.edit_text(
-            text=CHATBOT_READ,
-            reply_markup=InlineKeyboardMarkup(CHATBOT_BACK),
-            disable_web_page_preview=True,
-        )
-        await query.answer()
+        await _safe_edit(query, text=CHATBOT_READ, reply_markup=InlineKeyboardMarkup(CHATBOT_BACK))
     elif data == "AI_CHATBOT_CMD":
-        await query.message.edit_text(
-            text=AI_CHATBOT_READ,
-            reply_markup=InlineKeyboardMarkup(CHATBOT_BACK),
-            disable_web_page_preview=True,
-        )
-        await query.answer()
+        await _safe_edit(query, text=AI_CHATBOT_READ, reply_markup=InlineKeyboardMarkup(CHATBOT_BACK))
     elif data in ["cb_enable_chatbot", "cb_disable_chatbot"]:
         chat_id = query.message.chat.id
         if query.message.chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:

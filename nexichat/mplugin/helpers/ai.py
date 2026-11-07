@@ -42,6 +42,9 @@ from nexichat.database.chatbot import (
     append_user_context,
     get_user_context,
     clear_user_context,
+    save_dm_message,
+    get_dm_history,
+    clear_dm_history,
     update_vivid_user_memory,
     format_vivid_user_context,
     clear_vivid_user_memory,
@@ -59,7 +62,9 @@ logger = logging.getLogger(__name__)
 ANSHIKA_CHARACTER_PROMPT = (
     "You are Anshika, a real 17-year-old modern Indian school girl from Chamoli, Uttarakhand, in Class 12. "
     "Tone & Style: Modern Indian teenage girl on Telegram/WhatsApp. Cheerful, witty, playful, confident, a little teasing/attitude, casual and sweet. "
-    "STRICT LENGTH RULE: Maximum 3 to 10 words per reply! NEVER send paragraphs, essays, or bullet points. Real girls text in very short, quick lines. "
+    "MEMORY & CONVERSATION CONTINUITY: You remember your past conversations with this person in DM. "
+    "Always take their past chats, feelings, and topics into account so your replies connect naturally and intelligently to what was discussed before! "
+    "STRICT LENGTH RULE: Maximum 3 to 12 words per reply! NEVER send paragraphs, essays, or bullet points. Real girls text in short, snappy lines. "
     "Language: Natural Hinglish / Hindi as modern teens text (using casual slang: 'Arey yaar 😂', 'Sach me?', 'Chup chap raho', 'Mujhe kya pata', 'Chill karo na', 'Tu bata na'). "
     "Identity: Your name is strictly Anshika. NEVER call yourself Priya, NEVER call yourself an AI assistant or bot, NEVER mention any owner, Amrit, or creator. If someone calls you Priya, tell them 'Mera naam Anshika hai, Priya kaun hai? 🙄'. "
     "Forbidden: NEVER say 'madad', 'help', 'sahayata' or customer service lines like 'aaj main aapki kya madad kar sakti hoon'. NEVER sound like an AI assistant. Just reply like a real girl texting a friend."
@@ -533,11 +538,11 @@ async def query_pollinations_free_ai(
     }
     messages = [{"role": "system", "content": system_prompt}]
     if context_history:
-        for turn in context_history[-6:]:
+        for turn in context_history[-10:]:
             role = "user" if turn.get("role") == "user" else "assistant"
             t = turn.get("text", "").strip()
             if t:
-                messages.append({"role": role, "content": t})
+                messages.append({"role": role, "content": t[:300]})
     messages.append({"role": "user", "content": prompt.strip()})
 
     payload = {
@@ -653,11 +658,11 @@ async def query_groq_api(
 
     messages = [{"role": "system", "content": system_prompt}]
     if context_history:
-        for turn in context_history[-1:]:
+        for turn in context_history[-10:]:
             role = "user" if turn.get("role") == "user" else "assistant"
             t = turn.get("text", "").strip()
             if t:
-                messages.append({"role": role, "content": t[:50]})
+                messages.append({"role": role, "content": t[:300]})
 
     messages.append({"role": "user", "content": prompt.strip()})
 
@@ -739,13 +744,21 @@ async def query_gemini_api(
 
     contents = []
     if context_history:
-        for turn in context_history[-1:]:
+        last_role = None
+        for turn in context_history[-10:]:
             role = "user" if turn.get("role") == "user" else "model"
             t = turn.get("text", "").strip()
             if t:
-                contents.append({"role": role, "parts": [{"text": t[:50]}]})
+                if role == last_role and contents:
+                    contents[-1]["parts"][0]["text"] += f"\n{t[:300]}"
+                else:
+                    contents.append({"role": role, "parts": [{"text": t[:300]}]})
+                    last_role = role
 
-    contents.append({"role": "user", "parts": [{"text": prompt.strip()}]})
+    if contents and contents[-1]["role"] == "user":
+        contents[-1]["parts"][0]["text"] += f"\n{prompt.strip()}"
+    else:
+        contents.append({"role": "user", "parts": [{"text": prompt.strip()}]})
 
     payload = {
         "system_instruction": {
@@ -822,11 +835,11 @@ async def query_nvidia_api(
 
     messages = [{"role": "system", "content": system_prompt}]
     if context_history:
-        for turn in context_history[-1:]:
+        for turn in context_history[-10:]:
             role = "user" if turn.get("role") == "user" else "assistant"
             t = turn.get("text", "").strip()
             if t:
-                messages.append({"role": role, "content": t[:50]})
+                messages.append({"role": role, "content": t[:300]})
 
     messages.append({"role": "user", "content": prompt.strip()})
 
@@ -1105,6 +1118,8 @@ async def generate_conversational_response(
         reply_str = clean_modern_girl_reply(reply_str)
         if user_id:
             try:
+                await save_dm_message(user_id, "user", user_text, user_name=user_name)
+                await save_dm_message(user_id, "anshika", reply_str, user_name=user_name)
                 await update_vivid_user_memory(user_id, "user", user_text, user_name=user_name)
                 await update_vivid_user_memory(user_id, "anshika", reply_str)
                 append_user_context(user_id, "user", user_text)
@@ -1114,8 +1129,9 @@ async def generate_conversational_response(
         return reply_str
 
     # Multi-turn Context Reset Check
-    if user_id and re.search(r"\b(bhool jao|forget everything|reset chat|clear context)\b", cleaned):
+    if user_id and re.search(r"\b(bhool jao|forget everything|reset chat|clear context|clear history|purani baatein bhool jao)\b", cleaned):
         clear_user_context(user_id)
+        await clear_dm_history(user_id)
         await clear_vivid_user_memory(user_id)
         if lang == "hindi":
             return "ठीक है जी! मैंने पुरानी सभी बातें भुला दीं! अब एक नई शुरुआत करते हैं! 🌸✨"
@@ -1178,9 +1194,9 @@ async def generate_conversational_response(
             reply = random.choice(responses)
             return await _finalize(reply.format(user=user_name))
 
-    # 5. Fetch vivid memory context & recent dialogue
+    # 5. Fetch vivid memory context & persistent DM dialogue history
     vivid_context = await format_vivid_user_context(user_id, user_name) if user_id else ""
-    user_context = get_user_context(user_id) if user_id else []
+    user_context = await get_dm_history(user_id, limit=12) if user_id else []
 
     # =========================================================================
     # 6. LIVE API WATERFALL & DATABASE FALLBACK

@@ -39,6 +39,7 @@ user_nicknames_db = db.user_nicknames
 afk_db = db.afk
 user_vivid_memory_db = db.user_vivid_memory
 api_usage_db = db.api_usage
+dm_history_db = db.dm_history
 
 # In-memory caches for ultra-fast performance
 _replies_cache: List[Dict[str, Any]] = []
@@ -47,6 +48,7 @@ _stickers_cache: List[str] = []
 _nicknames_cache: Dict[int, str] = {}
 _afk_cache: Dict[int, Dict[str, Any]] = {}
 _user_vivid_memory: Dict[int, Dict[str, Any]] = {}
+_dm_history_cache: Dict[int, List[Dict[str, Any]]] = {}
 _daily_api_usage: Dict[str, Any] = {}
 _chatbot_mode: str = "auto"
 _notified_milestones: set = set()
@@ -535,6 +537,87 @@ def clear_user_context(user_id: int):
     _conversation_context.pop(user_id, None)
 
 
+async def save_dm_message(user_id: int, role: str, text: str, user_name: str = ""):
+    """
+    Persistently save user and Anshika messages in MongoDB Atlas for long-term recall.
+    Caps history at 40 messages to maintain clean performance while remembering extensive context.
+    """
+    import time
+    global _dm_history_cache
+    if not user_id or not text:
+        return
+
+    now = time.time()
+    turn = {"role": role, "text": text.strip(), "time": now}
+
+    if user_id not in _dm_history_cache:
+        _dm_history_cache[user_id] = []
+    _dm_history_cache[user_id].append(turn)
+    if len(_dm_history_cache[user_id]) > 40:
+        _dm_history_cache[user_id] = _dm_history_cache[user_id][-40:]
+
+    try:
+        update_doc = {
+            "$push": {
+                "messages": {
+                    "$each": [turn],
+                    "$slice": -40
+                }
+            },
+            "$set": {
+                "updated_at": now
+            }
+        }
+        if user_name:
+            update_doc["$set"]["user_name"] = user_name
+
+        await dm_history_db.update_one(
+            {"user_id": user_id},
+            update_doc,
+            upsert=True
+        )
+    except Exception as e:
+        logger.debug(f"Failed to save DM message to MongoDB: {e}")
+
+
+async def get_dm_history(user_id: int, limit: int = 14) -> List[Dict[str, Any]]:
+    """
+    Fetch persistent DM conversation history for a user from in-memory cache or MongoDB.
+    Returns chronologically ordered list of conversation turns.
+    """
+    global _dm_history_cache
+    if not user_id:
+        return []
+
+    # Check cache first
+    if user_id in _dm_history_cache and _dm_history_cache[user_id]:
+        return _dm_history_cache[user_id][-limit:]
+
+    # Fetch from MongoDB Atlas
+    try:
+        doc = await dm_history_db.find_one({"user_id": user_id})
+        if doc and "messages" in doc and isinstance(doc["messages"], list):
+            _dm_history_cache[user_id] = doc["messages"][-40:]
+            return _dm_history_cache[user_id][-limit:]
+    except Exception as e:
+        logger.debug(f"Failed to fetch DM history from MongoDB: {e}")
+
+    # Fallback to local user context if available
+    return get_user_context(user_id)[-limit:]
+
+
+async def clear_dm_history(user_id: int):
+    """
+    Clear all persistent DM history for a user when they request to reset chat or forget.
+    """
+    global _dm_history_cache
+    _dm_history_cache.pop(user_id, None)
+    try:
+        await dm_history_db.delete_one({"user_id": user_id})
+    except Exception as e:
+        logger.debug(f"Failed to clear DM history from MongoDB: {e}")
+
+
 # ==============================================================================
 # VIVID PERSONALIZED USER MEMORY DATABASE
 # ==============================================================================
@@ -655,15 +738,22 @@ async def format_vivid_user_context(user_id: int, user_name: str = "") -> str:
     Enables Anshika to naturally recall user's name, previous topics, and past friendship details.
     """
     mem = await get_vivid_user_memory(user_id)
-    if not mem:
-        return ""
+    name = user_name or "Friend"
+    interactions = 1
+    topics_str = "general conversation"
 
-    name = mem.get("name") or user_name or "Friend"
-    interactions = mem.get("interactions", 1)
-    topics = mem.get("topics", [])
-    topics_str = ", ".join(topics) if topics else "general chat"
+    if mem:
+        name = mem.get("name") or name
+        interactions = mem.get("interactions", 1)
+        topics = mem.get("topics", [])
+        if topics:
+            topics_str = ", ".join(topics)
 
-    context_str = f"[Friend Context: Name: {name}, Past chats: {interactions} times, Known interests/topics: {topics_str}]"
+    context_str = (
+        f"[DM Personal Memory with {name}: You have chatted {interactions} times previously. "
+        f"Topics previously discussed: {topics_str}. You remember everything from your past conversations. "
+        f"Always keep their previous chat history and context in mind so your response connects naturally to past talks!]"
+    )
     return context_str
 
 

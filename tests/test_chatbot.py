@@ -272,6 +272,53 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
         await save_chat_reply("rahul", "text", "heyy Rahul!")
         self.assertIsNone(await get_chat_reply("rahul"))
 
+    async def test_persistent_dm_history(self):
+        from nexichat.database.chatbot import save_dm_message, get_dm_history, clear_dm_history
+        test_uid = 9988776655
+        await clear_dm_history(test_uid)
+
+        # Empty initially
+        hist0 = await get_dm_history(test_uid)
+        self.assertEqual(len(hist0), 0)
+
+        # Save turns
+        await save_dm_message(test_uid, "user", "mera naam rohan hai", user_name="Rohan")
+        await save_dm_message(test_uid, "anshika", "Hii Rohan! Kaise ho aap?", user_name="Rohan")
+        await save_dm_message(test_uid, "user", "kal mera physics ka exam hai", user_name="Rohan")
+        await save_dm_message(test_uid, "anshika", "Best of luck! Ache se likhna!", user_name="Rohan")
+
+        # Fetch history
+        hist = await get_dm_history(test_uid, limit=10)
+        self.assertEqual(len(hist), 4)
+        self.assertEqual(hist[0]["role"], "user")
+        self.assertIn("rohan", hist[0]["text"])
+        self.assertEqual(hist[1]["role"], "anshika")
+        self.assertIn("Kaise ho", hist[1]["text"])
+        self.assertEqual(hist[2]["role"], "user")
+        self.assertIn("physics", hist[2]["text"])
+
+        # Clear history
+        await clear_dm_history(test_uid)
+        hist_cleared = await get_dm_history(test_uid)
+        self.assertEqual(len(hist_cleared), 0)
+
+    async def test_vivid_context_format(self):
+        from nexichat.database.chatbot import update_vivid_user_memory, format_vivid_user_context
+        test_uid = 9911223344
+        await update_vivid_user_memory(test_uid, "user", "Mujhe coding aur python bohot pasand hai", user_name="Aman")
+        ctx = await format_vivid_user_context(test_uid, "Aman")
+        self.assertIn("Aman", ctx)
+        self.assertIn("coding", ctx)
+
+    async def test_dm_reset_command(self):
+        test_uid = 7766554433
+        from nexichat.database.chatbot import save_dm_message, get_dm_history
+        await save_dm_message(test_uid, "user", "Secret info")
+        reply = await generate_conversational_response("purani baatein bhool jao", user_id=test_uid)
+        self.assertIn("bhula di", reply)
+        hist = await get_dm_history(test_uid)
+        self.assertEqual(len(hist), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,7 +2,7 @@ import time
 import logging
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
 
 from config import OWNER_ID, SUPPORT_GRP
 from nexichat import _boot_, get_readable_time, SUDOERS
@@ -90,7 +90,7 @@ async def getid(client: Client, message: Message):
 
     await message.reply_text(
         text,
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
         parse_mode=ParseMode.DEFAULT,
     )
 
@@ -108,22 +108,21 @@ async def user_profile(client: Client, message: Message):
     nickname = await get_user_nickname(user.id)
     nick_str = f"• **Nickname:** `{nickname}`\n" if nickname else ""
     
-    text = f"""**
-👑 User VIP Profile 👑
-────────────────────────────
+    text = f"""╭────────────────────────────╮
+│    👑 USER VIP PROFILE 👑  │
+╰────────────────────────────╯
 🌸 **Hello {user.mention}!**
 Here is your official VIP profile card.
 
-────────────────────────────
-• **Name:** {user.first_name}
-• **User ID:** `{user.id}`
-• **Username:** @{user.username if user.username else 'None'}
-{nick_str}• **Status:** {role}
-• **DC ID:** `{user.dc_id or 'Unknown'}`
-• **Bot Uptime:** `{uptime}`
-────────────────────────────
-📡 **Powered by:** [Amrit Feel](https://t.me/{SUPPORT_GRP}) 💞**
-"""
+╭────────────────────────────╮
+│ • **Name:** {user.first_name}
+│ • **User ID:** `{user.id}`
+│ • **Username:** @{user.username if user.username else 'None'}
+│ {nick_str}• **Status:** {role}
+│ • **DC ID:** `{user.dc_id or 'Unknown'}`
+│ • **Bot Uptime:** `{uptime}`
+╰────────────────────────────╯
+📡 **Powered by:** [Amrit Feel](https://t.me/{SUPPORT_GRP}) 💞"""
     btn = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("📷 Instagram", url="https://instagram.com/ex_amrit"),
@@ -134,4 +133,4 @@ Here is your official VIP profile card.
             InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE"),
         ]
     ])
-    await message.reply_text(text, reply_markup=btn, disable_web_page_preview=True)
+    await message.reply_text(text, reply_markup=btn, link_preview_options=LinkPreviewOptions(is_disabled=True))
