@@ -49,6 +49,9 @@ from nexichat.database.chatbot import (
     set_chatbot_enabled,
     is_db_fallback_enabled,
     set_db_fallback_enabled,
+    set_chatbot_mode,
+    get_chatbot_mode,
+    format_mode_dashboard,
     save_chat_reply,
     save_sticker,
     get_random_sticker,
@@ -140,10 +143,11 @@ async def chatbot_toggle_cmd(client: Client, message: Message):
     ])
 
     text = (
-        f"╭━━━━━━━〔 🤖 **AI CHATBOT SETTINGS** 〕━━━━━━━╮\n\n"
-        f"  ✦ **ᴄʜᴀᴛ :** {message.chat.title or message.chat.first_name or 'This Chat'}\n"
-        f"  ✦ **sᴛᴀᴛᴜs :** {status_icon}\n"
-        f"  ✦ **ᴘᴇʀsᴏɴᴀ :** sᴡᴇᴇᴛ ɪɴᴅɪᴀɴ ɢɪʀʟ (ᴀɴsʜɪᴋᴀ) 🌸\n\n"
+        f"🤖 **AI CHATBOT SETTINGS**\n"
+        f"────────────────────────────\n"
+        f"✦ **Chat:** {message.chat.title or message.chat.first_name or 'This Chat'}\n"
+        f"✦ **Status:** {status_icon}\n"
+        f"✦ **Persona:** Sweet Indian Girl (Anshika) 🌸\n\n"
         f"When enabled, I will reply to messages, questions, stickers and media!\n\n"
         f"**Quick Commands:**\n"
         f"• `/chatbot on` - Turn Chatbot ON\n"
@@ -191,10 +195,11 @@ async def chatbot_callback_handler(client: Client, query: CallbackQuery):
     ])
 
     text = (
-        f"╭━━━━━━━〔 🤖 **AI CHATBOT SETTINGS** 〕━━━━━━━╮\n\n"
-        f"  ✦ **ᴄʜᴀᴛ :** {query.message.chat.title or query.message.chat.first_name or 'This Chat'}\n"
-        f"  ✦ **sᴛᴀᴛᴜs :** {status_icon}\n"
-        f"  ✦ **ᴘᴇʀsᴏɴᴀ :** sᴡᴇᴇᴛ ɪɴᴅɪᴀɴ ɢɪʀʟ (ᴀɴsʜɪᴋᴀ) 🌸\n\n"
+        f"🤖 **AI CHATBOT SETTINGS**\n"
+        f"────────────────────────────\n"
+        f"✦ **Chat:** {query.message.chat.title or query.message.chat.first_name or 'This Chat'}\n"
+        f"✦ **Status:** {status_icon}\n"
+        f"✦ **Persona:** Sweet Indian Girl (Anshika) 🌸\n\n"
         f"When enabled, I will reply to messages, questions, stickers and media!\n\n"
         f"**Quick Commands:**\n"
         f"• `/chatbot on` - Turn Chatbot ON\n"
@@ -224,6 +229,13 @@ async def api_usage_cmd(client: Client, message: Message):
     btn = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("🔄 Refresh Dashboard", callback_data="cb_refresh_api_usage"),
+        ],
+        [
+            InlineKeyboardButton("🤖 Auto Mode", callback_data="cb_mode_auto"),
+            InlineKeyboardButton("🗄️ Database Only", callback_data="cb_mode_database"),
+            InlineKeyboardButton("⚡ Strict API", callback_data="cb_mode_api"),
+        ],
+        [
             InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
         ]
     ])
@@ -241,6 +253,13 @@ async def api_usage_callback_handler(client: Client, query: CallbackQuery):
     btn = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("🔄 Refresh Dashboard", callback_data="cb_refresh_api_usage"),
+        ],
+        [
+            InlineKeyboardButton("🤖 Auto Mode", callback_data="cb_mode_auto"),
+            InlineKeyboardButton("🗄️ Database Only", callback_data="cb_mode_database"),
+            InlineKeyboardButton("⚡ Strict API", callback_data="cb_mode_api"),
+        ],
+        [
             InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
         ]
     ])
@@ -251,13 +270,14 @@ async def api_usage_callback_handler(client: Client, query: CallbackQuery):
         await query.answer("✅ Dashboard is up to date!")
 
 
-@nexichat.on_message(filters.command(["dbmode", "databasemode"]))
+@nexichat.on_message(filters.command(["mode", "dbmode", "databasemode"]))
 async def db_mode_cmd(client: Client, message: Message):
     """
-    Owner/Sudo command to control Database Fallback Mode when AI API quota is exhausted:
-    /dbmode on -> Enable database fallback when API quota is exhausted
-    /dbmode off -> Strict API Only mode (never use database replies)
-    /dbmode -> Check current mode
+    Owner/Sudo command to control Chatbot Reply Source:
+    /mode auto -> APIs first, auto switch to Telegram/Mongo DB when limit finishes
+    /mode database (or /dbmode on) -> Strictly bypass APIs; reply from DB only
+    /mode api (or /dbmode off) -> Strictly use APIs only
+    /mode -> Interactive mode selection dashboard
     """
     user_id = message.from_user.id if message.from_user else 0
     if user_id not in SUDOERS and user_id != int(OWNER_ID):
@@ -265,85 +285,58 @@ async def db_mode_cmd(client: Client, message: Message):
 
     if len(message.command) > 1:
         action = message.command[1].lower()
-        if action in ["on", "enable", "yes", "true"]:
-            await set_db_fallback_enabled(True)
-            return await message.reply_text("🟢 **Database Fallback Mode: ENABLED**\nWhen live AI APIs hit quota/rate limits, verified database responses will be used as fallback.")
-        elif action in ["off", "disable", "no", "false"]:
-            await set_db_fallback_enabled(False)
-            return await message.reply_text("🔴 **Database Fallback Mode: DISABLED (Strict API-Only)**\nBot will strictly use Live AI APIs and will NOT fallback to database replies when API limit ends.")
+        if action in ["auto", "default"]:
+            await set_chatbot_mode("auto")
+            return await message.reply_text("🤖 **Chatbot Mode: AUTO (Recommended)**\nHigh-speed AI APIs will be used first. When API quotas hit limit, Telegram Cloud & MongoDB DB will be used automatically!")
+        elif action in ["database", "db", "on", "enable", "yes", "true"]:
+            await set_chatbot_mode("database")
+            return await message.reply_text("🗄️ **Chatbot Mode: DATABASE ONLY**\nAll external APIs are bypassed! Bot will strictly search and reply from Telegram Cloud Channel and MongoDB database (0 API credits used).")
+        elif action in ["api", "off", "disable", "no", "false"]:
+            await set_chatbot_mode("api")
+            return await message.reply_text("⚡ **Chatbot Mode: STRICT API ONLY**\nBot will strictly use Live AI APIs and will NOT fallback to database replies.")
         else:
-            return await message.reply_text("ℹ️ **Usage:** `/dbmode on` or `/dbmode off`")
+            return await message.reply_text("ℹ️ **Usage:** `/mode auto`, `/mode database`, or `/mode api`")
 
-    is_enabled = await is_db_fallback_enabled()
-    status_icon = "🟢 **ENABLED**" if is_enabled else "🔴 **DISABLED (API Only)**"
-
-    btn = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("🟢 Enable DB Fallback", callback_data="cb_dbmode_enable"),
-            InlineKeyboardButton("🔴 Disable (API Only)", callback_data="cb_dbmode_disable"),
-        ],
-        [
-            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
-        ]
-    ])
-
-    text = (
-        f"╭━━━━━━━〔 🗄️ **DATABASE FALLBACK MODE** 〕━━━━━━━╮\n\n"
-        f"  ✦ **ᴄᴜʀʀᴇɴᴛ sᴛᴀᴛᴜs :** {status_icon}\n"
-        f"  ✦ **ᴘʀɪᴏʀɪᴛʏ :** ʟɪᴠᴇ ᴀɪ ᴀᴘɪ (ɢʀᴏǫ & ɢᴇᴍɪɴɪ) ғɪʀsᴛ\n\n"
-        f"⚙️ **Behavior:**\n"
-        f"• **Live AI First**: Bot always uses Groq and Gemini live APIs until quota is exhausted.\n"
-        f"• **If Disabled (Default)**: Bot remains strictly in API mode and sends natural girl messages if APIs are exhausted. Zero database junk is used.\n"
-        f"• **If Enabled**: Bot allows clean verified database responses when APIs hit rate limit.\n\n"
-        f"**Commands:**\n"
-        f"• `/dbmode on` - Enable Database Fallback\n"
-        f"• `/dbmode off` - Strict API-Only Mode\n"
-        f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
-    )
+    text, btn = await format_mode_dashboard()
     await message.reply_text(text, reply_markup=btn)
+
+
+@nexichat.on_callback_query(filters.regex(r"^cb_mode_(auto|database|api)$"))
+async def mode_callback_handler(client: Client, query: CallbackQuery):
+    """Handles owner/sudo callbacks to select chatbot reply mode."""
+    user_id = query.from_user.id
+    if user_id not in SUDOERS and user_id != int(OWNER_ID):
+        return await query.answer("❌ Only Creator/Sudoers can change reply mode!", show_alert=True)
+
+    mode_map = {
+        "cb_mode_auto": "auto",
+        "cb_mode_database": "database",
+        "cb_mode_api": "api"
+    }
+    target_mode = mode_map.get(query.data, "auto")
+    await set_chatbot_mode(target_mode)
+    await query.answer(f"✅ Switched to {target_mode.upper()} mode!", show_alert=True)
+
+    text, btn = await format_mode_dashboard()
+    try:
+        await query.message.edit_text(text, reply_markup=btn)
+    except Exception:
+        pass
 
 
 @nexichat.on_callback_query(filters.regex(r"^cb_dbmode_(enable|disable)$"))
 async def dbmode_callback_handler(client: Client, query: CallbackQuery):
-    """Handles owner/sudo callbacks to toggle Database Fallback mode."""
+    """Handles legacy callbacks to toggle Database Fallback mode."""
     user_id = query.from_user.id
     if user_id not in SUDOERS and user_id != int(OWNER_ID):
         return await query.answer("❌ Only Creator/Sudoers can change this!", show_alert=True)
 
     action = query.data.split("_")[-1]
-    if action == "enable":
-        await set_db_fallback_enabled(True)
-        await query.answer("✅ Database fallback mode ENABLED!", show_alert=True)
-    else:
-        await set_db_fallback_enabled(False)
-        await query.answer("🛑 Strict API-only mode ENABLED!", show_alert=True)
+    is_en = (action == "enable")
+    await set_chatbot_mode("auto" if is_en else "api")
+    await query.answer("✅ Database fallback mode ENABLED!" if is_en else "🛑 Strict API-only mode ENABLED!", show_alert=True)
 
-    is_enabled = await is_db_fallback_enabled()
-    status_icon = "🟢 **ENABLED**" if is_enabled else "🔴 **DISABLED (API Only)**"
-
-    btn = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("🟢 Enable DB Fallback", callback_data="cb_dbmode_enable"),
-            InlineKeyboardButton("🔴 Disable (API Only)", callback_data="cb_dbmode_disable"),
-        ],
-        [
-            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
-        ]
-    ])
-
-    text = (
-        f"╭━━━━━━━〔 🗄️ **DATABASE FALLBACK MODE** 〕━━━━━━━╮\n\n"
-        f"  ✦ **ᴄᴜʀʀᴇɴᴛ sᴛᴀᴛᴜs :** {status_icon}\n"
-        f"  ✦ **ᴘʀɪᴏʀɪᴛʏ :** ʟɪᴠᴇ ᴀɪ ᴀᴘɪ (ɢʀᴏǫ & ɢᴇᴍɪɴɪ) ғɪʀsᴛ\n\n"
-        f"⚙️ **Behavior:**\n"
-        f"• **Live AI First**: Bot always uses Groq and Gemini live APIs until quota is exhausted.\n"
-        f"• **If Disabled (Default)**: Bot remains strictly in API mode and sends natural girl messages if APIs are exhausted. Zero database junk is used.\n"
-        f"• **If Enabled**: Bot allows clean verified database responses when APIs hit rate limit.\n\n"
-        f"**Commands:**\n"
-        f"• `/dbmode on` - Enable Database Fallback\n"
-        f"• `/dbmode off` - Strict API-Only Mode\n"
-        f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
-    )
+    text, btn = await format_mode_dashboard()
     try:
         await query.message.edit_text(text, reply_markup=btn)
     except Exception:

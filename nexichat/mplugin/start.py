@@ -34,19 +34,19 @@ async def start_message(client: Client, message: Message):
     bot_title = (bot_info.first_name or "VIP REACTION").upper()
 
     text = (
-        f"╭━━━━━━━〔 ❖ **{bot_title}** ❖ 〕━━━━━━━╮\n\n"
-        f"  🌸 **ʜᴇʏ {first_name}! ᴡᴇʟᴄᴏᴍᴇ ʙᴀʙʏ** 💖\n\n"
-        f"  ᴍᴀɪɴ ᴀᴀᴘᴋɪ ᴘʏᴀʀɪ **𝐀ɴsʜɪᴋᴀ‹✨** ʜᴏᴏɴ! ✨\n"
-        f"  ɪ ᴄʜᴀᴛ ᴡɪᴛʜ ʏᴏᴜ ʟɪᴋᴇ ᴀ ʟᴏᴠɪɴɢ ɢɪʀʟ, ʀᴇᴘʟʏ ᴛᴏ sᴛɪᴄᴋᴇʀs, \n"
-        f"  ᴘʜᴏᴛᴏs, ᴠɪᴅᴇᴏs & ʀᴇᴀᴄᴛ ᴛᴏ ᴍᴇssᴀɢᴇs! ⚡\n\n"
-        f"╭────────────────────────────────╮\n"
-        f"│ ✦ **ᴘᴇʀsᴏɴᴀ** : sᴡᴇᴇᴛ ɪɴᴅɪᴀɴ ɢɪʀʟ 🌸\n"
-        f"│ ✦ **ᴀᴜᴛᴏ-ʀᴇᴀᴄᴛ** : ɢʀᴏᴜᴘs & ᴄʜᴀɴɴᴇʟs ⚡\n"
-        f"│ ✦ **sᴍᴀʀᴛ ᴄʜᴀᴛ** : ᴛᴇxᴛ, sᴛɪᴄᴋᴇʀ, ᴍᴇᴅɪᴀ 💬\n"
-        f"│ ✦ **ᴍᴇᴍᴏʀʏ** : sᴇʟғ-ʟᴇᴀʀɴɪɴɢ Q&A 🧠\n"
-        f"│ ✦ **ᴄʀᴇᴀᴛᴏʀ** : [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/Villanns) 👑\n"
-        f"╰────────────────────────────────╯\n\n"
-        f"👇 **ᴛᴀᴘ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴍᴏʀᴇ!**"
+        f"❖ **{bot_title}** ❖\n"
+        f"────────────────────────────\n"
+        f"🌸 **Hey {first_name}! Welcome** 💖\n\n"
+        f"Main aapki pyari **Anshika** hoon! ✨\n"
+        f"I chat with you like a real friend, reply to stickers, photos, videos and react to messages! ⚡\n\n"
+        f"────────────────────────────\n"
+        f"• **Persona:** Sweet Indian Girl 🌸\n"
+        f"• **Auto-React:** Groups & Channels ⚡\n"
+        f"• **Smart Chat:** Text, Sticker, Media 💬\n"
+        f"• **Memory:** Self-Learning Q&A 🧠\n"
+        f"• **Creator:** [Amrit Raj](https://t.me/Villanns) 👑\n"
+        f"────────────────────────────\n\n"
+        f"👇 **Tap the buttons below to explore more!**"
     )
     await message.reply_text(
         text=text,
@@ -64,4 +64,3 @@ async def help_command(client: Client, message: Message):
         reply_markup=InlineKeyboardMarkup(HELP_BTN),
         disable_web_page_preview=True
     )
-

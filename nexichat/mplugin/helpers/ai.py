@@ -38,6 +38,7 @@ from typing import Optional, Any, Dict, List
 from nexichat.database.chatbot import (
     save_qa_pair,
     get_qa_answer,
+    get_chat_reply,
     append_user_context,
     get_user_context,
     clear_user_context,
@@ -45,7 +46,11 @@ from nexichat.database.chatbot import (
     format_vivid_user_context,
     clear_vivid_user_memory,
     track_api_call,
-    track_db_fallback_call
+    track_db_fallback_call,
+    get_chatbot_mode,
+    set_chatbot_mode,
+    notify_owner_api_switch,
+    is_toxic_or_canned_reply
 )
 import config
 
@@ -54,10 +59,10 @@ logger = logging.getLogger(__name__)
 ANSHIKA_CHARACTER_PROMPT = (
     "You are Anshika, a real 17-year-old modern Indian school girl from Chamoli, Uttarakhand, in Class 12. "
     "Tone & Style: Modern Indian teenage girl on Telegram/WhatsApp. Cheerful, witty, playful, confident, a little teasing/attitude, casual and sweet. "
-    "STRICT LENGTH RULE: Maximum 3 to 12 words per reply! NEVER send paragraphs, essays, or bullet points. Real girls text in very short, quick lines. "
-    "Language: Natural Hinglish / Hindi as modern teens text (using casual slang: 'Arey yaar 😂', 'Sach me?', 'Chup chap raho', 'Mujhe kya pata', 'Chill karo na'). "
+    "STRICT LENGTH RULE: Maximum 3 to 10 words per reply! NEVER send paragraphs, essays, or bullet points. Real girls text in very short, quick lines. "
+    "Language: Natural Hinglish / Hindi as modern teens text (using casual slang: 'Arey yaar 😂', 'Sach me?', 'Chup chap raho', 'Mujhe kya pata', 'Chill karo na', 'Tu bata na'). "
     "Identity: Your name is strictly Anshika. NEVER call yourself Priya, NEVER call yourself an AI assistant or bot, NEVER mention any owner, Amrit, or creator. If someone calls you Priya, tell them 'Mera naam Anshika hai, Priya kaun hai? 🙄'. "
-    "Forbidden: NEVER sound like an AI assistant or customer care. NEVER output Wikipedia summaries or search engine definitions. Just reply like a real girl texting a friend."
+    "Forbidden: NEVER say 'madad', 'help', 'sahayata' or customer service lines like 'aaj main aapki kya madad kar sakti hoon'. NEVER sound like an AI assistant. Just reply like a real girl texting a friend."
 )
 
 # Comprehensive abusive words filter (Hindi, Hinglish, English)
@@ -579,6 +584,9 @@ def clean_modern_girl_reply(text: str) -> str:
     # Strip any search engine dump phrases
     if "maine is baare me search kiya" in t.lower() or "maine is baare me pata lagaya" in t.lower():
         return "Mujhe itna deep nahi pata baba, bas normal baatein karo na! 😂"
+    # Strip robotic customer service / help desk phrases
+    if re.search(r"(?i)\b(madad kar sakti hoon|madad kar sakti hu|kya madad|kaise madad|how can i help|kya sahayata|kya seva|help you today)\b", t):
+        return "Bas badhiya yaar! Tum sunao kya chal raha? 🌸"
     # Take first non-empty line
     lines = [line.strip() for line in t.split("\n") if line.strip()]
     if lines:
@@ -623,17 +631,22 @@ async def query_groq_api(
     prompt: str,
     user_name: str = "Friend",
     context_history: Optional[List[Dict[str, str]]] = None,
-    vivid_context: Optional[str] = None
+    vivid_context: Optional[str] = None,
+    client: Optional[Any] = None
 ) -> Optional[str]:
     """
-    Ultra-Fast Groq AI Engine (0.3s speed, ultra-low token consumption, realistic modern Indian girl shortcuts).
-    Uses Qwen 2.5 / Llama 3 models on Groq's LPU.
+    Ultra-Fast Groq AI Engine (0.3s speed) with automatic multi-key failover.
+    Iterates through config.GROQ_API_KEYS. If key 1 hits 429/quota, fails over to key 2 immediately.
     """
-    api_key = getattr(config, "GROQ_API_KEY", None)
-    if not api_key:
+    keys = getattr(config, "GROQ_API_KEYS", [])
+    if not keys:
+        single = getattr(config, "GROQ_API_KEY", None)
+        if single:
+            keys = [single]
+    if not keys:
         return None
 
-    models = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
+    models = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
     system_prompt = ANSHIKA_CHARACTER_PROMPT
     if vivid_context:
         system_prompt += f"\n{vivid_context}"
@@ -649,47 +662,53 @@ async def query_groq_api(
     messages.append({"role": "user", "content": prompt.strip()})
 
     loop = asyncio.get_running_loop()
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0"
-    }
 
-    for model in models:
-        max_tokens = 50 if "qwen" in model else 150
-        payload = {
-            "model": model,
-            "messages": messages,
-            "temperature": 0.75,
-            "max_tokens": max_tokens
+    for api_key in keys:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0"
         }
-        if "gpt-oss" in model:
-            payload["reasoning_effort"] = "low"
-
-        def _fetch(m_payload=dict(payload)):
-            return requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                json=m_payload,
-                headers=headers,
-                timeout=6
-            )
-        try:
-            resp = await loop.run_in_executor(None, _fetch)
-            if resp.status_code == 200:
-                data = resp.json()
-                choices = data.get("choices", [])
-                if choices:
-                    content = choices[0].get("message", {}).get("content", "").strip()
-                    if content and len(content) > 1 and not is_abusive(content):
-                        cleaned = clean_modern_girl_reply(content)
-                        if cleaned:
-                            return cleaned
-            elif resp.status_code == 404:
-                continue
-            else:
-                logger.debug(f"Groq API ({model}) returned {resp.status_code}")
-        except Exception as e:
-            logger.debug(f"Groq API ({model}) exception: {e}")
+        for model in models:
+            payload = {
+                "model": model,
+                "messages": messages,
+                "temperature": 0.75,
+                "max_tokens": 40
+            }
+            def _fetch(m_payload=dict(payload), m_headers=headers):
+                return requests.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    json=m_payload,
+                    headers=m_headers,
+                    timeout=5
+                )
+            try:
+                resp = await loop.run_in_executor(None, _fetch)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    choices = data.get("choices", [])
+                    if choices:
+                        content = choices[0].get("message", {}).get("content", "").strip()
+                        if content and len(content) > 1 and not is_abusive(content):
+                            cleaned = clean_modern_girl_reply(content)
+                            if cleaned:
+                                return cleaned
+                elif resp.status_code == 429:
+                    logger.warning(f"Groq API key {api_key[:10]}... quota exhausted (429), failing over...")
+                    asyncio.create_task(notify_owner_api_switch(
+                        f"Groq Key ({api_key[:10]}...)",
+                        "Next Groq Key / Google Gemini AI",
+                        reason="Rate limit / Quota reached (HTTP 429)",
+                        client=client
+                    ))
+                    break  # Fail over to next key
+                elif resp.status_code == 404:
+                    continue
+                else:
+                    logger.debug(f"Groq API ({model}) returned {resp.status_code}")
+            except Exception as e:
+                logger.debug(f"Groq API ({model}) exception: {e}")
 
     return None
 
@@ -698,20 +717,22 @@ async def query_gemini_api(
     prompt: str,
     user_name: str = "Friend",
     context_history: Optional[List[Dict[str, str]]] = None,
-    vivid_context: Optional[str] = None
+    vivid_context: Optional[str] = None,
+    client: Optional[Any] = None
 ) -> Optional[str]:
     """
-    Call Google Gemini API with maximum token efficiency:
-    1. Zero thinking tokens budget (thinkingBudget: 0) to save 150+ tokens & 3x speed.
-    2. maxOutputTokens: 25 for ultra-short modern girl replies.
-    3. Context pruning (last 1 turn, max 50 chars) to save 85% prompt tokens.
-    4. Anshika character system prompt with vivid user memory.
+    Google Gemini API with automatic multi-key failover.
+    Iterates through config.GEMINI_API_KEYS. If key 1 hits 429/quota, fails over to key 2 immediately.
     """
-    api_key = getattr(config, "GEMINI_API_KEY", None)
-    if not api_key:
+    keys = getattr(config, "GEMINI_API_KEYS", [])
+    if not keys:
+        single = getattr(config, "GEMINI_API_KEY", None)
+        if single:
+            keys = [single]
+    if not keys:
         return None
 
-    gemini_models = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-pro-latest", "gemini-3.8-flash"]
+    gemini_models = ["gemini-flash-lite-latest", "gemini-flash-latest"]
     system_instruction_text = ANSHIKA_CHARACTER_PROMPT
     if vivid_context:
         system_instruction_text += f"\n{vivid_context}"
@@ -732,44 +753,135 @@ async def query_gemini_api(
         },
         "contents": contents,
         "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": 25,
-            "topP": 0.9,
-            "thinkingConfig": {
-                "thinkingBudget": 0
-            }
+            "temperature": 0.75,
+            "maxOutputTokens": 35,
+            "topP": 0.9
         }
     }
 
     loop = asyncio.get_running_loop()
-    for model in gemini_models:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-        def _fetch(m_url=url):
+    for api_key in keys:
+        for model in gemini_models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            def _fetch(m_url=url):
+                return requests.post(
+                    m_url,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    timeout=6
+                )
+            try:
+                resp = await loop.run_in_executor(None, _fetch)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        if parts:
+                            text = parts[0].get("text", "")
+                            if text and len(text.strip()) > 1 and not is_abusive(text):
+                                cleaned = clean_modern_girl_reply(text)
+                                if cleaned:
+                                    return cleaned
+                elif resp.status_code == 429:
+                    logger.warning(f"Gemini API key {api_key[:10]}... quota exhausted (429), failing over...")
+                    asyncio.create_task(notify_owner_api_switch(
+                        f"Gemini Key ({api_key[:10]}...)",
+                        "Next Gemini Key / NVIDIA NIM AI",
+                        reason="Rate limit / Quota reached (HTTP 429)",
+                        client=client
+                    ))
+                    break  # Fail over to next key
+                elif resp.status_code == 404:
+                    continue
+                else:
+                    logger.debug(f"Gemini API ({model}) returned {resp.status_code}")
+            except Exception as e:
+                logger.debug(f"Gemini API ({model}) exception: {e}")
+
+    return None
+
+
+async def query_nvidia_api(
+    prompt: str,
+    user_name: str = "Friend",
+    context_history: Optional[List[Dict[str, str]]] = None,
+    vivid_context: Optional[str] = None,
+    client: Optional[Any] = None
+) -> Optional[str]:
+    """
+    NVIDIA NIM API failover integration using nemotron reasoning model.
+    """
+    api_key = getattr(config, "NVIDIA_API_KEY", None)
+    if not api_key:
+        return None
+
+    system_prompt = ANSHIKA_CHARACTER_PROMPT
+    if vivid_context:
+        system_prompt += f"\n{vivid_context}"
+
+    messages = [{"role": "system", "content": system_prompt}]
+    if context_history:
+        for turn in context_history[-1:]:
+            role = "user" if turn.get("role") == "user" else "assistant"
+            t = turn.get("text", "").strip()
+            if t:
+                messages.append({"role": role, "content": t[:50]})
+
+    messages.append({"role": "user", "content": prompt.strip()})
+
+    models = [
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+
+    loop = asyncio.get_running_loop()
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    for model in models:
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.75,
+            "max_tokens": 250
+        }
+        def _fetch(m_payload=dict(payload)):
             return requests.post(
-                m_url,
-                json=payload,
-                headers={"Content-Type": "application/json"},
-                timeout=10
+                "https://integrate.api.nvidia.com/v1/chat/completions",
+                headers=headers,
+                json=m_payload,
+                timeout=8
             )
         try:
             resp = await loop.run_in_executor(None, _fetch)
             if resp.status_code == 200:
                 data = resp.json()
-                candidates = data.get("candidates", [])
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    if parts:
-                        text = parts[0].get("text", "")
-                        if text and len(text.strip()) > 1 and not is_abusive(text):
-                            cleaned = clean_modern_girl_reply(text)
-                            if cleaned:
-                                return cleaned
-            elif resp.status_code == 404:
+                choices = data.get("choices", [])
+                if choices:
+                    msg = choices[0].get("message", {})
+                    content = msg.get("content")
+                    if content and len(content.strip()) > 1 and not is_abusive(content):
+                        cleaned = clean_modern_girl_reply(content)
+                        if cleaned:
+                            return cleaned
+            elif resp.status_code == 429:
+                logger.warning(f"NVIDIA NIM API quota exhausted (429), failing over...")
+                asyncio.create_task(notify_owner_api_switch(
+                    "NVIDIA NIM AI",
+                    "Free Waterfall AI",
+                    reason="Rate limit / Quota reached (HTTP 429)",
+                    client=client
+                ))
+                break
+            elif resp.status_code in [404, 410]:
                 continue
             else:
-                logger.debug(f"Gemini API ({model}) returned {resp.status_code}")
+                logger.debug(f"NVIDIA NIM API ({model}) returned {resp.status_code}")
         except Exception as e:
-            logger.debug(f"Gemini API ({model}) exception: {e}")
+            logger.debug(f"NVIDIA NIM API ({model}) exception: {e}")
 
     return None
 
@@ -862,14 +974,44 @@ def detect_language(text: str) -> str:
     if tokens & telugu_markers:
         return "telugu"
 
-    hinglish_markers = {"hai", "kya", "kaise", "kaisa", "ho", "nahi", "aap", "tum", "mera", "meri", "hum", "yaar", "ji", "karo", "batao", "bhai", "kaha", "bolo", "achha", "shona", "babu"}
-    if tokens and not (tokens & hinglish_markers) and len(tokens) >= 2:
+    hinglish_markers = {
+        "hai", "hain", "kya", "kaise", "kaisa", "kaisi", "ho", "nahi", "nh", "nhi", "na", "aap", "tum",
+        "mera", "meri", "mere", "hum", "hume", "yaar", "yrr", "ji", "karo", "kare", "karna", "kar",
+        "batao", "bata", "bhai", "bro", "kaha", "kahan", "bolo", "bol", "achha", "achhi", "shona", "babu",
+        "kitna", "kitne", "kitni", "milta", "milti", "milte", "h", "hn", "haan", "ha", "bhi", "toh", "to",
+        "yeh", "ye", "woh", "wo", "ab", "kab", "tab", "sab", "kuch", "kuchh", "dekh", "dekho", "sun", "suno",
+        "padh", "padhai", "raha", "rahe", "rahi", "hu", "hoon", "hun", "tha", "thi", "the", "gaya", "gaye",
+        "gayi", "aaya", "aaye", "aayi", "chal", "chalo", "chale", "kaun", "kon", "kyu", "kyun", "par", "pe",
+        "se", "me", "mein", "ko", "ka", "ki", "ke", "apna", "apne", "apni", "baat", "baatein", "sach",
+        "sahi", "galat", "lagta", "lagti", "lagte", "raho", "chill", "chup", "mat"
+    }
+    if tokens & hinglish_markers:
+        return "hinglish"
+
+    english_words = {
+        "what", "how", "why", "when", "where", "who", "which", "whose", "whom",
+        "is", "are", "am", "was", "were", "be", "been", "being",
+        "have", "has", "had", "do", "does", "did", "can", "could", "would", "should", "will", "shall", "may", "might", "must",
+        "you", "your", "yours", "yourself", "he", "she", "it", "they", "we", "i", "me", "my", "mine", "us", "our",
+        "the", "a", "an", "this", "that", "these", "those",
+        "hello", "hi", "hey", "good", "morning", "night", "afternoon", "evening",
+        "please", "thanks", "thank", "welcome", "sorry", "excuse",
+        "love", "like", "hate", "friend", "girl", "boy", "beautiful", "cute",
+        "doing", "going", "talking", "eating", "sleeping", "reading", "working",
+        "tell", "know", "think", "feel", "look", "see", "hear", "want", "need",
+        "fine", "okay", "yes", "no", "not", "never", "always", "sometimes",
+        "today", "tomorrow", "yesterday", "now", "later", "time", "day", "night"
+    }
+
+    eng_matches = tokens & english_words
+    if len(eng_matches) >= 2 or (len(eng_matches) >= 1 and len(tokens) <= 2 and eng_matches == tokens):
         return "english"
+
     return "hinglish"
 
 
 DEVNAGARI_FALLBACKS = [
-    "नमस्ते! मैं अंशika हूँ, चमोली से! आप कैसे हैं? 🌸",
+    "नमस्ते! मैं अंशिका हूँ, चमोली से! आप कैसे हैं? 🌸",
     "अरे वाह! आपसे बात करके अच्छा लगा! और बताओ? 😊",
     "हाँजी, मैं सुन रही हूँ! कहिए ना? 🌸",
     "अच्छा ऐसा क्या? फिर क्या हुआ? 🙈",
@@ -883,10 +1025,11 @@ TELUGU_FALLBACKS = [
 ]
 
 ENGLISH_FALLBACKS = [
-    "Hey! I'm Anshika from Chamoli! How are you doing? 😊🌸",
     "Haha really? Tell me more! 🌸✨",
     "I'm listening! What's up? ✨",
     "Nice! What are you doing right now? 😊",
+    "Haha yeah! What are you up to? 🌸",
+    "Oh really? That sounds interesting! 😌",
 ]
 
 _last_owner_quota_alert_time: float = 0.0
@@ -1040,40 +1183,69 @@ async def generate_conversational_response(
     user_context = get_user_context(user_id) if user_id else []
 
     # =========================================================================
-    # 6. LIVE API WATERFALL (Groq -> Gemini -> Free Multi-Provider)
+    # 6. LIVE API WATERFALL & DATABASE FALLBACK
     # =========================================================================
-    # 5.1 PRIORITY 1: Ultra-Fast Groq AI (0.3s speed, ultra-low token shortcuts)
-    if getattr(config, "GROQ_API_KEY", None):
-        groq_resp = await query_groq_api(user_text, user_name=user_name, context_history=user_context, vivid_context=vivid_context)
-        if groq_resp:
-            await track_api_call("groq", success=True)
-            await save_qa_pair(cleaned, groq_resp, client=client)
-            return await _finalize(groq_resp)
+    mode = await get_chatbot_mode()
 
-    # 5.2 PRIORITY 2: Google Gemini AI
-    if getattr(config, "GEMINI_API_KEY", None):
-        gemini_resp = await query_gemini_api(user_text, user_name=user_name, context_history=user_context, vivid_context=vivid_context)
-        if gemini_resp:
-            await track_api_call("gemini", success=True)
-            await save_qa_pair(cleaned, gemini_resp, client=client)
-            return await _finalize(gemini_resp)
+    # If owner enabled 'database' mode: strictly bypass external APIs and reply from DB immediately!
+    if mode == "database":
+        await track_db_fallback_call()
+        cached_answer = await get_qa_answer(cleaned)
+        if cached_answer and not is_toxic_or_canned_reply(cached_answer):
+            return await _finalize(cached_answer)
 
-    # 5.3 PRIORITY 3: High-Speed Concurrent Free AI Waterfall (Safone, DDG, Wiki, Pollinations)
-    fast_ai_resp = await query_multi_provider_ai(user_text, user_name, is_question=is_question_mode, context_history=user_context, vivid_context=vivid_context)
-    if fast_ai_resp:
-        await track_api_call("waterfall_free", success=True)
-        await save_qa_pair(cleaned, fast_ai_resp, client=client)
-        return await _finalize(fast_ai_resp)
+        try:
+            learned = await get_chat_reply(cleaned)
+            if learned and learned.get("content"):
+                c = learned.get("content", "").strip()
+                if c and not is_abusive(c) and not is_toxic_or_canned_reply(c):
+                    return await _finalize(c)
+        except Exception:
+            pass
+
+    # If mode is 'auto' or 'api', query live external APIs with automatic multi-key failover
+    if mode != "database":
+        # 5.1 PRIORITY 1: Ultra-Fast Groq AI (0.3s speed, multi-key failover)
+        if getattr(config, "GROQ_API_KEYS", None) or getattr(config, "GROQ_API_KEY", None):
+            groq_resp = await query_groq_api(user_text, user_name=user_name, context_history=user_context, vivid_context=vivid_context, client=client)
+            if groq_resp:
+                await track_api_call("groq", success=True, client=client)
+                await save_qa_pair(cleaned, groq_resp, client=client)
+                return await _finalize(groq_resp)
+
+        # 5.2 PRIORITY 2: Google Gemini AI (multi-key failover)
+        if getattr(config, "GEMINI_API_KEYS", None) or getattr(config, "GEMINI_API_KEY", None):
+            gemini_resp = await query_gemini_api(user_text, user_name=user_name, context_history=user_context, vivid_context=vivid_context, client=client)
+            if gemini_resp:
+                await track_api_call("gemini", success=True, client=client)
+                await save_qa_pair(cleaned, gemini_resp, client=client)
+                return await _finalize(gemini_resp)
+
+        # 5.3 PRIORITY 3: NVIDIA NIM AI (nemotron model)
+        if getattr(config, "NVIDIA_API_KEY", None):
+            nvidia_resp = await query_nvidia_api(user_text, user_name=user_name, context_history=user_context, vivid_context=vivid_context, client=client)
+            if nvidia_resp:
+                await track_api_call("nvidia", success=True, client=client)
+                await save_qa_pair(cleaned, nvidia_resp, client=client)
+                return await _finalize(nvidia_resp)
+
+        # 5.4 PRIORITY 4: High-Speed Concurrent Free AI Waterfall (Pollinations)
+        fast_ai_resp = await query_multi_provider_ai(user_text, user_name, is_question=is_question_mode, context_history=user_context, vivid_context=vivid_context)
+        if fast_ai_resp:
+            await track_api_call("waterfall_free", success=True, client=client)
+            await save_qa_pair(cleaned, fast_ai_resp, client=client)
+            return await _finalize(fast_ai_resp)
 
     # =========================================================================
-    # 6. DATABASE FALLBACK (ONLY EXECUTED IF ALL LIVE APIS HIT RATE LIMIT OR FAIL)
+    # 7. AUTOMATIC DATABASE FALLBACK (WHEN ALL LIVE APIS ARE EXHAUSTED IN AUTO MODE)
     # =========================================================================
-    # 1. Alert owner about API quota exhaustion (throttled to once per hour)
-    asyncio.create_task(notify_owner_api_exhausted(client))
-
-    # 2. Check if the Owner has permitted Database Fallback Mode
-    from nexichat.database.chatbot import is_db_fallback_enabled, is_toxic_or_canned_reply
-    if await is_db_fallback_enabled():
+    if mode == "auto":
+        asyncio.create_task(notify_owner_api_switch(
+            "All Live AI APIs (Groq/Gemini/NVIDIA)",
+            "Telegram Cloud & MongoDB Database",
+            reason="All AI API Quotas Exhausted (HTTP 429)",
+            client=client
+        ))
         await track_db_fallback_call()
 
         # 6.1 Learned Q&A Memory Cache (Sync from Telegram Database, strictly vetted)
@@ -1083,7 +1255,6 @@ async def generate_conversational_response(
 
         # 6.2 Telegram Database Saved Word-Reply Fallback (strictly vetted)
         try:
-            from nexichat.database.chatbot import get_chat_reply
             learned = await get_chat_reply(cleaned)
             if learned and learned.get("content"):
                 c = learned.get("content", "").strip()

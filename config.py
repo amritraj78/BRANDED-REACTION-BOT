@@ -59,8 +59,16 @@ DATABASE_CHAT = getenv("DATABASE_CHAT", "-1004415957871")
 OWNER_USERNAME = getenv("OWNER_USERNAME", "Villanns")
 INSTAGRAM = getenv("INSTAGRAM", "ex_amrit")
 SNAPCHAT = getenv("SNAPCHAT", "ex_amrit")
-GROQ_API_KEY = getenv("GROQ_API_KEY", None)
-GEMINI_API_KEY = getenv("GEMINI_API_KEY", None)
+# Multi-Provider AI API Keys with Automatic Failover
+_raw_groq = getenv("GROQ_API_KEYS", getenv("GROQ_API_KEY", ""))
+GROQ_API_KEYS = [k.strip() for k in _raw_groq.split(",") if k.strip()]
+GROQ_API_KEY = GROQ_API_KEYS[0] if GROQ_API_KEYS else None
+
+_raw_gemini = getenv("GEMINI_API_KEYS", getenv("GEMINI_API_KEY", ""))
+GEMINI_API_KEYS = [k.strip() for k in _raw_gemini.split(",") if k.strip()]
+GEMINI_API_KEY = GEMINI_API_KEYS[0] if GEMINI_API_KEYS else None
+
+NVIDIA_API_KEY = getenv("NVIDIA_API_KEY", None)
 KOYEB_PUBLIC_URL = getenv("KOYEB_PUBLIC_URL", getenv("PING_URL", None))
 STORAGE_THRESHOLD = int(getenv("STORAGE_THRESHOLD", "90"))
 

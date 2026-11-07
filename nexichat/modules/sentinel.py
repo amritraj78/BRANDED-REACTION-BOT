@@ -212,15 +212,15 @@ async def check_and_alert_storage(client: Client):
         if current_ram_p >= m and m not in _reported_ram_milestones:
             _reported_ram_milestones.add(m)
             alert_msg = (
-                f"📊 **[KOYEB MEMORY MILESTONE : {m}%]** 📊\n\n"
+                f"📊 **[KOYEB MEMORY MILESTONE : {m}%]** 📊\n"
+                f"────────────────────────────\n"
                 f"🔔 **RAM Usage has reached {m}%!**\n\n"
-                f"╭────────────────────────────╮\n"
-                f"│ ✦ **ʀᴀᴍ ᴜsᴀɢᴇ** : `{ram['used_mb']} MB` / `{ram['total_mb']} MB` ({ram['percent']}%)\n"
-                f"│ ✦ **ᴅɪsᴋ ᴜsᴇᴅ** : `{disk['used_gb']} GB` / `{disk['total_gb']} GB` ({disk['percent']}%)\n"
-                f"│ ✦ **ᴅɪsᴋ ғʀᴇᴇ** : `{disk['free_gb']} GB`\n"
-                f"│ ✦ **ᴄᴀᴄʜᴇ sɪᴢᴇ**: `{cache_files} files` ({cache_mb} MB)\n"
-                f"│ ✦ **sᴛᴀᴛᴜs**    : {status_icon}\n"
-                f"╰────────────────────────────╯\n\n"
+                f"• **RAM Usage:** `{ram['used_mb']} MB` / `{ram['total_mb']} MB` ({ram['percent']}%)\n"
+                f"• **Disk Used:** `{disk['used_gb']} GB` / `{disk['total_gb']} GB` ({disk['percent']}%)\n"
+                f"• **Disk Free:** `{disk['free_gb']} GB`\n"
+                f"• **Cache Size:** `{cache_files} files` ({cache_mb} MB)\n"
+                f"• **Status:** {status_icon}\n"
+                f"────────────────────────────\n\n"
                 f"💡 **Clean Suggestion:** Click below to flush temporary cache files (.mp3, .jpg) & release RAM without affecting any learned memory!\n\n"
                 f"🛡️ **Safety Guarantee:** All learned Q&A & chats are 100% permanently stored in Telegram Cloud (>1000GB) & MongoDB."
             )
@@ -237,15 +237,15 @@ async def check_and_alert_storage(client: Client):
         if current_disk_p >= m and m not in _reported_disk_milestones:
             _reported_disk_milestones.add(m)
             alert_msg = (
-                f"💾 **[KOYEB STORAGE MILESTONE : {m}%]** 💾\n\n"
+                f"💾 **[KOYEB STORAGE MILESTONE : {m}%]** 💾\n"
+                f"────────────────────────────\n"
                 f"🔔 **Disk Storage has reached {m}%!**\n\n"
-                f"╭────────────────────────────╮\n"
-                f"│ ✦ **ᴅɪsᴋ ᴜsᴇᴅ** : `{disk['used_gb']} GB` / `{disk['total_gb']} GB` ({disk['percent']}%)\n"
-                f"│ ✦ **ᴅɪsᴋ ғʀᴇᴇ** : `{disk['free_gb']} GB`\n"
-                f"│ ✦ **ʀᴀᴍ ᴜsᴀɢᴇ** : `{ram['used_mb']} MB` / `{ram['total_mb']} MB` ({ram['percent']}%)\n"
-                f"│ ✦ **ᴄᴀᴄʜᴇ sɪᴢᴇ**: `{cache_files} files` ({cache_mb} MB)\n"
-                f"│ ✦ **sᴛᴀᴛᴜs**    : {status_icon}\n"
-                f"╰────────────────────────────╯\n\n"
+                f"• **Disk Used:** `{disk['used_gb']} GB` / `{disk['total_gb']} GB` ({disk['percent']}%)\n"
+                f"• **Disk Free:** `{disk['free_gb']} GB`\n"
+                f"• **RAM Usage:** `{ram['used_mb']} MB` / `{ram['total_mb']} MB` ({ram['percent']}%)\n"
+                f"• **Cache Size:** `{cache_files} files` ({cache_mb} MB)\n"
+                f"• **Status:** {status_icon}\n"
+                f"────────────────────────────\n\n"
                 f"💡 **Clean Suggestion:** Temporary media cache can be cleared now to protect Koyeb free tier disk.\n\n"
                 f"🛡️ **Safety Guarantee:** Your database on Telegram Cloud (>1000GB) & MongoDB is completely safe and unaffected!"
             )
@@ -264,15 +264,15 @@ async def check_and_alert_storage(client: Client):
         
         # Notify owner that auto-clean occurred while they were away
         auto_report = (
-            f"🤖 **[KOYEB AUTO-CLEAN EXECUTED]** 🤖\n\n"
+            f"🤖 **[KOYEB AUTO-CLEAN EXECUTED]** 🤖\n"
+            f"────────────────────────────\n"
             f"⚠️ **High usage detected ({max(disk['percent'], ram['percent'])}%)!**\n"
             f"Since owner action was pending, Sentinel automatically cleaned caches to protect your free Koyeb instance:\n\n"
-            f"╭────────────────────────────╮\n"
-            f"│ ✦ **ғɪʟᴇs ᴄʟᴇᴀɴᴇᴅ** : `{deleted} temp cache files`\n"
-            f"│ ✦ **sᴘᴀᴄᴇ ғʀᴇᴇᴅ**   : `{freed} MB`\n"
-            f"│ ✦ **ʀᴀᴍ ᴀᴄᴛɪᴏɴ**    : `gc.collect() executed`\n"
-            f"│ ✦ **ʟᴇᴀʀɴᴇᴅ ᴅᴀᴛᴀ**  : `100% Safe in Telegram DB` ☁️\n"
-            f"╰────────────────────────────╯\n\n"
+            f"• **Files Cleaned:** `{deleted} temp cache files`\n"
+            f"• **Space Freed:** `{freed} MB`\n"
+            f"• **RAM Action:** `gc.collect() executed`\n"
+            f"• **Learned Data:** `100% Safe in Telegram DB` ☁️\n"
+            f"────────────────────────────\n\n"
             f"💡 Koyeb is running smoothly without lag or risk of crash! 🚀"
         )
         try:
@@ -306,24 +306,23 @@ async def storage_command(client: Client, message: Message):
     status_icon = "🔴 Critical" if (disk["percent"] >= 90 or ram["percent"] >= 90) else ("🟡 Warning" if (disk["percent"] >= 70 or ram["percent"] >= 70) else "🟢 Optimal")
 
     text = f"""**
-╭━━━━━〔 💾 sʏsᴛᴇᴍ & sᴛᴏʀᴀɢᴇ 〕━━━━━╮
+💾 Server Health & Storage 💾
+────────────────────────────
+🌸 **Server Health & Storage Monitor**
+*Continuous 10% - 90% milestone reporting active!*
 
-  🌸 **sᴇʀᴠᴇʀ ʜᴇᴀʟᴛʜ & sᴛᴏʀᴀɢᴇ ᴍᴏɴɪᴛᴏʀ**
-  *Continuous 10% - 90% milestone reporting active!*
-
-╭────────────────────────────────╮
-│ ✦ **ᴅɪsᴋ ᴛᴏᴛᴀʟ** : `{disk['total_gb']} GB`
-│ ✦ **ᴅɪsᴋ ᴜsᴇᴅ**  : `{disk['used_gb']} GB` ({disk['percent']}%)
-│ ✦ **ᴅɪsᴋ ғʀᴇᴇ**  : `{disk['free_gb']} GB`
-│ ✦ **ʀᴀᴍ ᴜsᴀɢᴇ**  : `{ram['used_mb']} MB` / `{ram['total_mb']} MB` ({ram['percent']}%)
-│ ✦ **ᴄᴀᴄʜᴇ ᴅɪʀ**  : `{cache_files} files` ({cache_mb} MB)
-│ ✦ **sᴛᴀᴛᴜs**     : {status_icon}
-│ ✦ **ᴀᴜᴛᴏ-ᴀʟᴇʀᴛ** : Every 10% Step Milestone
-│ ✦ **ᴅᴀᴛᴀʙᴀsᴇ**   : Telegram Cloud (>1000GB) ☁️
-╰────────────────────────────────╯
-
-📡 **ʜᴏsᴛᴇᴅ ᴏɴ :** Koyeb Free Tier Cloud ☁️
-👑 **ᴏᴡɴᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/Villanns) 💖**
+────────────────────────────
+• **Disk Total:** `{disk['total_gb']} GB`
+• **Disk Used:** `{disk['used_gb']} GB` ({disk['percent']}%)
+• **Disk Free:** `{disk['free_gb']} GB`
+• **RAM Usage:** `{ram['used_mb']} MB` / `{ram['total_mb']} MB` ({ram['percent']}%)
+• **Cache Dir:** `{cache_files} files` ({cache_mb} MB)
+• **Status:** {status_icon}
+• **Auto-Alert:** Every 10% Step Milestone
+• **Database:** Telegram Cloud (>1000GB) ☁️
+────────────────────────────
+📡 **Hosted on:** Koyeb Free Tier Cloud ☁️
+👑 **Owner:** [Amrit Raj](https://t.me/Villanns) 💖**
 """
     await message.reply_text(text, reply_markup=get_sentinel_keyboard())
 
@@ -363,23 +362,23 @@ async def sentinel_callback_handler(client: Client, query: CallbackQuery):
 
     action_line = f"✨ *{action_text}*\n" if action_text else ""
     text = f"""**
-╭━━━━━〔 💾 sʏsᴛᴇᴍ & sᴛᴏʀᴀɢᴇ 〕━━━━━╮
+💾 Server Health & Storage 💾
+────────────────────────────
+🌸 **Server Health & Storage Monitor**
+*Continuous 10% - 90% milestone reporting active!*
 
-  🌸 **sᴇʀᴠᴇʀ ʜᴇᴀʟᴛʜ & sᴛᴏʀᴀɢᴇ ᴍᴏɴɪᴛᴏʀ**
-  *Continuous 10% - 90% milestone reporting active!*
-
-╭────────────────────────────────╮
-│ ✦ **ᴅɪsᴋ ᴛᴏᴛᴀʟ** : `{disk['total_gb']} GB`
-│ ✦ **ᴅɪsᴋ ᴜsᴇᴅ**  : `{disk['used_gb']} GB` ({disk['percent']}%)
-│ ✦ **ᴅɪsᴋ ғʀᴇᴇ**  : `{disk['free_gb']} GB`
-│ ✦ **ʀᴀᴍ ᴜsᴀɢᴇ**  : `{ram['used_mb']} MB` / `{ram['total_mb']} MB` ({ram['percent']}%)
-│ ✦ **ᴄᴀᴄʜᴇ ᴅɪʀ**  : `{cache_files} files` ({cache_mb} MB)
-│ ✦ **sᴛᴀᴛᴜs**     : {status_icon}
-│ ✦ **ᴀᴜᴛᴏ-ᴀʟᴇʀᴛ** : Every 10% Step Milestone
-│ ✦ **ᴅᴀᴛᴀʙᴀsᴇ**   : Telegram Cloud (>1000GB) ☁️
-╰────────────────────────────────╯
-{action_line}📡 **ʜᴏsᴛᴇᴅ ᴏɴ :** Koyeb Free Tier Cloud ☁️
-👑 **ᴏᴡɴᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/Villanns) 💖**
+────────────────────────────
+• **Disk Total:** `{disk['total_gb']} GB`
+• **Disk Used:** `{disk['used_gb']} GB` ({disk['percent']}%)
+• **Disk Free:** `{disk['free_gb']} GB`
+• **RAM Usage:** `{ram['used_mb']} MB` / `{ram['total_mb']} MB` ({ram['percent']}%)
+• **Cache Dir:** `{cache_files} files` ({cache_mb} MB)
+• **Status:** {status_icon}
+• **Auto-Alert:** Every 10% Step Milestone
+• **Database:** Telegram Cloud (>1000GB) ☁️
+────────────────────────────
+{action_line}📡 **Hosted on:** Koyeb Free Tier Cloud ☁️
+👑 **Owner:** [Amrit Raj](https://t.me/Villanns) 💖**
 """
     try:
         await query.message.edit_text(text, reply_markup=get_sentinel_keyboard())

@@ -44,11 +44,12 @@ async def stats(cli: Client, message: Message):
             from nexichat.database.chatbot import get_api_usage_stats
             st = await get_api_usage_stats()
             api_info = (
-                f"\n\n╭━━━━〔 📊 **VIP AI API USAGE** 〕━━━━╮\n"
+                f"\n\n📊 **VIP AI API USAGE**\n"
+                f"────────────────────────────\n"
                 f"✦ **Groq AI:** `{st['groq_calls']}`/`{st['groq_quota']}` ({st['groq_used_pct']}% used | {st['groq_left_pct']}% left)\n"
                 f"✦ **Gemini AI:** `{st['gemini_calls']}`/`{st['gemini_quota']}` ({st['gemini_used_pct']}% used | {st['gemini_left_pct']}% left)\n"
                 f"✦ **Total Queries:** `{st['total_calls']}` | **DB Fallback:** `{st['db_fallback_calls']}`\n"
-                f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
+                f"────────────────────────────"
             )
         except Exception:
             pass
@@ -117,36 +118,35 @@ async def user_profile(client: Client, message: Message):
     
     uptime = get_readable_time(time.time() - _boot_)
     is_owner = (user.id == int(OWNER_ID))
-    role = "👑 ᴏᴡɴᴇʀ / ʙᴏss" if is_owner else "💎 ᴠɪᴘ ᴍᴇᴍʙᴇʀ"
+    role = "👑 Owner / Boss" if is_owner else "💎 VIP Member"
     
     nickname = await get_user_nickname(user.id)
-    nick_str = f"│ ✦ **ɴɪᴄᴋɴᴀᴍᴇ :** `{nickname}`\n" if nickname else ""
+    nick_str = f"• **Nickname:** `{nickname}`\n" if nickname else ""
     
     text = f"""**
-╭━━━━━〔 👑 ᴜsᴇʀ ᴠɪᴘ ᴘʀᴏғɪʟᴇ 👑 〕━━━━━╮
+👑 User VIP Profile 👑
+────────────────────────────
+🌸 **Hello {user.mention}!**
+Here is your official VIP profile card.
 
-  🌸 **ʜᴇʟʟᴏ {user.mention}!**
-  ʜᴇʀᴇ ɪs ʏᴏᴜʀ ᴏғғɪᴄɪᴀʟ ᴠɪᴘ ᴘʀᴏғɪʟᴇ ᴄᴀʀᴅ.
-
-╭────────────────────────────────╮
-│ ✦ **ɴᴀᴍᴇ :** {user.first_name}
-│ ✦ **ᴜsᴇʀ ɪᴅ :** `{user.id}`
-│ ✦ **ᴜsᴇʀɴᴀᴍᴇ :** @{user.username if user.username else 'None'}
-{nick_str}│ ✦ **sᴛᴀᴛᴜs :** {role}
-│ ✦ **ᴅᴄ ɪᴅ :** `{user.dc_id or 'Unknown'}`
-│ ✦ **ʙᴏᴛ ᴜᴘᴛɪᴍᴇ :** `{uptime}`
-╰────────────────────────────────╯
-
-📡 **ᴘᴏᴡᴇʀᴇᴅ ʙʏ :** [ᴀᴍʀɪᴛ ғᴇᴇʟ](https://t.me/{SUPPORT_GRP}) 💞**
+────────────────────────────
+• **Name:** {user.first_name}
+• **User ID:** `{user.id}`
+• **Username:** @{user.username if user.username else 'None'}
+{nick_str}• **Status:** {role}
+• **DC ID:** `{user.dc_id or 'Unknown'}`
+• **Bot Uptime:** `{uptime}`
+────────────────────────────
+📡 **Powered by:** [Amrit Feel](https://t.me/{SUPPORT_GRP}) 💞**
 """
     btn = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("📷 ɪɴsᴛᴀɢʀᴀᴍ", url="https://instagram.com/ex_amrit"),
-            InlineKeyboardButton("👻 sɴᴀᴘᴄʜᴀᴛ", url="https://snapchat.com/add/ex_amrit"),
+            InlineKeyboardButton("📷 Instagram", url="https://instagram.com/ex_amrit"),
+            InlineKeyboardButton("👻 Snapchat", url="https://snapchat.com/add/ex_amrit"),
         ],
         [
-            InlineKeyboardButton("👑 ᴄʀᴇᴀᴛᴏʀ", url="https://t.me/Villanns"),
-            InlineKeyboardButton("⦿ ᴄʟᴏsᴇ ⦿", callback_data="CLOSE"),
+            InlineKeyboardButton("👑 Creator", url="https://t.me/Villanns"),
+            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE"),
         ]
     ])
     await message.reply_text(text, reply_markup=btn, disable_web_page_preview=True)

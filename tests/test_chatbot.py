@@ -201,8 +201,8 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
 
         dashboard = await format_api_usage_dashboard()
         self.assertIn("VIP AI API USAGE & DAILY QUOTA", dashboard)
-        self.assertIn("ɢʀᴏǫ ᴀɪ ᴇɴɢɪɴᴇ", dashboard)
-        self.assertIn("ɢᴏᴏɢʟᴇ ɢᴇᴍɪɴɪ ᴀɪ", dashboard)
+        self.assertIn("Groq AI Engine", dashboard)
+        self.assertIn("Google Gemini AI", dashboard)
 
 
     def test_hinglish_to_hindi_transliteration(self):
@@ -238,15 +238,27 @@ class TestChatbotFeatures(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(os.path.exists(path))
         self.assertTrue(os.path.getsize(path) > 500)
     async def test_db_fallback_toggle(self):
-        from nexichat.database.chatbot import is_db_fallback_enabled, set_db_fallback_enabled
-        # Default should be False (Strict API Only)
-        self.assertFalse(await is_db_fallback_enabled())
-        # Enable DB fallback
-        await set_db_fallback_enabled(True)
+        from nexichat.database.chatbot import (
+            is_db_fallback_enabled,
+            set_db_fallback_enabled,
+            get_chatbot_mode,
+            set_chatbot_mode
+        )
+        # Default mode is 'auto' (API first, auto DB fallback on quota exhaustion)
+        self.assertEqual(await get_chatbot_mode(), "auto")
         self.assertTrue(await is_db_fallback_enabled())
-        # Disable DB fallback
+        # Switch to database only
+        await set_chatbot_mode("database")
+        self.assertEqual(await get_chatbot_mode(), "database")
+        self.assertTrue(await is_db_fallback_enabled())
+        # Disable DB fallback (Strict API mode)
         await set_db_fallback_enabled(False)
+        self.assertEqual(await get_chatbot_mode(), "api")
         self.assertFalse(await is_db_fallback_enabled())
+        # Re-enable
+        await set_db_fallback_enabled(True)
+        self.assertEqual(await get_chatbot_mode(), "auto")
+        self.assertTrue(await is_db_fallback_enabled())
 
     async def test_toxic_filtering_and_db_fallback(self):
         from nexichat.database.chatbot import is_toxic_or_canned_reply, save_chat_reply, get_chat_reply

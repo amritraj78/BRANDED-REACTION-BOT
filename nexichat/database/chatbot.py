@@ -48,7 +48,49 @@ _nicknames_cache: Dict[int, str] = {}
 _afk_cache: Dict[int, Dict[str, Any]] = {}
 _user_vivid_memory: Dict[int, Dict[str, Any]] = {}
 _daily_api_usage: Dict[str, Any] = {}
+_chatbot_mode: str = "auto"
+_notified_milestones: set = set()
+_last_switch_alert_time: Dict[str, float] = {}
 _cache_loaded = False
+
+
+async def get_chatbot_mode() -> str:
+    """
+    Get current chatbot reply mode:
+    - 'auto': Use Live APIs (Groq -> Gemini -> NVIDIA NIM -> Free Waterfall); auto fallback to DB on exhaustion.
+    - 'database': Strictly bypass all external APIs; reply only from Telegram Cloud Channel and MongoDB database.
+    - 'api': Strictly use live APIs; never use database fallback.
+    Default: 'auto'
+    """
+    global _chatbot_mode
+    try:
+        doc = await chatbot_status_db.find_one({"setting": "chatbot_mode"})
+        if doc and "mode" in doc:
+            _chatbot_mode = doc["mode"]
+    except Exception:
+        pass
+    return _chatbot_mode
+
+
+async def set_chatbot_mode(mode: str):
+    """Set chatbot reply mode ('auto', 'database', or 'api')."""
+    global _chatbot_mode
+    if mode not in ["auto", "database", "api"]:
+        mode = "auto"
+    _chatbot_mode = mode
+    try:
+        await chatbot_status_db.update_one(
+            {"setting": "chatbot_mode"},
+            {"$set": {"mode": mode}},
+            upsert=True
+        )
+        await chatbot_status_db.update_one(
+            {"setting": "db_fallback_mode"},
+            {"$set": {"enabled": (mode in ["auto", "database"])}},
+            upsert=True
+        )
+    except Exception:
+        pass
 
 
 async def is_chatbot_enabled(chat_id: int) -> bool:
@@ -86,20 +128,15 @@ async def set_voicemode_enabled(chat_id: int, enabled: bool):
 
 
 async def is_db_fallback_enabled() -> bool:
-    """Check if database fallback is allowed when AI API quota is exhausted (defaults to False - strictly API first)."""
-    status_doc = await chatbot_status_db.find_one({"setting": "db_fallback_mode"})
-    if not status_doc:
-        return False
-    return status_doc.get("enabled", False)
+    """Check if database fallback is allowed. Defaults to True in 'auto' and 'database' modes."""
+    mode = await get_chatbot_mode()
+    return mode in ["auto", "database"]
 
 
 async def set_db_fallback_enabled(enabled: bool):
-    """Enable or disable database fallback when AI API quota is exhausted."""
-    await chatbot_status_db.update_one(
-        {"setting": "db_fallback_mode"},
-        {"$set": {"enabled": enabled}},
-        upsert=True
-    )
+    """Enable or disable database fallback. True maps to 'auto', False maps to 'api'."""
+    new_mode = "auto" if enabled else "api"
+    await set_chatbot_mode(new_mode)
 
 
 def is_toxic_or_canned_reply(text: str) -> bool:
@@ -223,6 +260,19 @@ async def get_chat_reply(word: str = "", clean_text: Optional[str] = None) -> Op
     if token_matches:
         return random.choice(token_matches)
 
+    # Fallback directly to MongoDB chatai collection if not found in RAM cache
+    try:
+        db_exact = await chatai_db.find_one({"word": word_clean})
+        if db_exact and not is_toxic_or_canned_reply(db_exact.get("content", "")):
+            return db_exact
+        for tok in tokens:
+            if len(tok) >= 3:
+                db_tok = await chatai_db.find_one({"word": tok})
+                if db_tok and not is_toxic_or_canned_reply(db_tok.get("content", "")):
+                    return db_tok
+    except Exception:
+        pass
+
     return None
 
 
@@ -276,7 +326,7 @@ def _jaccard_token_similarity(text1: str, text2: str) -> float:
 
 
 async def get_qa_answer(question: str) -> Optional[str]:
-    """Retrieve an answer from Q&A memory with exact and semantic fuzzy matching (0 API credits)."""
+    """Retrieve an answer from Q&A memory and MongoDB with exact and semantic fuzzy matching (0 API credits)."""
     global _qa_cache, _cache_loaded
     if not _cache_loaded:
         await load_replies_cache()
@@ -299,14 +349,28 @@ async def get_qa_answer(question: str) -> Optional[str]:
         if not is_toxic_or_canned_reply(ans):
             return ans
 
-    # 2. Token overlap similarity match (Jaccard similarity >= 0.70)
+    # 2. Token overlap similarity match (Jaccard similarity >= 0.40 or token subset)
     q_words = set(q_norm.split())
-    if len(q_words) >= 2:
+    if len(q_words) >= 1:
         for saved_q, saved_a in _qa_cache.items():
             if not is_toxic_or_canned_reply(saved_a):
-                sim = _jaccard_token_similarity(question, saved_q)
-                if sim >= 0.70:
+                saved_words = set(saved_q.split())
+                if (q_words and saved_words and (q_words.issubset(saved_words) or saved_words.issubset(q_words))):
                     return saved_a
+                sim = _jaccard_token_similarity(question, saved_q)
+                if sim >= 0.40:
+                    return saved_a
+
+    # 3. Direct MongoDB qa_cache_db fallback
+    try:
+        db_doc = await qa_cache_db.find_one({"q": q_norm})
+        if db_doc and "a" in db_doc and not is_toxic_or_canned_reply(db_doc["a"]):
+            return db_doc["a"]
+        db_rx = await qa_cache_db.find_one({"q": {"$regex": re.escape(q_norm), "$options": "i"}})
+        if db_rx and "a" in db_rx and not is_toxic_or_canned_reply(db_rx["a"]):
+            return db_rx["a"]
+    except Exception:
+        pass
 
     return None
 
@@ -618,6 +682,7 @@ async def clear_vivid_user_memory(user_id: int):
 # ==============================================================================
 GROQ_DAILY_QUOTA = 1000      # 1,000 requests/day
 GEMINI_DAILY_QUOTA = 1500    # 1,500 requests/day
+MILESTONES = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
 
 def _get_today_utc() -> str:
@@ -625,9 +690,9 @@ def _get_today_utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
-async def track_api_call(provider: str, success: bool = True):
-    """Record an API request in RAM and MongoDB daily quota tracker."""
-    global _daily_api_usage
+async def track_api_call(provider: str, success: bool = True, client: Optional[Any] = None):
+    """Record an API request in RAM and MongoDB daily quota tracker and check 10% milestones."""
+    global _daily_api_usage, _notified_milestones
     today = _get_today_utc()
 
     if _daily_api_usage.get("date") != today:
@@ -639,6 +704,7 @@ async def track_api_call(provider: str, success: bool = True):
             "db_fallback_calls": 0,
             "total_calls": 0
         }
+        _notified_milestones = set()
 
     provider_lower = provider.lower()
     if "groq" in provider_lower:
@@ -659,6 +725,145 @@ async def track_api_call(provider: str, success: bool = True):
             }},
             upsert=True
         )
+    except Exception:
+        pass
+
+    # Check 10% milestone notifications
+    await check_and_notify_api_milestones(client=client)
+
+
+async def check_and_notify_api_milestones(client: Optional[Any] = None):
+    """Check if total daily API quota usage crossed any 10% milestone and alert owner."""
+    global _notified_milestones
+    today = _get_today_utc()
+    stats = await get_api_usage_stats()
+    groq_pct = stats.get("groq_used_pct", 0.0)
+    gemini_pct = stats.get("gemini_used_pct", 0.0)
+    peak_pct = max(groq_pct, gemini_pct)
+
+    for m in MILESTONES:
+        if peak_pct >= m and m not in _notified_milestones:
+            _notified_milestones.add(m)
+            try:
+                await api_usage_db.update_one(
+                    {"date": today},
+                    {"$addToSet": {"notified_milestones": m}},
+                    upsert=True
+                )
+            except Exception:
+                pass
+            import asyncio
+            asyncio.create_task(notify_owner_milestone(m, stats, client))
+
+
+async def notify_owner_milestone(milestone: int, stats: Dict[str, Any], client: Optional[Any] = None):
+    """Send real-time milestone percentage alert to owner with live stats and mode toggle buttons."""
+    import config
+    owner_id = getattr(config, "OWNER_ID", None)
+    if not owner_id:
+        return
+
+    try:
+        from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+        from nexichat import nexichat
+
+        bot_client = nexichat if (hasattr(nexichat, "is_connected") and nexichat.is_connected) else client
+        if not bot_client:
+            return
+
+        mode = await get_chatbot_mode()
+        mode_labels = {
+            "auto": "🤖 Auto (API + DB Fallback)",
+            "database": "🗄️ Database Only (Telegram + Mongo)",
+            "api": "⚡ Strict API Only"
+        }
+        mode_display = mode_labels.get(mode, mode.upper())
+
+        btn = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🤖 Auto (API + DB)", callback_data="cb_mode_auto"),
+                InlineKeyboardButton("🗄️ Database Only", callback_data="cb_mode_database"),
+            ],
+            [
+                InlineKeyboardButton("⚡ Strict API Only", callback_data="cb_mode_api"),
+                InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
+            ]
+        ])
+
+        msg = (
+            f"📊 **[API USAGE MILESTONE ALERT - {milestone}%]**\n"
+            f"────────────────────────────\n"
+            f"Daily AI API quota usage has crossed **{milestone}%**!\n\n"
+            f"✦ **Live Quota Metrics:**\n"
+            f"  • **Groq AI:** `{stats['groq_calls']}` / `{stats['groq_quota']}` requests (`{stats['groq_used_pct']}%`)\n"
+            f"  • **Google Gemini:** `{stats['gemini_calls']}` / `{stats['gemini_quota']}` requests (`{stats['gemini_used_pct']}%`)\n"
+            f"  • **Total AI Queries:** `{stats['total_calls']}` requests\n"
+            f"  • **Active Mode:** {mode_display}\n\n"
+            f"✦ **Owner Reply Source Control:**\n"
+            f"Aap chahein toh neeche button click karke reply source turant switch kar sakte hain:\n"
+            f"────────────────────────────"
+        )
+        await bot_client.send_message(chat_id=int(owner_id), text=msg, reply_markup=btn)
+    except Exception:
+        pass
+
+
+async def notify_owner_api_switch(from_api: str, to_api: str, reason: str = "Rate limit / Quota reached (HTTP 429)", client: Optional[Any] = None):
+    """Notify owner whenever an API fails/exhausts and switches to another provider or database."""
+    global _last_switch_alert_time
+    import time
+    import config
+
+    owner_id = getattr(config, "OWNER_ID", None)
+    if not owner_id:
+        return
+
+    trans_key = f"{from_api}->{to_api}"
+    now = time.time()
+    if now - _last_switch_alert_time.get(trans_key, 0) < 120:
+        return
+    _last_switch_alert_time[trans_key] = now
+
+    try:
+        from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+        from nexichat import nexichat
+
+        bot_client = nexichat if (hasattr(nexichat, "is_connected") and nexichat.is_connected) else client
+        if not bot_client:
+            return
+
+        mode = await get_chatbot_mode()
+        mode_labels = {
+            "auto": "🤖 Auto (API + DB Fallback)",
+            "database": "🗄️ Database Only (Telegram + Mongo)",
+            "api": "⚡ Strict API Only"
+        }
+        mode_display = mode_labels.get(mode, mode.upper())
+
+        btn = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🤖 Auto (API + DB)", callback_data="cb_mode_auto"),
+                InlineKeyboardButton("🗄️ Database Only", callback_data="cb_mode_database"),
+            ],
+            [
+                InlineKeyboardButton("⚡ Strict API Only", callback_data="cb_mode_api"),
+                InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
+            ]
+        ])
+
+        msg = (
+            f"⚠️ **[AI API SWITCH ALERT]**\n"
+            f"────────────────────────────\n"
+            f"An AI API limit was reached and the system automatically switched!\n\n"
+            f"✦ **Previous API:** `{from_api}`\n"
+            f"✦ **Reason:** {reason}\n"
+            f"🔄 **Switched To:** `{to_api}`\n\n"
+            f"✦ **Active Mode:** {mode_display}\n\n"
+            f"✦ **Owner Reply Source Control:**\n"
+            f"Aap neeche diye gaye buttons se reply mode turant change kar sakte hain:\n"
+            f"────────────────────────────"
+        )
+        await bot_client.send_message(chat_id=int(owner_id), text=msg, reply_markup=btn)
     except Exception:
         pass
 
@@ -692,7 +897,7 @@ async def track_db_fallback_call():
 
 async def get_api_usage_stats() -> Dict[str, Any]:
     """Calculate live usage counts and remaining percentage for today."""
-    global _daily_api_usage
+    global _daily_api_usage, _notified_milestones
     today = _get_today_utc()
 
     if _daily_api_usage.get("date") != today:
@@ -707,6 +912,7 @@ async def get_api_usage_stats() -> Dict[str, Any]:
                     "db_fallback_calls": doc.get("db_fallback_calls", 0),
                     "total_calls": doc.get("total_calls", 0)
                 }
+                _notified_milestones = set(doc.get("notified_milestones", []))
             else:
                 _daily_api_usage = {
                     "date": today,
@@ -716,6 +922,7 @@ async def get_api_usage_stats() -> Dict[str, Any]:
                     "db_fallback_calls": 0,
                     "total_calls": 0
                 }
+                _notified_milestones = set()
         except Exception:
             _daily_api_usage = {
                 "date": today,
@@ -725,6 +932,7 @@ async def get_api_usage_stats() -> Dict[str, Any]:
                 "db_fallback_calls": 0,
                 "total_calls": 0
             }
+            _notified_milestones = set()
 
     groq_calls = _daily_api_usage.get("groq_calls", 0)
     gemini_calls = _daily_api_usage.get("gemini_calls", 0)
@@ -761,24 +969,78 @@ async def get_api_usage_stats() -> Dict[str, Any]:
 async def format_api_usage_dashboard() -> str:
     """Format an interactive, clean markdown dashboard for bot creator."""
     stats = await get_api_usage_stats()
+    mode = await get_chatbot_mode()
+    mode_labels = {
+        "auto": "🤖 Auto (API + DB Fallback)",
+        "database": "🗄️ Database Only (Telegram + Mongo)",
+        "api": "⚡ Strict API Only"
+    }
+    mode_display = mode_labels.get(mode, mode.upper())
+
     return (
-        f"╭━━━━━━〔 📊 **VIP AI API USAGE & DAILY QUOTA** 〕━━━━━━╮\n\n"
-        f"👑 **ᴄʀᴇᴀᴛᴏʀ :** Amrit Raj (@Villanns)\n"
-        f"📅 **ᴅᴀᴛᴇ (ᴜᴛᴄ) :** `{stats['date']}`\n\n"
-        f"✦ **ɢʀᴏǫ ᴀɪ ᴇɴɢɪɴᴇ :**\n"
+        f"📊 **VIP AI API USAGE & DAILY QUOTA**\n"
+        f"────────────────────────────\n"
+        f"👑 **Creator:** Amrit Raj (@Villanns)\n"
+        f"📅 **Date (UTC):** `{stats['date']}`\n"
+        f"⚙️ **Active Mode:** {mode_display}\n\n"
+        f"✦ **Groq AI Engine:**\n"
         f"  • Used Today: `{stats['groq_calls']}` / `{stats['groq_quota']}` requests\n"
         f"  • Used: `{stats['groq_used_pct']}%`  |  Remaining: `{stats['groq_left_pct']}%`\n\n"
-        f"✦ **ɢᴏᴏɢʟᴇ ɢᴇᴍɪɴɪ ᴀɪ :**\n"
+        f"✦ **Google Gemini AI:**\n"
         f"  • Used Today: `{stats['gemini_calls']}` / `{stats['gemini_quota']}` requests\n"
         f"  • Used: `{stats['gemini_used_pct']}%`  |  Remaining: `{stats['gemini_left_pct']}%`\n\n"
-        f"✦ **ғʀᴇᴇ ᴡᴀᴛᴇʀғᴀʟʟ ᴀɪ :** `{stats['waterfall_calls']}` requests (Unlimited)\n"
-        f"✦ **ᴛᴏᴛᴀʟ ᴀɪ ǫᴜᴇʀɪᴇs :** `{stats['total_calls']}` requests\n\n"
-        f"✦ **ᴅᴀᴛᴀʙᴀsᴇ ғᴀʟʟʙᴀᴄᴋ sᴛᴀᴛᴜs :**\n"
+        f"✦ **NVIDIA NIM AI:** Multi-Key Active ⚡\n"
+        f"✦ **Free Waterfall AI:** `{stats['waterfall_calls']}` requests (Unlimited)\n"
+        f"✦ **Total AI Queries:** `{stats['total_calls']}` requests\n\n"
+        f"✦ **Database Fallback Status:**\n"
         f"  • Status: {stats['status']}\n"
         f"  • DB Fallback Triggers: `{stats['db_fallback_calls']}`\n"
-        f"  *(Database is ONLY utilized when all APIs reach 100% quota limit!)*\n\n"
-        f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
+        f"────────────────────────────"
     )
+
+
+async def format_mode_dashboard():
+    """Format the interactive mode control dashboard and buttons for owner/sudoers."""
+    from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    mode = await get_chatbot_mode()
+
+    auto_check = " ✅" if mode == "auto" else ""
+    db_check = " ✅" if mode == "database" else ""
+    api_check = " ✅" if mode == "api" else ""
+
+    btn = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(f"🤖 Auto Mode (API + DB){auto_check}", callback_data="cb_mode_auto"),
+        ],
+        [
+            InlineKeyboardButton(f"🗄️ Database Only (Telegram + Mongo){db_check}", callback_data="cb_mode_database"),
+        ],
+        [
+            InlineKeyboardButton(f"⚡ Strict API Only{api_check}", callback_data="cb_mode_api"),
+        ],
+        [
+            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE")
+        ]
+    ])
+
+    mode_descriptions = {
+        "auto": "🟢 **Auto Mode (Recommended)**: Live AI APIs (Groq -> Gemini -> NVIDIA NIM -> Free Waterfall) used first. When API quotas hit limit, automatically switches to Telegram Cloud & MongoDB Database!",
+        "database": "🗄️ **Database Only Mode**: Zero API credit usage. Strictly searches and replies from Telegram Cloud Channel and MongoDB database!",
+        "api": "⚡ **Strict API Only Mode**: Strictly replies from Live AI APIs. Never uses database fallback."
+    }
+
+    text = (
+        f"⚙️ **CHATBOT REPLY SOURCE CONTROL**\n"
+        f"────────────────────────────\n"
+        f"✦ **Current Active Mode:** `{mode.upper()}`\n\n"
+        f"{mode_descriptions.get(mode, '')}\n\n"
+        f"**Reply Options:**\n"
+        f"1. **Auto (API + DB Fallback)** - APIs first, auto DB fallback when quota ends\n"
+        f"2. **Database Only** - 100% free Telegram Cloud + MongoDB answers\n"
+        f"3. **Strict API Only** - External APIs only\n\n"
+        f"Tap any button below to change reply source instantly:"
+    )
+    return text, btn
 
 
 

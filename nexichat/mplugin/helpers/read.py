@@ -11,7 +11,7 @@
 ================================================================================
 Is file ka kya kaam hai?
   Ye file bot ke sare texts, help menus, messages aur templates ko format karti hai.
-  Isme Start, Help, About, Admin, aur Game commands ke pre-styled text messages hain.
+  Isme Start, Help, About, Admin, aur Game commands ke clean standard formatted messages hain.
 ================================================================================
 """
 
@@ -22,213 +22,197 @@ bot_name = getattr(nexichat, "name", "VIP REACTION BOT")
 bot_username = getattr(nexichat, "username", "Reactions_rebot")
 
 START = """**
-╭━━━━━━━〔 ❖ VIP REACTION & AI ❖ 〕━━━━━━━╮
+❖ VIP REACTION & AI ❖
+────────────────────────────
+🌸 **Hey {}! Welcome** 💖
 
-  🌸 **ʜᴇʏ {}! ᴡᴇʟᴄᴏᴍᴇ ʙᴀʙʏ** 💖
+Main aapki pyari **Anshika** hoon! ✨
+I chat with you like a real friend, reply to stickers, photos, videos and react to messages! ⚡
 
-  ᴍᴀɪɴ ᴀᴀᴘᴋɪ ᴘʏᴀʀɪ **𝐀ɴsʜɪᴋᴀ‹✨** ʜᴏᴏɴ! ✨
-  ɪ ᴄʜᴀᴛ ᴡɪᴛʜ ʏᴏᴜ ʟɪᴋᴇ ᴀ ʟᴏᴠɪɴɢ ɢɪʀʟ, ʀᴇᴘʟʏ ᴛᴏ sᴛɪᴄᴋᴇʀs, 
-  ᴘʜᴏᴛᴏs, ᴠɪᴅᴇᴏs & ʀᴇᴀᴄᴛ ᴛᴏ ᴍᴇssᴀɢᴇs! ⚡
+────────────────────────────
+• **Persona:** Sweet Indian Girl 🌸
+• **Auto-React:** Groups & Channels ⚡
+• **Smart Chat:** Text, Sticker, Media 💬
+• **Memory:** Self-Learning Q&A 🧠
+• **Creator:** [Amrit Raj](https://t.me/Villanns) 👑
+────────────────────────────
 
-╭────────────────────────────────╮
-│ ✦ **ᴘᴇʀsᴏɴᴀ** : sᴡᴇᴇᴛ ɪɴᴅɪᴀɴ ɢɪʀʟ 🌸
-│ ✦ **ᴀᴜᴛᴏ-ʀᴇᴀᴄᴛ** : ɢʀᴏᴜᴘs & ᴄʜᴀɴɴᴇʟs ⚡
-│ ✦ **sᴍᴀʀᴛ ᴄʜᴀᴛ** : ᴛᴇxᴛ, sᴛɪᴄᴋᴇʀ, ᴍᴇᴅɪᴀ 💬
-│ ✦ **ᴍᴇᴍᴏʀʏ** : sᴇʟғ-ʟᴇᴀʀɴɪɴɢ Q&A 🧠
-│ ✦ **ᴄʀᴇᴀᴛᴏʀ** : [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/Villanns) 👑
-╰────────────────────────────────╯
+✦ **Total Users:** `{}`
+✦ **Total Chats:** `{}`
+✦ **Uptime:** `{}`
 
-❖ **ᴛᴏᴛᴀʟ ᴜsᴇʀs** : `{}`
-❖ **ᴛᴏᴛᴀʟ ᴄʜᴀᴛs** : `{}`
-❖ **ᴜᴘᴛɪᴍᴇ** : `{}`
-
-👇 **ᴛᴀᴘ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴍᴏʀᴇ!**
+👇 **Tap the buttons below to explore more!**
 **"""
 
 HELP_READ = f"""**
-╭━━━━━〔 ❖ ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅs ❖ 〕━━━━━╮
+❖ Help & Commands ❖
+────────────────────────────
+🌸 **Click on the buttons below to explore**
+All available features, Anshika chat, reactions & tools!
 
-  🌸 **ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ**
-  ᴀʟʟ ᴀᴠᴀɪʟᴀʙʟᴇ ғᴇᴀᴛᴜʀᴇs, 𝐀ɴsʜɪᴋᴀ‹✨ ᴄʜᴀᴛ, ʀᴇᴀᴄᴛɪᴏɴs & ᴛᴏᴏʟs!
+────────────────────────────
+• **Reactions:** Auto emoji reacts ⚡
+• **AI Chatbot:** Sweet girl chat 🌸
+• **Tools:** Ping, stats, clone, broadcast 🛠️
+• **Support:** [Amrit Feel](https://t.me/{SUPPORT_GRP}) 👥
+────────────────────────────
 
-╭────────────────────────────────╮
-│ ✦ **ʀᴇᴀᴄᴛɪᴏɴs** : ᴀᴜᴛᴏ ᴇᴍᴏᴊɪ ʀᴇᴀᴄᴛs ⚡
-│ ✦ **ᴀɪ ᴄʜᴀᴛʙᴏᴛ** : sᴍᴀʀᴛ ɢɪʀʟ ᴄʜᴀᴛ 🌸
-│ ✦ **ᴛᴏᴏʟs** : ᴘɪɴɢ, sᴛᴀᴛs, ᴄʟᴏɴᴇ, ɢᴄᴀsᴛ 🛠️
-│ ✦ **sᴜᴘᴘᴏʀᴛ** : [ᴀᴍʀɪᴛ ғᴇᴇʟ](https://t.me/{SUPPORT_GRP}) 👥
-╰────────────────────────────────╯
-
-ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs ᴄᴀɴ ʙᴇ ᴜsᴇᴅ ᴡɪᴛʜ: `/`**
+All commands can be used with: `/`**
 """
 
 TOOLS_DATA_READ = f"""**
-╭━━━━━〔 ⚙️ ᴜᴛɪʟɪᴛʏ ᴛᴏᴏʟs ⚙️ 〕━━━━━╮
-
-╭────────────────────────────────╮
-│ ➻ /start - ᴡᴇʟᴄᴏᴍᴇ ᴍᴇssᴀɢᴇ & ᴍᴇɴᴜ
-│ ➻ /help - ɢᴇᴛ ғᴜʟʟ ʜᴇʟᴘ ɢᴜɪᴅᴇ
-│ ➻ /ping - ᴄʜᴇᴄᴋ ʙᴏᴛ ʟᴀᴛᴇɴᴄʏ
-│ ➻ /speedtest - sᴇʀᴠᴇʀ sᴘᴇᴇᴅ ᴛᴇsᴛ
-│ ➻ /id - ɢᴇᴛ ᴜsᴇʀ, ᴄʜᴀᴛ & ᴍsɢ ɪᴅ
-│ ➻ /stats - ᴠɪᴇᴡ sᴇʀᴠᴇᴅ ᴜsᴇʀs & ᴄʜᴀᴛs
-│ ➻ /link <chat_id> - ɢᴇᴛ ɪɴᴠɪᴛᴇ ʟɪɴᴋ
-│ ➻ /broadcast - ʙʀᴏᴀᴅᴄᴀsᴛ (ᴏᴡɴᴇʀ ᴏɴʟʏ)
-╰────────────────────────────────╯
-
-📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
+⚙️ Utility Tools ⚙️
+────────────────────────────
+• `/start` - Welcome message & menu
+• `/help` - Full help guide
+• `/ping` - Check bot latency
+• `/speedtest` - Server speed test
+• `/id` - Get user, chat & message ID
+• `/stats` - View served users & chats
+• `/link <chat_id>` - Get invite link
+• `/broadcast` - Global broadcast (Owner)
+────────────────────────────
+📡 **Developer:** [Amrit Raj](https://t.me/{OWNER_USERNAME}) 💞**
 """
 
 CHATBOT_READ = f"""**
-╭━━━━━〔 ✨ ᴀᴜᴛᴏ ʀᴇᴀᴄᴛɪᴏɴs ✨ 〕━━━━━╮
+✨ Auto Reactions ✨
+────────────────────────────
+⚡ **High-Speed Auto-Reaction System**
+Reacts instantly to messages in groups, channels and private chats!
 
-  ⚡ **ʜɪɢʜ-sᴘᴇᴇᴅ ᴀᴜᴛᴏ-ʀᴇᴀᴄᴛɪᴏɴ sʏsᴛᴇᴍ**
-  ʀᴇᴀᴄᴛs ɪɴsᴛᴀɴᴛʟʏ ᴛᴏ ᴍᴇssᴀɢᴇs ɪɴ ɢʀᴏᴜᴘs, 
-  ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴘʀɪᴠᴀᴛᴇ ᴄʜᴀᴛs!
-
-╭────────────────────────────────╮
-│ ➻ /reactions - ᴠɪᴇᴡ ᴄᴜʀʀᴇɴᴛ sᴇᴛᴛɪɴɢs
-│ ➻ /reactions on - ᴛᴜʀɴ ʀᴇᴀᴄᴛɪᴏɴs ᴏɴ
-│ ➻ /reactions off - ᴛᴜʀɴ ʀᴇᴀᴄᴛɪᴏɴs ᴏғғ
-│ ➻ /setreactions 👍 ❤️ 🔥 - sᴇᴛ ᴄᴜsᴛᴏᴍ
-│ ➻ /resetreactions - ʀᴇsᴇᴛ ᴛᴏ ᴅᴇғᴀᴜʟᴛ
-│ ➻ /clone <token> - ᴄʟᴏɴᴇ ʏᴏᴜʀ ᴏᴡɴ ʙᴏᴛ
-│ ➻ /cloned - ʟɪsᴛ ᴀʟʟ ᴄʟᴏɴᴇᴅ ʙᴏᴛs
-│ ➻ /delclone <token> - ᴅᴇʟᴇᴛᴇ ʙᴏᴛ ᴄʟᴏɴᴇ
-│ ➻ /idclone <session> - ᴄʟᴏɴᴇ ʏᴏᴜʀ ɪᴅ
-│ ➻ /idclones - ʟɪsᴛ ᴀʟʟ ɪᴅ ᴄʟᴏɴᴇs
-│ ➻ /delidclone - ᴅᴇʟᴇᴛᴇ ʏᴏᴜʀ ɪᴅ ᴄʟᴏɴᴇ
-╰────────────────────────────────╯
-
-📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
+────────────────────────────
+• `/reactions` - View current settings
+• `/reactions on` - Turn reactions ON
+• `/reactions off` - Turn reactions OFF
+• `/setreactions 👍 ❤️ 🔥` - Set custom reactions
+• `/resetreactions` - Reset to default
+• `/clone <token>` - Clone your own bot
+• `/cloned` - List all cloned bots
+• `/delclone <token>` - Delete bot clone
+• `/idclone <session>` - Clone your ID
+• `/idclones` - List all ID clones
+• `/delidclone` - Delete your ID clone
+────────────────────────────
+📡 **Developer:** [Amrit Raj](https://t.me/{OWNER_USERNAME}) 💞**
 """
 
 AI_CHATBOT_READ = f"""**
-╭━━━━━〔 🌸 ᴀɪ ɢɪʀʟ ᴄʜᴀᴛ & ᴍᴇᴍᴏʀʏ 🌸 〕━━━━━╮
+🌸 AI Girl Chat & Memory 🌸
+────────────────────────────
+💖 **Meet Anshika, your sweet companion!** 🌸
+Main ek real school girl (Anshika) ki tarah chat karti hoon, text, stickers, photos aur videos ka natural Hinglish mein reply karti hoon!
 
-  💖 **ᴍᴇᴇᴛ ʏᴏᴜʀ ᴘʏᴀʀɪ ᴀɪ ᴄᴏᴍᴘᴀɴɪᴏɴ!** 🌸
-  ᴍᴀɪɴ ᴇᴋ ᴘʏᴀʀɪ ʟᴀᴅᴋɪ (𝐀ɴsʜɪᴋᴀ) ᴋɪ ᴛᴀʀᴀʜ ʙᴀᴀᴛ ᴋᴀʀᴛɪ ʜᴏᴏɴ, 
-  sᴛɪᴄᴋᴇʀs, ᴛᴇxᴛ, ᴘʜᴏᴛᴏs & ᴠɪᴅᴇᴏs ᴋᴀ ʀᴇᴘʟʏ 
-  ɴᴀᴛᴜʀᴀʟ sᴡᴇᴇᴛ ɢɪʀʟ ᴛᴇxᴛ sᴇ ᴋᴀʀᴛɪ ʜᴏᴏɴ!
-
-╭────────────────────────────────╮
-│ ➻ /chatbot - ᴏᴘᴇɴ ᴛᴏɢɢʟᴇ ᴍᴇɴᴜ
-│ ➻ /chatbot on - ᴇɴᴀʙʟᴇ ɪɴ ᴄʜᴀᴛ
-│ ➻ /chatbot off - ᴅɪsᴀʙʟᴇ ɪɴ ᴄʜᴀᴛ
-│ ➻ /ask <query> - ᴀsᴋ ᴀɴʏᴛʜɪɴɢ
-│ ➻ /love <name1> <name2> - ʟᴏᴠᴇ ᴛᴇsᴛ %
-│ ➻ /shayri - sᴡᴇᴇᴛ ʜɪɴᴅɪ sʜᴀʏᴀʀɪ
-│ ➻ /joke - ғᴜɴɴʏ ᴊᴏᴋᴇs
-│ ➻ /draw <prompt> - ᴀɪ ɪᴍᴀɢᴇ ɢᴇɴᴇʀᴀᴛᴏʀ 🎨
-│ ➻ /setname <nick> - sᴇᴛ ʏᴏᴜʀ ɴɪᴄᴋɴᴀᴍᴇ
-│ ➻ /dbmode - ᴀᴘɪ/ᴅᴀᴛᴀʙᴀsᴇ sᴡɪᴛᴄʜ (ᴏᴡɴᴇʀ) 🗄️
-│ ➻ /api - ʟɪᴠᴇ ᴀᴘɪ ᴜsᴀɢᴇ & ǫᴜᴏᴛᴀ 📊
-╰────────────────────────────────╯
-
-💡 **ᴛɪᴘ:** ᴍᴀɪɴ ᴀᴀᴘᴋɪ ᴘᴜʀᴀɴɪ ʙᴀᴀᴛᴇɪɴ ᴀᴜʀ ɪɴᴛᴇʀᴇsᴛs ʏᴀᴀᴅ ʀᴀᴋʜᴛɪ ʜᴏᴏɴ (ᴠɪᴠɪᴅ ᴍᴇᴍᴏʀʏ)! 🥰
-
-📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
+────────────────────────────
+• `/chatbot` - Open toggle menu
+• `/chatbot on` - Enable in chat
+• `/chatbot off` - Disable in chat
+• `/ask <query>` - Ask anything
+• `/love <name1> <name2>` - Love calculator %
+• `/shayri` - Sweet Hindi shayari
+• `/joke` - Funny jokes
+• `/draw <prompt>` - AI image generator 🎨
+• `/setname <nick>` - Set your nickname
+• `/dbmode` - API / Database switch (Owner) 🗄️
+• `/api` - Live API usage & quota 📊
+────────────────────────────
+💡 **Tip:** Main aapki baatein yaad rakhti hoon (Vivid Memory)! 🥰
+📡 **Developer:** [Amrit Raj](https://t.me/{OWNER_USERNAME}) 💞**
 """
 
 SOURCE_READ = f"""**
-╭━━━━━〔 🌟 ᴘʀᴏᴊᴇᴄᴛ & ᴄᴏᴘʏʀɪɢʜᴛ 🌟 〕━━━━━╮
+🌟 Project & Copyright 🌟
+────────────────────────────
+✦ **VIP Reaction & Anshika Chatbot**
+✦ **Copyright © 2026 [Amrit Raj](https://t.me/{OWNER_USERNAME}). All Rights Reserved.**
+✦ Unauthorized copying is strictly prohibited!
 
-  ✦ **ᴠɪᴘ ʀᴇᴀᴄᴛɪᴏɴ & ᴀɴsʜɪᴋᴀ ᴄʜᴀᴛʙᴏᴛ**
-  ✦ **ᴄᴏᴘʏʀɪɢʜᴛ © 2026 [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}). ᴀʟʟ ʀɪɢʜᴛs ʀᴇsᴇʀᴠᴇᴅ.**
-  ✦ ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴄᴏᴘʏɪɴɢ ɪs sᴛʀɪᴄᴛʟʏ ᴘʀᴏʜɪʙɪᴛᴇᴅ!
-
-╭────────────────────────────────╮
-│ ➻ **ʀᴇᴘᴏ :** [ᴠɪᴘ-ʀᴇᴀᴄᴛɪᴏɴ-ʙᴏᴛ](https://github.com/amritraj78/VIP-REACTION-BOT)
-│ ➻ **sᴜᴘᴘᴏʀᴛ :** [ᴀᴍʀɪᴛ ғᴇᴇʟ](https://t.me/{SUPPORT_GRP})
-│ ➻ **ᴄʀᴇᴀᴛᴏʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME})
-│ ➻ **ʟɪᴄᴇɴsᴇ :** ᴘʀᴏᴘʀɪᴇᴛᴀʀʏ (ᴄᴏᴘʏʀɪɢʜᴛ ᴘʀᴏᴛᴇᴄᴛᴇᴅ)
-╰────────────────────────────────╯**
+────────────────────────────
+• **Repo:** [VIP-REACTION-BOT](https://github.com/amritraj78/VIP-REACTION-BOT)
+• **Support:** [Amrit Feel](https://t.me/{SUPPORT_GRP})
+• **Creator:** [Amrit Raj](https://t.me/{OWNER_USERNAME})
+• **License:** Proprietary (Copyright Protected)
+────────────────────────────**
 """
 
 ADMIN_READ = f"""**
-╭━━━━━〔 👑 ᴏᴡɴᴇʀ & ᴀᴅᴍɪɴ 👑 〕━━━━━╮
-
-╭────────────────────────────────╮
-│ ➻ /gcast <msg> - ɢʟᴏʙᴀʟ ʙʀᴏᴀᴅᴄᴀsᴛ
-│ ➻ /stats - sᴇʀᴠᴇᴅ ᴜsᴇʀs & ᴄʜᴀᴛs
-│ ➻ /storage - sᴇʀᴠᴇʀ ᴅɪsᴋ & ʀᴀᴍ ʜᴇᴀʟᴛʜ 💾
-│ ➻ /exportdb - ᴅᴏᴡɴʟᴏᴀᴅ ᴅʙ ʙᴀᴄᴋᴜᴘ 📁
-│ ➻ /ping - ᴄʜᴇᴄᴋ ʙᴏᴛ ʟᴀᴛᴇɴᴄʏ
-│ ➻ /speedtest - sᴇʀᴠᴇʀ sᴘᴇᴇᴅ ᴛᴇsᴛ
-│ ➻ /id - ɢᴇᴛ ᴜsᴇʀ, ᴄʜᴀᴛ & ᴍsɢ ɪᴅ
-│ ➻ /clone <token> - ᴍᴀᴋᴇ ᴄʟᴏɴᴇ ʙᴏᴛ
-│ ➻ /cloned - ʟɪsᴛ ᴀʟʟ ᴄʟᴏɴᴇ ʙᴏᴛs
-│ ➻ /delclone - ᴅᴇʟᴇᴛᴇ ᴄʟᴏɴᴇ ʙᴏᴛ
-│ ➻ /idclone <session> - ᴍᴀᴋᴇ ɪᴅ ᴄʟᴏɴᴇ
-│ ➻ /idclones - ʟɪsᴛ ᴀʟʟ ɪᴅ ᴄʟᴏɴᴇs
-│ ➻ /delidclone - ᴅᴇʟᴇᴛᴇ ɪᴅ ᴄʟᴏɴᴇ
-│ ➻ /dbmode [on/off] - ᴛᴏɢɢʟᴇ ᴅʙ ғᴀʟʟʙᴀᴄᴋ ᴍᴏᴅᴇ 🗄️
-│ ➻ /api - ʟɪᴠᴇ ᴀɪ ǫᴜᴏᴛᴀ ᴅᴀsʜʙᴏᴀʀᴅ 📊
-╰────────────────────────────────╯
-
-📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
+👑 Owner & Admin 👑
+────────────────────────────
+• `/gcast <msg>` - Global broadcast
+• `/stats` - Served users & chats
+• `/storage` - Server disk & RAM health 💾
+• `/exportdb` - Download DB backup 📁
+• `/ping` - Check bot latency
+• `/speedtest` - Server speed test
+• `/id` - Get user, chat & msg ID
+• `/clone <token>` - Make clone bot
+• `/cloned` - List all clone bots
+• `/delclone` - Delete clone bot
+• `/idclone <session>` - Make ID clone
+• `/idclones` - List all ID clones
+• `/delidclone` - Delete ID clone
+• `/dbmode [on/off]` - Toggle DB fallback mode 🗄️
+• `/api` - Live AI quota dashboard 📊
+────────────────────────────
+📡 **Developer:** [Amrit Raj](https://t.me/{OWNER_USERNAME}) 💞**
 """
 
 HELP_GAMES_READ = f"""**
-╭━━━━━〔 🎮 ɢᴀᴍᴇs & ғᴜɴ 🎮 〕━━━━━╮
+🎮 Games & Fun 🎮
+────────────────────────────
+🌸 **Fun, Games & Love Commands**
 
-  🌸 **ғᴜɴ, ɢᴀᴍᴇs & ʟᴏᴠᴇ ᴄᴏᴍᴍᴀɴᴅs**
-
-╭────────────────────────────────╮
-│ ➻ /dice - ᴅɪᴄᴇ ᴍᴀᴛᴄʜ ᴠs ᴀɴsʜɪᴋᴀ 🎲
-│ ➻ 🎲 🎯 🏀 ⚽ 🎰 - sᴇɴᴅ ᴀɴɪᴍᴀᴛᴇᴅ ᴇᴍᴏᴊɪ
-│ ➻ /toss - ᴄᴏɪɴ ᴛᴏss (ʜᴇᴀᴅs/ᴛᴀɪʟs) 🪙
-│ ➻ /truth - sᴘɪᴄʏ ᴛʀᴜᴛʜ ǫᴜᴇsᴛɪᴏɴs 🤫
-│ ➻ /dare - ғᴜɴ ᴅᴀʀᴇ ᴄʜᴀʟʟᴇɴɢᴇs 🎯
-│ ➻ /flirt - sᴡᴇᴇᴛ ʀᴏᴍᴀɴᴛɪᴄ ғʟɪʀᴛs 💖
-│ ➻ /roast - ғᴜɴɴʏ ʀᴏᴀsᴛs 🔥
-│ ➻ /love <name1> <name2> - ʟᴏᴠᴇ % 🔮
-│ ➻ /couples - ᴛᴏᴅᴀʏ's ɢʀᴏᴜᴘ ᴄᴏᴜᴘʟᴇ 💑
-│ ➻ /propose - ᴘʀᴏᴘᴏsᴇ sᴏᴍᴇᴏɴᴇ 💍
-│ ➻ /shayri - sᴡᴇᴇᴛ ʜɪɴᴅɪ sʜᴀʏᴀʀɪ 🌺
-│ ➻ /joke - ғᴜɴɴʏ ʜɪɴᴅɪ ᴊᴏᴋᴇs 😂
-│ ➻ /quote - ɪɴsᴘɪʀᴀᴛɪᴏɴᴀʟ ǫᴜᴏᴛᴇs 🌟
-╰────────────────────────────────╯
-
-📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
+────────────────────────────
+• `/dice` - Dice match vs Anshika 🎲
+• `🎲 🎯 🏀 ⚽ 🎰` - Send animated emoji
+• `/toss` - Coin toss (Heads / Tails) 🪙
+• `/truth` - Spicy truth questions 🤫
+• `/dare` - Fun dare challenges 🎯
+• `/flirt` - Sweet romantic flirts 💖
+• `/roast` - Funny roasts 🔥
+• `/love <name1> <name2>` - Love % test 🔮
+• `/couples` - Today's group couple 💑
+• `/propose` - Propose someone 💍
+• `/shayri` - Sweet Hindi shayari 🌺
+• `/joke` - Funny Hindi jokes 😂
+• `/quote` - Inspirational quotes 🌟
+────────────────────────────
+📡 **Developer:** [Amrit Raj](https://t.me/{OWNER_USERNAME}) 💞**
 """
 
 HELP_GROUP_READ = f"""**
-╭━━━━━〔 👥 ɢʀᴏᴜᴘ & ᴡᴇʟᴄᴏᴍᴇ 👥 〕━━━━━╮
+👥 Group & Welcome 👥
+────────────────────────────
+🌸 **Group Management & Welcome**
 
-  🌸 **ɢʀᴏᴜᴘ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ & ᴡᴇʟᴄᴏᴍᴇ**
-
-╭────────────────────────────────╮
-│ ➻ /welcome - ᴄʜᴇᴄᴋ ᴡᴇʟᴄᴏᴍᴇ sᴛᴀᴛᴜs
-│ ➻ /welcome on - ᴇɴᴀʙʟᴇ ᴡᴇʟᴄᴏᴍᴇ ᴄᴀʀᴅ
-│ ➻ /welcome off - ᴅɪsᴀʙʟᴇ ᴡᴇʟᴄᴏᴍᴇ
-│ ➻ /tagall <text> - ᴛᴀɢ ᴀʟʟ ᴍᴇᴍʙᴇʀs 📢
-│ ➻ /cancel - sᴛᴏᴘ ᴛᴀɢɢɪɴɢ 🛑
-│ ➻ /afk [reason] - sᴇᴛ ᴀғᴋ sᴛᴀᴛᴜs 💤
-│ ➻ /security - sᴇᴄᴜʀɪᴛʏ sʜɪᴇʟᴅ 🛡️
-│ ➻ /antilink - ᴛᴏɢɢʟᴇ ᴀɴᴛɪ-ʟɪɴᴋ 🚫
-│ ➻ /antispam - ᴛᴏɢɢʟᴇ ᴀɴᴛɪ-sᴘᴀᴍ ⚔️
-│ ➻ /profile or /me - ᴠɪᴇᴡ ʏᴏᴜʀ ᴠɪᴘ ᴄᴀʀᴅ
-╰────────────────────────────────╯
-
-📡 **ᴅᴇᴠᴇʟᴏᴘᴇʀ :** [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 💞**
+────────────────────────────
+• `/welcome` - Check welcome status
+• `/welcome on` - Enable welcome card
+• `/welcome off` - Disable welcome card
+• `/tagall <text>` - Tag all members 📢
+• `/cancel` - Stop tagging 🛑
+• `/afk [reason]` - Set AFK status 💤
+• `/security` - Security shield 🛡️
+• `/antilink` - Toggle anti-link 🚫
+• `/antispam` - Toggle anti-spam ⚔️
+• `/profile` or `/me` - View your VIP card
+────────────────────────────
+📡 **Developer:** [Amrit Raj](https://t.me/{OWNER_USERNAME}) 💞**
 """
 
 ABOUT_READ = f"""**
-╭━━━━━〔 ❖ ᴀʙᴏᴜᴛ ᴛʜɪs ʙᴏᴛ ❖ 〕━━━━━╮
+❖ About This Bot ❖
+────────────────────────────
+🌸 **VIP Reaction & Anshika Chatbot**
+An all-in-one Telegram bot combining instant emoji reactions, a loving girl persona, games & AI tools!
 
-  🌸 **ᴠɪᴘ ʀᴇᴀᴄᴛɪᴏɴ & ᴀɴsʜɪᴋᴀ ᴄʜᴀᴛʙᴏᴛ**
-  ᴀɴ ᴀʟʟ-ɪɴ-ᴏɴᴇ ᴛᴇʟᴇɢʀᴀᴍ ʙᴏᴛ ᴄᴏᴍʙɪɴɪɴɢ 
-  ɪɴsᴛᴀɴᴛ ᴇᴍᴏᴊɪ ʀᴇᴀᴄᴛɪᴏɴs, ᴀ ʟᴏᴠɪɴɢ ᴀɪ ɢɪʀʟ 
-  ᴘᴇʀsᴏɴᴀ, ɢᴀᴍᴇs & ɪᴍᴀɢᴇ ɢᴇɴ!
-
-╭────────────────────────────────╮
-│ ✦ **ᴄʀᴇᴀᴛᴏʀ** : [ᴀᴍʀɪᴛ ʀᴀᴊ](https://t.me/{OWNER_USERNAME}) 👑
-│ ✦ **sᴜᴘᴘᴏʀᴛ** : [ᴀᴍʀɪᴛ ғᴇᴇʟ](https://t.me/{SUPPORT_GRP}) 👥
-│ ✦ **ᴜᴘᴅᴀᴛᴇs** : [ᴘʀɪᴠᴀᴛᴇ ᴛʜɪɴᴋ](https://t.me/{UPDATE_CHNL}) 📢
-│ ✦ **ʟᴀɴɢᴜᴀɢᴇ** : [ᴘʏᴛʜᴏɴ 3](https://www.python.org) 🐍
-│ ✦ **ғʀᴀᴍᴇᴡᴏʀᴋ** : [ᴘʏʀᴏɢʀᴀᴍ](https://docs.pyrogram.org) ⚡
-│ ✦ **ᴅᴀᴛᴀʙᴀsᴇ** : ᴛᴇʟᴇɢʀᴀᴍ ᴅʙ & ᴍᴏɴɢᴏ 🧠
-╰────────────────────────────────╯
-
-✨ **ᴛʜᴀɴᴋ ʏᴏᴜ ғᴏʀ ᴜsɪɴɢ ᴏᴜʀ ʙᴏᴛ!****
+────────────────────────────
+• **Creator:** [Amrit Raj](https://t.me/{OWNER_USERNAME}) 👑
+• **Support:** [Amrit Feel](https://t.me/{SUPPORT_GRP}) 👥
+• **Updates:** [Private Think](https://t.me/{UPDATE_CHNL}) 📢
+• **Language:** [Python 3](https://www.python.org) 🐍
+• **Framework:** [Pyrogram](https://docs.pyrogram.org) ⚡
+• **Database:** MongoDB & Telegram DB 🧠
+────────────────────────────
+✨ **Thank you for using our bot!**
 """

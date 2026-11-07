@@ -26,11 +26,12 @@ async def stats(cli: Client, message: Message):
             from nexichat.database.chatbot import get_api_usage_stats
             st = await get_api_usage_stats()
             api_info = (
-                f"\n\n╭━━━━〔 📊 **VIP AI API USAGE** 〕━━━━╮\n"
+                f"\n\n📊 **VIP AI API USAGE**\n"
+                f"────────────────────────────\n"
                 f"✦ **Groq AI:** `{st['groq_calls']}`/`{st['groq_quota']}` ({st['groq_used_pct']}% used | {st['groq_left_pct']}% left)\n"
                 f"✦ **Gemini AI:** `{st['gemini_calls']}`/`{st['gemini_quota']}` ({st['gemini_used_pct']}% used | {st['gemini_left_pct']}% left)\n"
                 f"✦ **Total Queries:** `{st['total_calls']}` | **DB Fallback:** `{st['db_fallback_calls']}`\n"
-                f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
+                f"────────────────────────────"
             )
         except Exception:
             pass
@@ -50,8 +51,8 @@ async def getid(client: Client, message: Message):
     message_id = message.id
     reply = message.reply_to_message
 
-    text = f"**[ᴍᴇssᴀɢᴇ ɪᴅ:]({message.link})** `{message_id}`\n"
-    text += f"**[ʏᴏᴜʀ ɪᴅ:](tg://user?id={your_id})** `{your_id}`\n"
+    text = f"**[Message ID:]({message.link})** `{message_id}`\n"
+    text += f"**[Your ID:](tg://user?id={your_id})** `{your_id}`\n"
 
     if not getattr(message, "command", None):
         message.command = (getattr(message, "text", "") or "").split()
@@ -60,29 +61,32 @@ async def getid(client: Client, message: Message):
         try:
             split = message.text.split(None, 1)[1].strip()
             user_id = (await client.get_users(split)).id
-            text += f"**[ᴜsᴇʀ ɪᴅ:](tg://user?id={user_id})** `{user_id}`\n"
+            text += f"**[User ID:](tg://user?id={user_id})** `{user_id}`\n"
         except Exception:
-            return await message.reply_text("ᴛʜɪs ᴜsᴇʀ ᴅᴏᴇsɴ'ᴛ ᴇxɪsᴛ.", quote=True)
+            return await message.reply_text("This user doesn't exist.", quote=True)
 
     chat_username = getattr(chat, "username", None)
     if chat_username:
-        text += f"**[ᴄʜᴀᴛ ɪᴅ:](https://t.me/{chat_username})** `{chat.id}`\n\n"
+        text += f"**[Chat ID:](https://t.me/{chat_username})** `{chat.id}`\n\n"
     else:
-        text += f"**ᴄʜᴀᴛ ɪᴅ :** `{chat.id}`\n\n"
+        text += f"**Chat ID:** `{chat.id}`\n\n"
 
     if (
         not getattr(reply, "empty", True)
         and not message.forward_from_chat
         and not reply.sender_chat
     ):
-        text += f"**[ʀᴇᴘʟɪᴇᴅ ᴍᴇssᴀɢᴇ ɪᴅ:]({reply.link})** `{reply.id}`\n"
-        text += f"**[ʀᴇᴘʟɪᴇᴅ ᴜsᴇʀ ɪᴅ:](tg://user?id={reply.from_user.id})** `{reply.from_user.id}`\n\n"
+        text += f"**[Replied Message ID:]({reply.link})** `{reply.id}`\n"
+        text += f"**[Replied User ID:](tg://user?id={reply.from_user.id})** `{reply.from_user.id}`\n\n"
+
+    if reply and reply.forward_from:
+        text += f"The forwarded user, {reply.forward_from.first_name}, has an ID of `{reply.forward_from.id}`\n\n"
 
     if reply and reply.forward_from_chat:
-        text += f"ᴛʜᴇ ғᴏʀᴡᴀʀᴅᴇᴅ ᴄʜᴀɴɴᴇʟ, {reply.forward_from_chat.title}, ʜᴀs ᴀɴ ɪᴅ ᴏғ `{reply.forward_from_chat.id}`\n\n"
+        text += f"The forwarded channel, {reply.forward_from_chat.title}, has an ID of `{reply.forward_from_chat.id}`\n\n"
 
     if reply and reply.sender_chat:
-        text += f"ɪᴅ ᴏғ ᴛʜᴇ ʀᴇᴘʟɪᴇᴅ ᴄʜᴀᴛ/ᴄʜᴀɴɴᴇʟ, ɪs `{reply.sender_chat.id}`"
+        text += f"ID of the replied chat/channel is `{reply.sender_chat.id}`"
 
     await message.reply_text(
         text,
@@ -99,36 +103,35 @@ async def user_profile(client: Client, message: Message):
     
     uptime = get_readable_time(time.time() - _boot_)
     is_owner = (user.id == int(OWNER_ID))
-    role = "👑 ᴏᴡɴᴇʀ / ʙᴏss" if is_owner else "💎 ᴠɪᴘ ᴍᴇᴍʙᴇʀ"
+    role = "👑 Owner / Boss" if is_owner else "💎 VIP Member"
     
     nickname = await get_user_nickname(user.id)
-    nick_str = f"│ ✦ **ɴɪᴄᴋɴᴀᴍᴇ :** `{nickname}`\n" if nickname else ""
+    nick_str = f"• **Nickname:** `{nickname}`\n" if nickname else ""
     
     text = f"""**
-╭━━━━━〔 👑 ᴜsᴇʀ ᴠɪᴘ ᴘʀᴏғɪʟᴇ 👑 〕━━━━━╮
+👑 User VIP Profile 👑
+────────────────────────────
+🌸 **Hello {user.mention}!**
+Here is your official VIP profile card.
 
-  🌸 **ʜᴇʟʟᴏ {user.mention}!**
-  ʜᴇʀᴇ ɪs ʏᴏᴜʀ ᴏғғɪᴄɪᴀʟ ᴠɪᴘ ᴘʀᴏғɪʟᴇ ᴄᴀʀᴅ.
-
-╭────────────────────────────────╮
-│ ✦ **ɴᴀᴍᴇ :** {user.first_name}
-│ ✦ **ᴜsᴇʀ ɪᴅ :** `{user.id}`
-│ ✦ **ᴜsᴇʀɴᴀᴍᴇ :** @{user.username if user.username else 'None'}
-{nick_str}│ ✦ **sᴛᴀᴛᴜs :** {role}
-│ ✦ **ᴅᴄ ɪᴅ :** `{user.dc_id or 'Unknown'}`
-│ ✦ **ʙᴏᴛ ᴜᴘᴛɪᴍᴇ :** `{uptime}`
-╰────────────────────────────────╯
-
-📡 **ᴘᴏᴡᴇʀᴇᴅ ʙʏ :** [ᴀᴍʀɪᴛ ғᴇᴇʟ](https://t.me/{SUPPORT_GRP}) 💞**
+────────────────────────────
+• **Name:** {user.first_name}
+• **User ID:** `{user.id}`
+• **Username:** @{user.username if user.username else 'None'}
+{nick_str}• **Status:** {role}
+• **DC ID:** `{user.dc_id or 'Unknown'}`
+• **Bot Uptime:** `{uptime}`
+────────────────────────────
+📡 **Powered by:** [Amrit Feel](https://t.me/{SUPPORT_GRP}) 💞**
 """
     btn = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("📷 ɪɴsᴛᴀɢʀᴀᴍ", url="https://instagram.com/ex_amrit"),
-            InlineKeyboardButton("👻 sɴᴀᴘᴄʜᴀᴛ", url="https://snapchat.com/add/ex_amrit"),
+            InlineKeyboardButton("📷 Instagram", url="https://instagram.com/ex_amrit"),
+            InlineKeyboardButton("👻 Snapchat", url="https://snapchat.com/add/ex_amrit"),
         ],
         [
-            InlineKeyboardButton("👑 ᴄʀᴇᴀᴛᴏʀ", url="https://t.me/Villanns"),
-            InlineKeyboardButton("⦿ ᴄʟᴏsᴇ ⦿", callback_data="CLOSE"),
+            InlineKeyboardButton("👑 Creator", url="https://t.me/Villanns"),
+            InlineKeyboardButton("⦿ Close ⦿", callback_data="CLOSE"),
         ]
     ])
     await message.reply_text(text, reply_markup=btn, disable_web_page_preview=True)
