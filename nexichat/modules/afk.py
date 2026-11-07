@@ -15,7 +15,7 @@ Is file ka kya kaam hai?
 Features:
   1. /afk <reason> se user apna AFK status set kar sakta hai.
   2. Jab bhi koi doosra user AFK person ko tag ya reply karta hai, toh bot
-     Priya sweet tone me unko bata deti hai ki wo AFK hain.
+     Anshika sweet tone me unko bata deti hai ki wo AFK hain.
   3. Jab AFK user wapas aakar koi bhi message bhejta hai, toh bot automatically
      unka AFK remove karti hai aur sweet welcome back karti hai!
 ================================================================================
@@ -71,7 +71,7 @@ async def afk_command(client: Client, message: Message):
         f"  ✦ **ᴜsᴇʀ :** {user.mention}\n"
         f"  ✦ **sᴛᴀᴛᴜs :** Away From Keyboard (AFK)\n"
         f"  ✦ **ʀᴇᴀsᴏɴ :** `{reason}`\n\n"
-        f"  🌸 *Priya: Jaldi aana ji, hum sab aapko bohot miss karenge!* ✨\n\n"
+        f"  🌸 *Anshika: Jaldi aana ji, hum sab aapko bohot miss karenge!* ✨\n\n"
         f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
     )
     await message.reply_text(text)
@@ -104,7 +104,7 @@ async def afk_listener(client: Client, message: Message):
             f"╭━━━━━━━〔 🌸 **WELCOME BACK!** 〕━━━━━━━╮\n\n"
             f"  ✦ **ᴜsᴇʀ :** {user.mention} is now back online! 🥰\n"
             f"  ✦ **ᴀғᴋ ᴅᴜʀᴀᴛɪᴏɴ :** `{duration_str}`\n\n"
-            f"  🌸 *Priya: Aap wapas aa gaye, sach mein bohot khushi hui ji!* 💖✨\n\n"
+            f"  🌸 *Anshika: Aap wapas aa gaye, sach mein bohot khushi hui ji!* 💖✨\n\n"
             f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
         )
         await message.reply_text(text)
@@ -127,7 +127,7 @@ async def afk_listener(client: Client, message: Message):
                         f"  ✦ **ᴜsᴇʀ :** {replied_user.mention} is currently AFK!\n"
                         f"  ✦ **ʀᴇᴀsᴏɴ :** `{reason_str}`\n"
                         f"  ✦ **sɪɴᴄᴇ :** `{dur_str} ago`\n\n"
-                        f"  🌸 *Priya: Unko thoda time do na ji, aate hi reply karenge!* 🌸\n\n"
+                        f"  🌸 *Anshika: Unko thoda time do na ji, aate hi reply karenge!* 🌸\n\n"
                         f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
                     )
                     await message.reply_text(text)
@@ -152,7 +152,7 @@ async def afk_listener(client: Client, message: Message):
                             f"  ✦ **ᴜsᴇʀ :** {target_user.mention} is currently AFK!\n"
                             f"  ✦ **ʀᴇᴀsᴏɴ :** `{reason_str}`\n"
                             f"  ✦ **sɪɴᴄᴇ :** `{dur_str} ago`\n\n"
-                            f"  🌸 *Priya: Jaise hi aayenge, main unhe bata dungi ji!* 🌸\n\n"
+                            f"  🌸 *Anshika: Jaise hi aayenge, main unhe bata dungi ji!* 🌸\n\n"
                             f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
                         )
                         await message.reply_text(text)

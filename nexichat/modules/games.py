@@ -199,7 +199,7 @@ async def interactive_dice_match(client: Client, message: Message):
             await asyncio.sleep(2.0)
             user_val = user_dice_msg.dice.value if user_dice_msg.dice else random.randint(1, 6)
         
-        # Now Priya (bot) rolls her own dice to compete with user!
+        # Now Anshika (bot) rolls her own dice to compete with user!
         await asyncio.sleep(0.8)
         status = await message.reply_text(f"🌸 **Meri baari! Dekhte hain mera kya aata hai...** {emoji}✨")
         await asyncio.sleep(1.0)
@@ -364,7 +364,7 @@ async def propose_command(client: Client, message: Message):
         f"  ✦ **ғʀᴏᴍ :** {proposer.mention}\n"
         f"  ✦ **ᴛᴏ :** {target.mention}\n\n"
         f"  💬 *\"{proposer.first_name} says: {chosen_line}\"*\n\n"
-        f"  🌸 *Priya: Awww kitna romantic moment hai! {target.first_name}, jaldi reply do na!* 🥰\n\n"
+        f"  🌸 *Anshika: Awww kitna romantic moment hai! {target.first_name}, jaldi reply do na!* 🥰\n\n"
         f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
     )
     await message.reply_text(text, reply_markup=buttons)
@@ -396,7 +396,7 @@ async def propose_callback_handler(client: Client, query: CallbackQuery):
             f"    {proposer_mention} 💕 💍 💕 {target_mention}\n\n"
             f"  🎉 **SHE/HE SAID YES!** 🥳\n"
             f"  {target_mention} ne {proposer_mention} ka proposal ACCEPT kar liya hai!\n\n"
-            f"  🌸 *Priya: Mubarak ho dono ko! Ekdum Rab ne bana di jodi! Dher saara pyaar aur duayein!* 🌹✨\n\n"
+            f"  🌸 *Anshika: Mubarak ho dono ko! Ekdum Rab ne bana di jodi! Dher saara pyaar aur duayein!* 🌹✨\n\n"
             f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
         )
         await query.message.edit_text(text)
@@ -405,7 +405,7 @@ async def propose_callback_handler(client: Client, query: CallbackQuery):
             f"╭━━━━━━━〔 💔 **PROPOSAL REJECTED** 〕━━━━━━━╮\n\n"
             f"  ✦ **ᴜɴғᴏʀᴛᴜɴᴀᴛᴇʟʏ :**\n"
             f"    {target_mention} ne {proposer_mention} ka proposal REJECT kar diya... 🥺\n\n"
-            f"  🥀 *Priya: Ouch! Dil ke armaan aansuon me beh gaye... Koi baat nahi {proposer_mention}, aap bohot achhe ho! Himmat rakho!* 🌸\n\n"
+            f"  🥀 *Anshika: Ouch! Dil ke armaan aansuon me beh gaye... Koi baat nahi {proposer_mention}, aap bohot achhe ho! Himmat rakho!* 🌸\n\n"
             f"╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
         )
         await query.message.edit_text(text)

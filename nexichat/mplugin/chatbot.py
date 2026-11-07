@@ -275,7 +275,7 @@ async def love_command(client: Client, message: Message):
     if len(message.command) < 3:
         return await message.reply_text(
             "❤️ **Usage:** `/love <Name1> <Name2>`\n\n"
-            "**Example:** `/love Rahul Priya`"
+            "**Example:** `/love Rahul Anshika`"
         )
 
     name1 = message.command[1]
@@ -438,7 +438,7 @@ async def auto_chatbot_listener(client: Client, message: Message):
             _message_counts.pop(user_id, None)
             await message.reply_text(
                 f"⚠️ Arey {message.from_user.mention}! Thoda sa aaram se na please! 🙈\n"
-                "Priya thak jayegi! 10-15 second ruk ke baat karo na! 🌸✨"
+                "Anshika thak jayegi! 10-15 second ruk ke baat karo na! 🌸✨"
             )
             return
 

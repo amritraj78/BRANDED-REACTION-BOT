@@ -143,7 +143,7 @@ async def send_to_telegram_db(client: Optional[Client], text: str, sticker_file_
 def _get_bot_source_label(client: Optional[Client]) -> str:
     """Format bot source label for database records."""
     if not client:
-        return "Priya AI (Central DB)"
+        return "Anshika (Central DB)"
     bot_user = getattr(client, "me", None)
     if bot_user:
         uname = bot_user.username

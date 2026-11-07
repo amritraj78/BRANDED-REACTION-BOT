@@ -288,7 +288,7 @@ async def love_command(client: Client, message: Message):
     if len(message.command) < 3:
         return await message.reply_text(
             "❤️ **Usage:** `/love <Name1> <Name2>`\n\n"
-            "**Example:** `/love Rahul Priya`"
+            "**Example:** `/love Rahul Anshika`"
         )
 
     name1 = message.command[1]

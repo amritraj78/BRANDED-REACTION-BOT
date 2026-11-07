@@ -85,6 +85,19 @@ async def set_voicemode_enabled(chat_id: int, enabled: bool):
     )
 
 
+def is_toxic_or_canned_reply(text: str) -> bool:
+    """Check if the text is robotic, search engine dump, or mentions Priya / AI assistant."""
+    if not text:
+        return True
+    lower = text.lower()
+    toxic_markers = [
+        "priya", "amrit", "safone", "as an ai", "i am an ai", "i'm an ai",
+        "language model", "created by amrit", "maine is baare me search kiya",
+        "maine is baare me pata lagaya", "abstracttext", "wikipedia", "convert currencies"
+    ]
+    return any(marker in lower for marker in toxic_markers)
+
+
 async def load_replies_cache():
     """Load all learned replies, Q&A memory, and stickers into cache."""
     global _replies_cache, _qa_cache, _stickers_cache, _cache_loaded
@@ -97,7 +110,9 @@ async def load_replies_cache():
         qa_list = await qa_cursor.to_list(length=None)
         for doc in qa_list:
             if "q" in doc and "a" in doc:
-                _qa_cache[doc["q"]] = doc["a"]
+                ans = doc["a"]
+                if not is_toxic_or_canned_reply(ans):
+                    _qa_cache[doc["q"]] = ans
 
         # Load learned stickers
         stk_cursor = stickers_db.find()
@@ -176,6 +191,10 @@ async def save_qa_pair(question: str, answer: str, client: Optional[Any] = None)
     if not question or not answer:
         return
 
+    # Never save toxic, robotic, or Priya/Amrit canned replies into cache
+    if is_toxic_or_canned_reply(answer):
+        return
+
     q_key = question.strip().lower()
     _qa_cache[q_key] = answer
 
@@ -231,17 +250,22 @@ async def get_qa_answer(question: str) -> Optional[str]:
 
     # 1. Exact match in memory
     if q_norm in _qa_cache:
-        return _qa_cache[q_norm]
+        ans = _qa_cache[q_norm]
+        if not is_toxic_or_canned_reply(ans):
+            return ans
     if question.strip().lower() in _qa_cache:
-        return _qa_cache[question.strip().lower()]
+        ans = _qa_cache[question.strip().lower()]
+        if not is_toxic_or_canned_reply(ans):
+            return ans
 
     # 2. Token overlap similarity match (Jaccard similarity >= 0.70)
     q_words = set(q_norm.split())
     if len(q_words) >= 2:
         for saved_q, saved_a in _qa_cache.items():
-            sim = _jaccard_token_similarity(question, saved_q)
-            if sim >= 0.70:
-                return saved_a
+            if not is_toxic_or_canned_reply(saved_a):
+                sim = _jaccard_token_similarity(question, saved_q)
+                if sim >= 0.70:
+                    return saved_a
 
     return None
 
@@ -382,7 +406,7 @@ def append_user_context(user_id: int, role: str, text: str):
 
     _conversation_context[user_id].append({"role": role, "text": text.strip(), "time": now})
 
-    # Keep at most 6 recent turns (3 user + 3 Priya) to protect RAM
+    # Keep at most 6 recent turns (3 user + 3 Anshika) to protect RAM
     if len(_conversation_context[user_id]) > 6:
         _conversation_context[user_id] = _conversation_context[user_id][-6:]
 

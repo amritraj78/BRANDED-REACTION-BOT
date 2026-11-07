@@ -54,7 +54,7 @@ async def is_admin_or_sudo(client: Client, message: Message) -> bool:
 
 @Client.on_message(filters.command(["tagall", "mention", "all"]))
 async def tagall_command(client: Client, message: Message):
-    """Mention all group members in safe batches of 5 with Priya emojis."""
+    """Mention all group members in safe batches of 5 with Anshika emojis."""
     if message.chat.type not in [ChatType.GROUP, ChatType.SUPERGROUP]:
         return await message.reply_text("❌ **Ye command sirf groups mein kaam karta hai ji!** 🌸")
 
@@ -84,7 +84,7 @@ async def tagall_command(client: Client, message: Message):
                 if len(batch) >= 5:
                     lines = [f"{emojis[i % len(emojis)]} {u.mention}" for i, u in enumerate(batch)]
                     tag_text = (
-                        f"╭━━━━━━━〔 📢 **PRIYA ANNOUNCEMENT** 〕━━━━━━━╮\n\n"
+                        f"╭━━━━━━━〔 📢 **ANSHIKA ANNOUNCEMENT** 〕━━━━━━━╮\n\n"
                         f"  💬 **ᴍᴇssᴀɢᴇ :** {custom_text}\n\n"
                         + "\n".join(lines) +
                         f"\n\n╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
@@ -104,7 +104,7 @@ async def tagall_command(client: Client, message: Message):
         if batch and ACTIVE_TAGALL.get(chat_id):
             lines = [f"{emojis[i % len(emojis)]} {u.mention}" for i, u in enumerate(batch)]
             tag_text = (
-                f"╭━━━━━━━〔 📢 **PRIYA ANNOUNCEMENT** 〕━━━━━━━╮\n\n"
+                f"╭━━━━━━━〔 📢 **ANSHIKA ANNOUNCEMENT** 〕━━━━━━━╮\n\n"
                 f"  💬 **ᴍᴇssᴀɢᴇ :** {custom_text}\n\n"
                 + "\n".join(lines) +
                 f"\n\n╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"

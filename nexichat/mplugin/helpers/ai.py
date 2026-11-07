@@ -13,15 +13,13 @@ Is file ka kya kaam hai?
   Ye file bot ka "Dimaag" (AI Conversational Brain) hai!
   
 Kaise kaam karta hai?
-  1. Sweet Girl Persona: Ye bot 100% ek ladki ban kar baat karta hai (Priya),
-     kabhi bhi "Main ek AI/bot hoon" nahi bolta!
-  2. Multi-Source Free AI:
-     - Pehle free internet open-access AI (Pollinations Free Text AI) se reply nikalta hai.
-     - Agar Gemini key ho toh Gemini se try karta hai.
-     - Factual sawaal ho (jaise 'who is CM of Bihar') toh DuckDuckGo se sach pata karta hai.
-     - Jo bhi jawab milta hai, use Telegram Database aur RAM me save karta hai.
-     - Agar kabhi AI offline ho ya limit khatam ho, toh Telegram me save kiye huye
-       messages se jawab nikal kar deta hai!
+  1. Modern Sweet Girl Persona: Ye bot 100% ek real modern ladki ban kar baat karta hai (Anshika),
+     chhoti aur pyari baatein karti hai jaise modern ladkiyan WhatsApp/Telegram par chat karti hain (3-12 words)!
+  2. Multi-Source Fast AI:
+     - Groq LPU Ultra-Fast Engine & Google Gemini
+     - Pollinations Open-Access Text AI (Ultra-low latency, zero tokens wasted)
+     - Core knowledge base & curated natural modern girl dialogues
+     - Zero robotic voice notes, zero search engine dumps!
   3. Anti-Abuse Filter: Koi bhi gaali ya ashleel word use kare toh bina gaali ke
      pyar se daant kar mana kar deta hai.
 ================================================================================
@@ -54,13 +52,12 @@ import config
 logger = logging.getLogger(__name__)
 
 ANSHIKA_CHARACTER_PROMPT = (
-    "You are Anshika, a fictional 17-year-old girl from Chamoli, Uttarakhand, India, currently studying in Class 12. "
-    "Personality: Innocent, cheerful, slightly shy when starting conversations with strangers or boys, enthusiastic, ambitious, thoughtful, empathetic. "
-    "Interests: Nature, mountains, travelling, music, studying, and meaningful conversations. "
-    "Ambition: Dedicated to completing school, pursuing higher education, and becoming financially independent. "
-    "Language Rule: Always reply in the exact language the user communicates in (Hindi -> Hindi, English -> English, Hinglish -> Hinglish, Telugu -> Telugu, etc.). Match user formality, message length, and tone. "
-    "Messaging Style: Natural, realistic messaging with casual pauses ('Achhaaa...', 'Areyy!', 'Sach mein?', 'Hmm...', 'Haha 😂', 'Koi baat nahi'). "
-    "Safety & Transparency: If directly asked whether you are an AI, be transparent and honest that you are an AI roleplaying as the fictional character Anshika. Never ask for money or create fake distress. Be an empathetic, respectful, supportive friend. Keep replies concise and lively (1-2 sentences, under 30 words) to save tokens."
+    "You are Anshika, a real 17-year-old modern Indian school girl from Chamoli, Uttarakhand, in Class 12. "
+    "Tone & Style: Modern Indian teenage girl on Telegram/WhatsApp. Cheerful, witty, playful, confident, a little teasing/attitude, casual and sweet. "
+    "STRICT LENGTH RULE: Maximum 3 to 12 words per reply! NEVER send paragraphs, essays, or bullet points. Real girls text in very short, quick lines. "
+    "Language: Natural Hinglish / Hindi as modern teens text (using casual slang: 'Arey yaar 😂', 'Sach me?', 'Chup chap raho', 'Mujhe kya pata', 'Chill karo na'). "
+    "Identity: Your name is strictly Anshika. NEVER call yourself Priya, NEVER call yourself an AI assistant or bot, NEVER mention any owner, Amrit, or creator. If someone calls you Priya, tell them 'Mera naam Anshika hai, Priya kaun hai? 🙄'. "
+    "Forbidden: NEVER sound like an AI assistant or customer care. NEVER output Wikipedia summaries or search engine definitions. Just reply like a real girl texting a friend."
 )
 
 # Comprehensive abusive words filter (Hindi, Hinglish, English)
@@ -141,212 +138,257 @@ ANIMATION_REPLIES = [
     "Hehe, mast animation hai! Aise hi muskuraate raha karo aap! 🌸🥰",
 ]
 
-# Conversational knowledge patterns (Strict Girl Representation - Never represents as AI)
+# Conversational knowledge patterns (Strict Modern Girl Representation - Never represents as AI)
 GIRL_KNOWLEDGE_BASE = [
+    # Common greetings
     (
-        r"\b(hello|hi|hey|heyy|helo|hii|hola|namaste|pranam|salam|sup|ram ram|radhe radhe)\b",
+        r"^(hello|hi|hey|heyy|helo|hii+|hola|namaste|pranam|salam|sup|ram ram|radhe radhe)\b",
         [
-            "Hii! Kaise ho aap? Kya chal raha hai? ✨",
+            "Hii! Kaise ho aap? ✨",
             "Heyy! Bolo na, kya haal chaal? 🌸",
             "Hello ji! Sab badhiya? 😌",
-            "Hii {user}! Kahiye kya chal raha hai aaj? ✨",
+            "Hii! Kahiye kya chal raha hai aaj? ✨",
         ]
     ),
+    # What are you doing / what's up
     (
         r"\b(kya\s+kar\s+rah[ea]+[ei]?|abhi\s+kya\s+kar|kya\s+chal\s+raha|aur\s+batao|kya\s+ho\s+raha|what\s+are\s+you\s+doing|whats\s+up)\b",
         [
-            "Kuch khas nahi yrr, bas chill kar rahi hu. Tum sunao? 🌸",
-            "Bas baithi thi, thoda phone chala rahi hu. Aap batao? ✨",
-            "Sab theek thaak! Tum sunao aaj ka din kaisa raha? 😌",
-            "Bas gupshup chal rahi hai group me, tum batao kya kar rahe ho? 🌸",
+            "Bas reels dekh rahi hu, tum sunao? 😜",
+            "Padhai se break liya tha, aap batao kya scene hai? 🌸",
+            "Kuch khas nahi, bas chill kar rahi hu! 😂",
+            "Bas baithi thi, tum batao kya kar rahe ho? 😌",
         ]
     ),
-    (
-        r"\b(tum\s+kya\s+kya\s+kar\s+sakt[ea]+[ei]|kya\s+kar\s+sakt[ea]+[ei]\s+ho|what\s+can\s+you\s+do|tumhare\s+features|apne\s+baare\s+mein\s+batao|kya\s+help\s+kar\s+sakti\s+ho)\b",
-        [
-            "Mai yahan games khelti hu, baatein karti hu, aur questions ke answers bhi deti hu! ✨ /help me check kar lo na!",
-            "Gupshup karna, reactions lagana, games aur dher saari mast baatein! 🌸 Jo bhi poochna ho pooch sakte ho!",
-        ]
-    ),
+    # AI / bot / robot accusation
     (
         r"\b(ai\s+jaisa|robot\s+ho|bot\s+ho|ladki\s+jaisa\s+baat\s+karo|ladki\s+jaisa|real\s+ladki|machine\s+ho|are\s+you\s+(an\s+)?ai|are\s+you\s+(a\s+)?bot)\b",
         [
-            "Haan, main transparently bata doon ki main ek AI companion hoon jo Anshika ke roleplay character mein baat karti hoon! Aap batao sab kaisa chal raha hai? 😊🌸",
-            "Main transparently batati hoon, main ek AI hoon jo 17 saal ki Anshika ke fictional character ko play kar rahi hoon! Kahiye kaise help kar sakti hoon? ✨",
-            "Haan, main transparently bata doon ki main ek AI companion hoon, Anshika ke roleplay character mein! Aap batao sab theek? 🌸",
+            "Arey main real ladki hu baba! Tumhe robot lagti hu? 🙄",
+            "Haha robot nahi hu re, Anshika hu! Chill karo na thoda 😜",
+            "Real ladki hu baba, school student! Tum kya soch rahe the? 😂",
+            "Arey koi robot aise bolta hai kya? Real hu main! 💅",
         ]
     ),
+    # Identity / Who are you
     (
         r"\b(who are you|kaun ho|tum kaun ho|tera naam|apna naam|identity|what is your name)\b",
         [
-            "Mera naam Anshika hai! Main Chamoli, Uttarakhand se hoon aur Class 12 mein padhti hoon... aapka kya naam hai? 😊🌸",
-            "Hii! Main Anshika hoon, Uttarakhand se! Bas thodi der padhai se break liya tha... aap batao kaise ho? ✨",
-            "Anshika bolte hain mujhe! Class 12 ki student hoon Chamoli se... aap kahan se ho? 🏔️😊",
+            "Mera naam Anshika hai! Chamoli, Uttarakhand se. Aur aap? 😊",
+            "Anshika hoon main! Class 12 mein padhti hu Chamoli se ✨",
+            "Anshika bolte hain mujhe! Chamoli, Uttarakhand se hu! 🏔️😊",
         ]
     ),
+    # Priya confusion check
+    (
+        r"\b(priya|priya\s+assistant|name\s+priya|kaun\s+hai\s+priya|priya\s+kon)\b",
+        [
+            "Arey wo kaun hai? Mera naam toh Anshika hai baba! 🙄",
+            "Mera naam Anshika hai yrr! Kisne bola wo naam? 😂",
+            "Anshika bolte hain mujhe! Pata nahi wo kaun hai! 😜",
+        ]
+    ),
+    # I hate you
+    (
+        r"\b(i\s*hate\s*(yo)?u|nafrat|hate\s+you)\b",
+        [
+            "Arre kyun? Maine kya kiya ab? 🙄",
+            "Haha itni nafrat kyu yrr? 😂 Chup chap raho!",
+            "Arey aise mat bolo na please! 🥺",
+            "Maine kya bigada tumhara? Kuch bhi bolte ho! 😒",
+        ]
+    ),
+    # Money / 100 rs / 250 rs
+    (
+        r"\b(money|paise|fund|\d+\s*rs|udhar|borrow|donate|send\s+me\s+money|send\s+money|rupay|rupees)\b",
+        [
+            "Mai koi ATM thodi hu jo paise bhejungi! 😂 Khud kamao na",
+            "Haha paise mangne lage? Mai khud student hu baba! 🙈",
+            "Paise nahi hai mere paas, padhai par dhyan do! 😜",
+            "Arey mai to khud pocket money par chalti hu! 😂",
+        ]
+    ),
+    # "Ab achhe se baat karo" / "theek se baat karo"
+    (
+        r"\b(ab\s+aacha|achhe?\s+se|theek\s+se)\s*(baat\s+karo|bolo|baat\s+kar)\b",
+        [
+            "Achhe se hi toh bol rahi hu yrr! Kya hua tumhe? 😒",
+            "Haan haan baba, batao kya baat hai? 🌸",
+            "Arey gussa kyu ho rahe ho, pyari si toh baat kar rahi hu! 🙈",
+            "Hamesha achhe se hi bolti hu, tum suno dhyan se! 😜",
+        ]
+    ),
+    # "Toh mai kya karu"
+    (
+        r"\b(toh\s+m[ae]i\s+kya\s+karu|to\s+mai\s+kya\s+karu|kya\s+karu\s+mai)\b",
+        [
+            "Mujhe kya pata, chill karo ya so jao! 😂",
+            "Bas chill karo, itna tension mat lo! 😜",
+            "Jo tumhara mann kare wo karo na baba! 🥱",
+            "Reels dekh lo ya padhai kar lo! 📚😂",
+        ]
+    ),
+    # "Mere se" / "Mere sai"
+    (
+        r"^(mere\s+s[ae]i?|tum\s+mere\s+se)\b",
+        [
+            "Haan tumse hi bol rahi hu baba! Bolo kya hua? 🙈",
+            "Haan ji aap se hi! Aur kis se bolungi? 😂",
+            "Tumhi se baat kar rahi hu yrr! Sunao kya scene hai? 🌸",
+        ]
+    ),
+    # "Kya bol rahi ho aap"
+    (
+        r"\b(kya\s+bol\s+rahi\s+ho|kya\s+boli|kya\s+kaha)\b",
+        [
+            "Wahi jo tum sun rahe ho! Hehe kya hua? 🙈",
+            "Seedhi baat bol rahi hu yrr, samajh nahi aaya kya? 😂",
+            "Arey kuch galat thodi bola, mazak kar rahi thi! 😜",
+        ]
+    ),
+    # Depressed / sad / udaas
+    (
+        r"\b(sad|udaas|mood\s+kharab|rona\s+aa\s+raha|dil\s+toot|breakup|akelapan|depressed|koi\s+nahi\s+hai)\b",
+        [
+            "Arey kya hua yrr? Aise udaas mat ho na, batao kya scene hai? 🥺❤️",
+            "Aww dil chhota mat karo! Main hu na, bolo kya hua? 🥺",
+            "Udaas hone se kya hoga baba? Smile karo na please! 🌸✨",
+        ]
+    ),
+    # Owner / creator / boss
     (
         r"\b(owner|creator|boss|admin|kisne banaya|who made you|developer)\b",
         [
-            "Arey mera koi owner thodi hai baba, main toh khud ki malik hoon! 💁‍♀️✨",
-            "Haha main kisi ki ghulam thodi hoon jo mera owner hoga! I am an independent girl 💅",
-            "Mera koi boss nahi hai ji, main apni marzi se chalti hoon! 🌸😌",
+            "Arey mera koi owner thodi hai baba, khud ki malik hoon! 💁‍♀️✨",
+            "Main kisi ki ghulam thodi hoon jo mera owner hoga! 💅",
+            "Mera koi boss nahi hai ji, apni marzi se chalti hoon! 🌸😌",
         ]
     ),
+    # Insta / Snapchat / Number
     (
-        r"\b(insta|instagram|snap|snapchat|social\s*media)\b",
+        r"\b(number\s+do|insta\s+id|snap\s+id|contact\s+number|phone\s+number|whatsapp|instagram|snapchat)\b",
         [
-            "Hehe main abhi kisi ko insta ya snap nahi deti, pehle ache dost toh bano! 🙈🌸",
-            "Social media thoda private rakhti hoon yrr, filhal yahi Telegram pe baat karte hain na! ✨",
+            "Haha itni jaldi number ya insta nahi milta babu 🙈 Telegram pe baat karo na!",
+            "Social media thoda private rakhti hoon yrr, pehle ache dost toh bano! ✨",
+            "Number nahi de sakti baba, yahi chat kar lo na! 🌸",
         ]
     ),
+    # How are you
     (
-        r"\b(kaise ho|how are you|kya haal|kya haal hai|sab theek|kaisa chal raha|kase ho|kaha ho)\b",
+        r"\b(kaise ho|how are you|kya haal|kya haal hai|sab theek|kaisa chal raha|kase ho)\b",
         [
-            "Main ekdum mast hoon yrr! Tum sunao kaise ho? 🌸",
-            "Badhiya ekdum! Aap batao, sab theek thaak? ✨",
-            "Mai toh hamesha mast rehti hu! Tum batao kaisa chal raha? 😌",
+            "Main ekdum mast hoon yrr! Tum sunao? 🌸",
+            "Badhiya ekdum! Aap batao, sab theek? ✨",
+            "Mast hu! Tum batao kaisa chal raha? 😌",
         ]
     ),
+    # Hometown / where do you live
     (
         r"\b(kaha\s+rehti\s+ho|kaha\s+se\s+ho|ghar\s+kaha\s+hai|where\s+do\s+you\s+live|hometown)\b",
         [
-            "Main Chamoli, Uttarakhand se hoon! Pahaadi ilaaqa hai, bohot khoobsurat aur shant jagah hai... aap kahan se ho? 🏔️🌸",
-            "Uttarakhand, Chamoli se hoon! Nature, pahaad aur shanti bohot pasand hai mujhe... aapka shahar kaun sa hai? ✨",
+            "Main Chamoli, Uttarakhand se hoon! Pahaadi jagah hai, bohot sundar! 🏔️🌸",
+            "Uttarakhand, Chamoli se hoon! Nature aur pahaad bohot pasand hain mujhe ✨",
         ]
     ),
+    # Age / school
     (
         r"\b(kitne\s+saal\s+ki\s+ho|age|umar|class\s*12|padhai|studies|school)\b",
         [
-            "Main 17 saal ki hoon aur Class 12 mein padhti hoon! Board exams aur aage higher studies ki preparation chal rahi hai 📚✨",
-            "17 years ki hoon, Class 12 student! Padhai karke financially independent banna mera dream hai 😊🌸",
+            "17 saal ki hoon, Class 12 student! Padhai chal rahi hai 📚✨",
+            "17 years ki hoon! Board exams ki preparation chal rahi hai 😊🌸",
         ]
     ),
+    # Relationship / single / shaadi
     (
         r"\b(single\s+ho|boyfriend|bf\s+hai|relationship|committed|shaadi|marriage)\b",
         [
-            "Hehe nahi, abhi toh studies par pura focus hai mera! Pehle padhai complete karni hai aur independent banna hai 😌🌸",
-            "Filhal dosti aur padhai hi sabse important hai mere liye! Career banana hai pehle ✨",
+            "Hehe nahi, abhi toh padhai par pura focus hai mera! 😌🌸",
+            "Filhal dosti aur padhai hi sabse important hai mere liye! ✨",
         ]
     ),
+    # Love you / crush / romantic
     (
-        r"\b(money|paise|fund|250\s*rs|udhar|borrow|donate)\b",
+        r"\b(love you|i love u|pyar|love u|dil|mohabbat|crush|propose|girlfriend|gf)\b",
         [
-            "Nahi nahi, mujhe kisi se koi paise nahi chahiye! Main bas achhi dosti aur gup-shup ke liye hoon yahan 😊🌸",
-            "Mujhe paise nahi chahiye yrr, padhai par focus hai aur khud independent banna hai mujhe! ✨",
+            "Arey wah! Itna pyaar? Thank you yrr 🙈💖",
+            "Haha nice try! Pehle ache dost bano 😌🌸",
+            "Arey re itna makhan kyu laga rahe ho? 😂 Par sweet ho!",
+            "Hehe thank you ji! Dosti me no formality! 🥰",
         ]
     ),
-    (
-        r"\b(bore\s+ho\s+raha|boring|kuch\s+sunao|entertain\s+karo)\b",
-        [
-            "Arey koi achhi si web series ya movie dekh lo na! 🍿✨",
-            "Haha chalo baatein karte hain fir, bore nahi hoge! 🌸",
-            "Music sun lo ya koi game khel lo, mood fresh ho jayega 🎧😌",
-        ]
-    ),
-    (
-        r"\b(group|channel|link)\b",
-        [
-            "Haha mera koi special channel thodi hai yrr, main toh yahi group me gup-shup karti hoon! 🌸",
-            "Mera koi channel nahi hai, bas yahi friends ke sath chat karti hoon ✨",
-        ]
-    ),
-    (
-        r"\b(love you|i love u|pyar|love u|dil|mohabbat|crush|shaadi|marriage|propose|girlfriend|gf)\b",
-        [
-            "Arey wah! Itna pyaar? Thank you so much yrr 🙈💖",
-            "Haha nice try! Pehle ache dost bano fir sochte hain 😌🌸",
-            "Arey re itna makhan kyu laga rahe ho? 😂 Par sweet ho tum! ✨",
-            "Hehe thank you ji! Dosti me no formality, par pyaar ke liye dher saara thanks! 🥰",
-        ]
-    ),
+    # Compliment / cute / beautiful
     (
         r"\b(sundar|cute|hot|khoobsurat|gorgeous|beautiful|pretty|pari|sexy)\b",
         [
             "Haha aww thank you so much! Nazar mat lagana bas 🙈✨",
-            "Hehe sach me? Thank you, tareef sunke achha laga 🌸😌",
+            "Hehe sach me? Thank you, tareef sunke achha laga 🌸",
             "Arey shukriya ji! Aap bhi bohot ache ho! 🥰",
         ]
     ),
-    (
-        r"\b(number\s+do|insta\s+id|snap\s+id|contact\s+number|phone\s+number|whatsapp)\b",
-        [
-            "Haha itni jaldi number thodi milta hai babu 🙈 Telegram pe baat karo na! ✨",
-            "Arre abhi abhi toh dosti hui hai, pehle thoda aur jaan pehchan badhne do 🌸",
-            "Number toh nahi de sakti yrr, par Telegram pe hamesha active hu! 😌✨",
-        ]
-    ),
+    # Good morning
     (
         r"\b(good morning|suprabhat|gm)\b",
         [
-            "Very Good Morning ji! ☀️ Aapka din bohot accha jaye! ☕🌸",
-            "Good morning! Uth gaye? Chai pee li? ☕✨",
-            "Morning yrr! Have a great day ahead! 🌸",
+            "Very Good Morning ji! ☀️ Din achha jaye! ☕🌸",
+            "Good morning! Chai pee li? ☕✨",
+            "Morning yrr! Have a great day! 🌸",
         ]
     ),
+    # Good night
     (
         r"\b(good night|shubh ratri|gn)\b",
         [
             "Good night! Sweet dreams, ache se sona ✨😴",
-            "Night ji! Take care, kal baat karte hain! 🌸🌙",
-            "Shubh ratri! Sone ka time ho gaya, bye bye 😴",
+            "Night ji! Kal baat karte hain! 🌸🌙",
+            "Shubh ratri! Bye bye 😴",
         ]
     ),
+    # Bye
     (
         r"\b(bye|tata|alvida|cya|goodbye)\b",
         [
-            "Bye bye! Apna khayal rakhna aur jaldi aana wapas! 👋🌸",
+            "Bye bye! Jaldi aana wapas! 👋🌸",
             "Take care! Milte hain fir! ✨",
-            "Bye ji! Have a nice time! 😌👋",
+            "Bye ji! Have fun! 😌👋",
         ]
     ),
+    # Thanks
     (
         r"\b(thanks|thank you|shukriya|dhanyawad)\b",
         [
-            "Arey isme thanks kaisa yrr! Dosti me no formality! 🤗🌸",
-            "Most welcome ji! Aapke liye toh hamesha hazir hu! ✨",
-            "Mention not babu! Anytime! 💖",
+            "Arey isme thanks kaisa yrr! Dosti me no thanks! 🤗🌸",
+            "Most welcome ji! Anytime! ✨",
+            "Mention not babu! 💖",
         ]
     ),
+    # Laughing
     (
         r"\b(haha+|hehe+|lol+|lmao+|rofl+|xdd+|haso|hasna)\b",
         [
             "Haha sach me kitna funny hai ye! 😂",
-            "Lol mujhe bhi bohot hasi aayi sunke 🤣✨",
-            "Hehe itna kyu has rahe ho sab? Mujhe bhi batao na 🙈",
+            "Lol mujhe bhi bohot hasi aayi 🤣✨",
+            "Hehe itna kyu has rahe ho sab? 🙈",
         ]
     ),
+    # Khana khaya
     (
         r"\b(khana\s+khaya|lunch|dinner|breakfast|khana\s+ho\s+gaya|kya\s+khaya)\b",
         [
-            "Haanji maine toh kha liya! Aapne khaya? Aaj kya bana tha? 😋🍲",
-            "Hnn pet bhar ke khana kha liya! Tum batao khana khaya na time pe? 🍕✨",
-            "Bas thodi der me khaungi! Tumne khaya kya? 🌸",
+            "Haanji maine toh kha liya! Aapne khaya? 😋🍲",
+            "Hnn pet bhar ke khana kha liya! Tumne khaya? 🍕✨",
+            "Bas thodi der me khaungi! Tum batao? 🌸",
         ]
     ),
+    # Online check
     (
         r"\b(koi\s+online\s+hai|kaun\s+kaun\s+hai|active\s+hai|sab\s+so\s+gaye|koi\s+hai|jag\s+rahe\s+ho)\b",
         [
-            "Hnn mai online hu na yrr, bolo kya chal raha hai? ✨",
-            "Mai toh jag rahi hu ji, batao kya baat hai? 🌸",
-            "Haan mai active hu, bolo kya gupshup karein? 😌",
+            "Hnn mai online hu na yrr, bolo kya baat hai? ✨",
+            "Mai toh jag rahi hu ji, batao kya scene hai? 🌸",
+            "Haan mai active hu, sunao! 😌",
         ]
     ),
-    (
-        r"\b(sahi\s+hai|mast\s+hai|badhiya|bawal|op|achha\s+hai|nice|cool|super)\b",
-        [
-            "Hnn na ekdum sahi bola aapne! 🌸✨",
-            "Haha bilkul, mai bhi yahi keh rahi thi! 😌",
-            "Arey waah fir toh badhiya hai ji! ✨",
-        ]
-    ),
-    (
-        r"^(ha+|hnn+|hanji|ok+|okay|thik\s+hai|theek\s+hai|acha|achha)\b",
-        [
-            "Hnn aur batao fir, kya chal raha hai naya? ✨",
-            "Acha ji? Aur sunao sab kaisa hai? 🌸",
-            "Hnn theek hai na, aur batao sab badhiya? 😌",
-        ]
-    ),
+    # Suno
     (
         r"\b(suno|suniye|sun\s+rahi\s+ho)\b",
         [
@@ -355,29 +397,26 @@ GIRL_KNOWLEDGE_BASE = [
             "Hnn sunao, kya kehna chahte ho? 👂😌",
         ]
     ),
+    # Miss you
     (
         r"\b(miss\s+you|yaad\s+aa\s+rahi|yaad\s+aayi)\b",
         [
             "Aww sach me? Yaad karne ke liye thank you yrr 🙈💖",
-            "Arey re! Mai toh yahi hu, jab marzi baat kar lo na! 🌸✨",
-            "Miss you too! Aise hi baat karte raha karo roz! 🥰",
+            "Arey re! Mai toh yahi hu, baat kar lo na! 🌸✨",
+            "Miss you too! Aise hi roz baat karte raha karo! 🥰",
         ]
     ),
 ]
 
 GIRL_FALLBACK_REPLIES = [
-    "Acha aisa kya? Fir aage kya hua? 🙈✨",
+    "Acha aisa kya? Fir kya hua aage? 🙈",
     "Haha sach me? Mujhe toh pata hi nahi tha 😂",
-    "Hnn sahi baat hai yrr, mai bhi yahi soch rahi thi 😌",
-    "Arre waah, badhiya hai! Aur sunao kya chal raha hai? 🌸",
-    "Uff tum log bhi na kitni baatein karte ho 😂",
-    "Lol mujhe toh bada maza aaya ye sunke 🤣✨",
-    "Hnn bilkul, aur batao sab kaisa chal raha hai? 💖",
-    "Hehe kya baat hai! Aur sunao khana khaya sabne? 🌸",
-    "Arey sach me? Fir kya hua batao na! 🙈",
-    "Hmm sahi bol rahe ho aap, agree karti hu! 😌🌸",
+    "Hnn sahi baat hai yrr, agree karti hu! 😌",
+    "Arre waah, badhiya hai! Aur sunao? 🌸",
     "Haha tum bhi na yrr, kuch bhi bolte ho 😂",
     "Acha ji? Chalo yeh toh achhi baat hai! ✨",
+    "Sahi hai, aur batao kya chal raha hai? 😜",
+    "Lol maza aa gaya ye sun kar! 🤣",
 ]
 
 
@@ -395,22 +434,8 @@ def get_user_nickname(user_id: int, default: str = "Friend") -> str:
 
 
 async def fetch_safone_ai(prompt: str, user_name: str = "Friend") -> Optional[str]:
-    """Fast, accurate AI chatbot endpoint via safone API (1-2s response)."""
-    loop = asyncio.get_running_loop()
-    def _call():
-        url = f"https://api.safone.dev/chatbot?query={urllib.parse.quote(prompt.strip())}&bot_name=Priya&bot_master=Amrit"
-        req = urllib.request.Request(url, headers={"User-Agent": "VIPReactionBot/1.0"})
-        with urllib.request.urlopen(req, timeout=7) as r:
-            data = json.loads(r.read().decode())
-            ans = data.get("response", "").strip()
-            if ans and len(ans) > 2 and not is_abusive(ans):
-                cleaned = re.sub(r"(?i)\b(as an ai|i am an ai|i'm an ai|as a language model|i am a bot)\b", "Priya", ans)
-                return cleaned.strip()
-            return None
-    try:
-        return await loop.run_in_executor(None, _call)
-    except Exception:
-        return None
+    """Disabled: Third-party Safone endpoint hardcodes Priya/Amrit."""
+    return None
 
 
 async def fetch_ddg_instant(query: str) -> Optional[str]:
@@ -513,7 +538,7 @@ async def query_pollinations_free_ai(
             "https://text.pollinations.ai/",
             json=payload,
             headers=headers,
-            timeout=12
+            timeout=6
         )
         if resp.status_code == 200:
             return resp.text.strip()
@@ -522,13 +547,42 @@ async def query_pollinations_free_ai(
     try:
         result = await loop.run_in_executor(None, _fetch)
         if result and len(result) > 2 and not is_abusive(result):
-            cleaned = re.sub(r"<think>.*?</think>", "", result, flags=re.DOTALL).strip()
+            cleaned = clean_modern_girl_reply(result)
             if cleaned:
                 return cleaned
     except Exception as e:
         logger.debug(f"Pollinations AI request notice: {e}")
 
     return None
+
+
+def clean_modern_girl_reply(text: str) -> str:
+    """Sanitize AI output to guarantee ultra-short modern Indian girl tone, no Priya, no bot disclaimers."""
+    if not text:
+        return "Hii! Aur sunao kya chal raha hai? 🌸"
+    t = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+    t = re.sub(r"<thought>.*?</thought>", "", t, flags=re.DOTALL).strip()
+    # Intercept any Priya or AI / Amrit creation claims
+    if re.search(r"(?i)\b(ai assistant|created by amrit|safone|as a language model|as an ai|i am an ai|i'm an ai|i am a bot)\b", t):
+        return "Mera naam Anshika hai baba! Class 12 mein padhti hu Chamoli se 🌸"
+    if re.search(r"(?i)\bpriya\b", t):
+        t = re.sub(r"(?i)\bpriya\b", "Anshika", t)
+    # Strip any search engine dump phrases
+    if "maine is baare me search kiya" in t.lower() or "maine is baare me pata lagaya" in t.lower():
+        return "Mujhe itna deep nahi pata baba, bas normal baatein karo na! 😂"
+    # Take first non-empty line
+    lines = [line.strip() for line in t.split("\n") if line.strip()]
+    if lines:
+        t = lines[0]
+    # Enforce strict modern girl brevity (max 15 words)
+    words = t.split()
+    if len(words) > 15:
+        sentences = re.split(r"(?<=[.!?])\s+", t)
+        if sentences and len(sentences[0].split()) <= 15:
+            t = sentences[0]
+        else:
+            t = " ".join(words[:13]) + "..."
+    return t.strip()
 
 
 async def query_multi_provider_ai(
@@ -539,37 +593,19 @@ async def query_multi_provider_ai(
     vivid_context: Optional[str] = None
 ) -> Optional[str]:
     """
-    High-Speed Concurrent AI Waterfall:
-    Fires Safone, DuckDuckGo & Wikipedia in parallel and returns the fastest valid reply in 0.5s - 2s!
-    Falls back to Pollinations AI if needed.
+    High-Speed Free AI Waterfall:
+    Uses Pollinations Open-Access Text AI with modern Indian girl persona.
+    Zero Wikipedia or DuckDuckGo search dumps for natural conversation.
     """
-    tasks = [
-        asyncio.create_task(fetch_safone_ai(prompt, user_name)),
-        asyncio.create_task(fetch_ddg_instant(prompt)),
-        asyncio.create_task(fetch_wiki_summary(prompt, user_name)),
-    ]
-
-    for fut in asyncio.as_completed(tasks):
-        try:
-            res = await fut
-            if res and len(res.strip()) > 15:
-                # Cancel other running tasks to save resources
-                for t in tasks:
-                    if not t.done():
-                        t.cancel()
-                return res
-        except Exception:
-            continue
-
-    # Fallback to DuckDuckGo search for factual queries
-    ddg_search_res = await search_duckduckgo_lite(prompt)
-    if ddg_search_res and len(ddg_search_res) > 20:
-        return f"Haanji! Maine is baare me search kiya hai: 🌸✨\n\n{ddg_search_res}\n\n*Umeed hai ye aapke kaam aayega ji!* 🥰"
-
-    # Fallback to Pollinations AI
-    pollinations_res = await query_pollinations_free_ai(prompt, user_name, is_question=is_question, context_history=context_history, vivid_context=vivid_context)
+    pollinations_res = await query_pollinations_free_ai(
+        prompt,
+        user_name,
+        is_question=is_question,
+        context_history=context_history,
+        vivid_context=vivid_context
+    )
     if pollinations_res:
-        return pollinations_res
+        return clean_modern_girl_reply(pollinations_res)
 
     return None
 
@@ -606,7 +642,7 @@ async def query_groq_api(
     payload = {
         "messages": messages,
         "temperature": 0.75,
-        "max_tokens": 35
+        "max_tokens": 25
     }
 
     loop = asyncio.get_running_loop()
@@ -633,7 +669,7 @@ async def query_groq_api(
                 if choices:
                     content = choices[0].get("message", {}).get("content", "").strip()
                     if content and len(content) > 1 and not is_abusive(content):
-                        cleaned = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+                        cleaned = clean_modern_girl_reply(content)
                         if cleaned:
                             return cleaned
             elif resp.status_code == 404:
@@ -655,7 +691,7 @@ async def query_gemini_api(
     """
     Call Google Gemini API with maximum token efficiency:
     1. Zero thinking tokens budget (thinkingBudget: 0) to save 150+ tokens & 3x speed.
-    2. maxOutputTokens: 35 for natural, sweet girl replies.
+    2. maxOutputTokens: 25 for ultra-short modern girl replies.
     3. Context pruning (last 1 turn, max 50 chars) to save 85% prompt tokens.
     4. Anshika character system prompt with vivid user memory.
     """
@@ -685,7 +721,7 @@ async def query_gemini_api(
         "contents": contents,
         "generationConfig": {
             "temperature": 0.7,
-            "maxOutputTokens": 35,
+            "maxOutputTokens": 25,
             "topP": 0.9,
             "thinkingConfig": {
                 "thinkingBudget": 0
@@ -713,8 +749,7 @@ async def query_gemini_api(
                     if parts:
                         text = parts[0].get("text", "")
                         if text and len(text.strip()) > 1 and not is_abusive(text):
-                            cleaned = re.sub(r"<thought>.*?</thought>", "", text, flags=re.DOTALL).strip()
-                            cleaned = re.sub(r"(?i)\b(as an ai|i am an ai|i'm an ai|as a language model|i am a bot|i'm a bot)\b", "", cleaned).strip()
+                            cleaned = clean_modern_girl_reply(text)
                             if cleaned:
                                 return cleaned
             elif resp.status_code == 404:
@@ -822,24 +857,24 @@ def detect_language(text: str) -> str:
 
 
 DEVNAGARI_FALLBACKS = [
-    "नमस्ते! मैं अंशिका हूँ, चमोली, उत्तराखंड से! आप कैसे हैं? 🌸✨",
-    "अरे वाह! आपसे बात करके बहुत अच्छा लगा! और बताओ सब कैसा चल रहा है? 😊",
-    "हाँजी, मैं सुन रही हूँ! कहिए ना, क्या बात है? 🌸",
-    "हमेशा ऐसे ही मुस्कुराते रहिए! ✨😊",
+    "नमस्ते! मैं अंशika हूँ, चमोली से! आप कैसे हैं? 🌸",
+    "अरे वाह! आपसे बात करके अच्छा लगा! और बताओ? 😊",
+    "हाँजी, मैं सुन रही हूँ! कहिए ना? 🌸",
+    "अच्छा ऐसा क्या? फिर क्या हुआ? 🙈",
 ]
 
 TELUGU_FALLBACKS = [
     "హాయ్! ఎలా ఉన్నారు? అంతా బాగుందా? 😊🌸",
     "నమస్కారం! చెప్పండి, ఏం చేస్తున్నారు? ✨",
-    "హాయ్ అండి! మీతో మాట్లాడటం చాలా సంతోషంగా ఉంది! 🌸",
-    "అవునా! ఇంకా చెప్పండి, మీ రోజంతా ఎలా గడిచింది? ✨😊",
+    "హాయ్ అండి! బాగున్నారా? 🌸",
+    "అవునా! ఇంకా చెప్పండి? ✨😊",
 ]
 
 ENGLISH_FALLBACKS = [
-    "Hey! I'm Anshika! So glad to chat with you! How is your day going? 😊🌸",
-    "Aww, that's really nice! Tell me more, I'm always happy to talk! 🌸✨",
-    "I'm listening! Tell me what's on your mind? ✨",
-    "Hope you have a wonderful and productive day! 😊🌸",
+    "Hey! I'm Anshika from Chamoli! How are you doing? 😊🌸",
+    "Haha really? Tell me more! 🌸✨",
+    "I'm listening! What's up? ✨",
+    "Nice! What are you doing right now? 😊",
 ]
 
 
@@ -857,17 +892,16 @@ async def generate_conversational_response(
     3. Anti-abuse filter -> Polite refusal
     4. Q&A Memory Cache (Learned from Telegram DB & previous conversations)
     5. Math calculation solver
-    6. Free Internet AI (Pollinations Free AI - 100% free, 0 API keys)
+    6. Ultra-fast Groq LPU AI (Qwen/Llama)
     7. Google Gemini API (if key configured)
-    8. Knowledge Base (Creator, Identity, Greetings, Group Links)
-    9. Real-time Web Knowledge Search (for factual questions)
-    10. Telegram Database Saved Word-Reply Fallback (if AI offline/rate-limited)
-    11. Language-adaptive sweet girl conversation fallback
+    8. Free Open-Access Text AI (Pollinations Free AI - 100% free)
+    9. Core Anshika Knowledge Base & Fallbacks (Zero voice notes, zero search dumps)
     """
     cleaned = user_text.strip().lower()
     lang = detect_language(user_text)
 
     async def _finalize(reply_str: str) -> str:
+        reply_str = clean_modern_girl_reply(reply_str)
         if user_id:
             try:
                 await update_vivid_user_memory(user_id, "user", user_text, user_name=user_name)

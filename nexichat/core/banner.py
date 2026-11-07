@@ -30,7 +30,7 @@ def get_startup_banner(username: str, owner_id: int, db_mode: str, port: int, wo
     banner = (
         "\n"
         "╔═══════════════════════════════════════════════════════════════════════════╗\n"
-        "║                     VIP REACTION & AI CHATBOT (PRIYA AI)                  ║\n"
+        "║                    VIP REACTION & AI CHATBOT (ANSHIKA AI)                 ║\n"
         "║              Copyright (c) 2026 Amrit Raj. All Rights Reserved.           ║\n"
         "╠═══════════════════════════════════════════════════════════════════════════╣\n"
         f"║  • Bot Username   : @{username:<48} ║\n"
@@ -41,7 +41,7 @@ def get_startup_banner(username: str, owner_id: int, db_mode: str, port: int, wo
         f"║  • Concurrency    : Pyrogram Workers: {workers} (Koyeb 512MB Optimized)     ║\n"
         f"║  • Cloud Watchdog : Active (Memory & Disk Auto-Clean Sentinel)            ║\n"
         f"║  • Web Health Srv : Active on Port {port:<38} ║\n"
-        "║  • AI Brain Waterfall: Safone + Wiki REST + DDG Lite + Pollinations       ║\n"
+        "║  • AI Brain Engine: Groq LPU + Gemini 3.5 + Modern Girl Multi-Tier        ║\n"
         "║  • Anti-Flood Shield : Leaky-Bucket 5 msgs / 10s Rate Limiter             ║\n"
         "╚═══════════════════════════════════════════════════════════════════════════╝\n"
     )

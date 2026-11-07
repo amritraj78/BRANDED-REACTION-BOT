@@ -315,7 +315,7 @@ class TestReactionFeatures(unittest.TestCase):
 
         msg2 = MagicMock()
         msg2.sticker = None
-        msg2.text = "Q: who are you\nA: Main Priya hoon, sweet AI dost! 🌸"
+        msg2.text = "Q: who are you\nA: Main Anshika hoon, Class 12 student Chamoli se! 🌸"
 
         msg3 = MagicMock()
         msg3.sticker = None
